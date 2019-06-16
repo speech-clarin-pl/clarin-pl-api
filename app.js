@@ -20,4 +20,4 @@ app.use((req, res, next) => {
 //forwarduje kazde nadchodzace rzadanie do tych roterow
 app.use('/projectsList',projectsListRoutes);
 
-app.listen(8080);
+app.listen(1234);
