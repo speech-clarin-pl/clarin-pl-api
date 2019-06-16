@@ -4,29 +4,29 @@ exports.getProjectsList = (req, res, next) => {
     res.status(200).json({
         projects: [
             {
-            id: 'p1',
-            title: 'Jakiś tytuł projektu 1',
+            _id: 'p1',
+            name: 'Jakiś tytuł projektu Mariusz :)',
             owner: 'You',
-            modified: '22.03.2019'
+            modified: new Date().toISOString(),
             },
             {
-            id: 'p2',
-            title: 'Jakiś tytuł projektu 2 bla bla',
+            _id: 'p2',
+            name: 'Jakiś tytuł projektu 2 bla bla',
             owner: 'You',
-            modified: '23.03.2019'
+            modified: new Date().toISOString(),
             },
             {
-            id: 'p3',
-            title: 'Jakiś tytuł projektu 3',
+            _id: 'p3',
+            name: 'Jakiś tytuł projektu 3',
             owner: 'You',
-            modified: '24.03.2019'
+            modified: new Date().toISOString(),
             }
         ]})
 }
 
+
+//dodawanie nowego projektu
 exports.createProject = (req, res, next) => {
-    
-    
     const projectName = req.body.name;
 //tutaj stworzyc nowy wpis w mongo
     res.status(201).json({
