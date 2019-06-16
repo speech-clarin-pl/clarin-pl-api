@@ -1,3 +1,7 @@
+const {validationResult} = require('express-validator/check');
+
+//importuje model wpisu projektu
+const ProjectEntry = require('../models/projectEntry');
 
 //kontroler do wydobywania listy projektow
 exports.getProjectsList = (req, res, next) => {
@@ -37,19 +41,39 @@ exports.getProjectsList = (req, res, next) => {
 
 //dodawanie nowego projektu
 exports.createProject = (req, res, next) => {
+
+    //resultaty validacji
+    const error = validationResult(req);
+    if(!error.isEmpty()){
+        return res.status(422).json({
+            message: 'Validation failed',
+            errors: error.array(),
+        });
+    }
+
     const reqProjectName = req.body.projectName;
-    //console.log(reqProjectName); 
-    //tutaj stworzyc nowy wpis w mongo
-    res.status(201).json({
-        message: 'The project created successfully!',
-        project: { 
-            _id: new Date(),
-            name: reqProjectName,
-            owner: 'You',
-            modified: new Date(),
-            owner: "idOwnera1",
-            accessToRead: [],
-            accessToEdit: []
-         }
+
+    //tworze nowy wpis w bazie za pomoca modelu
+    const projectEntry = new ProjectEntry({
+        name: reqProjectName,
+        owner: 'You',
+        accessToRead: [],
+        accessToEdit: []
     });
+
+    //zapisuje do bazy
+    projectEntry
+        .save()
+        .then(entry => {
+            console.log(entry);
+            res.status(201).json({
+                message: 'The project created successfully!',
+                project: entry
+            });
+        })
+        .catch(error => {
+            console.log(error);
+        })
+
+    
 }
