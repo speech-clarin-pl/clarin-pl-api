@@ -4,20 +4,41 @@
 // zapisuje plik na dysku i robie rozpoznawanie
 exports.startFileRecognition = (req, res,next) => {
    
-    if(!req.audioFile){
-        //const error = new Error('No file provided');
-        //error.statusCode = 422;
-       // throw error;
+    const sentAudioFile = req.file;
+    const sentEntryId = req.body.entryId;
+
+    if(!sentAudioFile){
+        const error = new Error('No file provided');
+        error.statusCode = 422;
+        throw error;
     }
 
-    //const audioFileUrl = req.audioFile.path;
-
-    console.log("RECOGNITION");
-    console.log(req.body.entryId);
-    console.log(req.file);
-
-    //console.log("czesc")
-    //res.status(201).json(req);
+    console.log("FILE RECOGNITION");
+    
+    res.status(201).json({message: 'Received the file for recognition', sentEntryId: {sentEntryId}});
     //console.log(req);
     next();
 }
+
+exports.startBatchRecognition = (req, res,next) => {
+   
+    if(!req.files){
+        const error = new Error('No file provided');
+        error.statusCode = 422;
+        throw error;
+    }
+
+    console.log("BATCH RECOGNITION");
+    const uploadedAudioFiles = req.files;
+    const uploadedAudioFilesIds = req.body.audioFilesIds;
+    
+    //console.log(uploadedAudioFiles);
+    //console.log(uploadedAudioFilesIds);
+   
+    res.status(201).json({message: 'Files were uploaded correctly!',
+                uploadedAudioFilesIds: uploadedAudioFilesIds});
+    
+    next();
+}
+
+

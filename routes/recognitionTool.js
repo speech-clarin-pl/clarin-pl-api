@@ -5,6 +5,7 @@ const router = express.Router();
 
 // POST /recognition/singleFile
 router.post('/singleFile', recognitionToolController.startFileRecognition);
+router.post('/multipleFiles', recognitionToolController.startBatchRecognition);
 
 
 module.exports = router;

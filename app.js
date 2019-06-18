@@ -13,10 +13,9 @@ const app = express();
 //konfiguracja gdzie zapisywac pliki
 const fileStorage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, './repo');
+        cb(null, './repo/');
     },
     filename: (req, file, cb) => {
-        
         cb(null, new Date().toISOString() + '-' + file.originalname);
     }
 });
@@ -33,15 +32,24 @@ const fileFilter = (req, file, cb) => {
      
         cb(null, false);
     }
+
+    //TYMCZASOWO
+    //cb(null, true);
 }
 
-//konfiguracja multera - narazie akceptuje pojedynczy plik
-app.use(multer({storage: fileStorage, fileFilter: fileFilter}).single('audioFile'));
-//app.use(multer({storage: fileStorage, fileFilter: fileFilter}).array('audioFiles'));
-
-
 // dla rzadan zakodowanych w application/json
-app.use(bodyParser.json());
+//app.use(bodyParser.json());
+
+//debaguje ...
+// app.use((req, res, next) => {
+//     //console.log(req);
+//     next();
+// });
+
+//konfiguracja multera - narazie akceptuje pojedynczy plik
+//app.use(multer({storage: fileStorage, fileFilter: fileFilter}).single('audioFile'));
+
+app.use(multer({storage: fileStorage}).array('audioFiles',10));
 
 
 
