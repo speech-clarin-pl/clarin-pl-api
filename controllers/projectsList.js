@@ -65,9 +65,12 @@ exports.createProject = (req, res, next) => {
 
     //resultaty validacji
     const error = validationResult(req);
+    console.log(req.body.projectName)
     if(!error.isEmpty()){
-        const error = new Error('Validation failed');
-        error.statusCode = 422;
+        console.log("ERROR")
+        console.log(error.array())
+        const errortothrow = new Error('Validation failed');
+        errortothrow.statusCode = 422;
         throw errow;
     }
 

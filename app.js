@@ -38,7 +38,7 @@ const fileFilter = (req, file, cb) => {
 }
 
 // dla rzadan zakodowanych w application/json
-//app.use(bodyParser.json());
+app.use(bodyParser.json());
 
 //debaguje ...
 // app.use((req, res, next) => {
@@ -49,9 +49,7 @@ const fileFilter = (req, file, cb) => {
 //konfiguracja multera - narazie akceptuje pojedynczy plik
 //app.use(multer({storage: fileStorage, fileFilter: fileFilter}).single('audioFile'));
 
-app.use(multer({storage: fileStorage}).array('audioFiles',10));
-
-
+app.use(multer({storage: fileStorage}).array('audioFiles'));
 
 
 //tutaj ustawiam katalog repo aby byl statyczny i widoczny publicznie - tymczasowo
@@ -79,7 +77,7 @@ app.use((error, req, res, next) => {
 
 //najpierw lacze sie z baza a nastepnie startuje serwer
 mongoose
-    .connect('mongodb://127.0.0.1:13013/clarinApp')
+    .connect('mongodb://127.0.0.1:27017/workers')
     .then(result => {
 
         app.listen(1234);

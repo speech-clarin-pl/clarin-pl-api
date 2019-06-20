@@ -13,7 +13,7 @@ router.get('', projectsListController.getProjectsList);
 router.post('', [
     body('projectName')
         .trim()
-        .isLength({ min: 3 }),
+        .isLength({min: 3 }),
 ], projectsListController.createProject);
 
 //update projektu PUT
@@ -21,6 +21,6 @@ router.put('/:projectId',[
     body('projectName')
         .trim()
         .isLength({ min: 3 }),
-],);
+],projectsListController.updateProjectName);
 
 module.exports = router;
