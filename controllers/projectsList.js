@@ -14,7 +14,7 @@ exports.getProjectsList = (req, res, next) => {
             if(!projectsList){
                 const error = new Error('Could not find any project');
                 error.statusCode = 404;
-                throw errow;
+                throw error;
             }
 
             res.status(200).json({message: 'Projects list featched!', projects: projectsList})
@@ -37,26 +37,7 @@ exports.getProjectsList = (req, res, next) => {
     //             accessToRead: [],
     //             accessToEdit: []
     //         },
-    //         {
-    //             _id: 'p2',
-    //             name: 'Jakiś tytuł projektu 2 bla bla',
-    //             owner: 'You',
-    //             modified: new Date(),
-    //             owner: "idOwnera1",
-    //             accessToRead: [],
-    //             accessToEdit: []
-    //         },
-    //         {
-    //             _id: 'p3',
-    //             name: 'Jakiś tytuł projektu 3',
-    //             owner: 'You',
-    //             modified: new Date(),
-    //             owner: "idOwnera1",
-    //             accessToRead: [],
-    //             accessToEdit: []
-    //         }
-    //     ]
-    // })
+
 }
 
 
@@ -71,7 +52,7 @@ exports.createProject = (req, res, next) => {
         console.log(error.array())
         const errortothrow = new Error('Validation failed');
         errortothrow.statusCode = 422;
-        throw errow;
+        throw error;
     }
 
     const reqProjectName = req.body.projectName;
@@ -102,30 +83,71 @@ exports.createProject = (req, res, next) => {
         })
 }
 
+//usuwanie projektu
+exports.deleteProject = (req,res,next) => {
+    const projectId = req.body.idprojektu;
+
+    console.log("DELETE PROJECT")
+    console.log(req.body.idprojektu)
+
+    ProjectEntry.findById(projectId)
+        .then(projectEntry => {
+
+            if(!projectEntry){
+                const error = new Error('Could not find the project entry');
+                error.statusCode = 404;
+                throw error;
+            }
+
+            // TO DO: tutaj sprawdzic czy usuwany post nalezy do zalogowanego usera
+            // TO DO: tutaj tez usunac projekt z wszystkimi plikami uzytkownika
+            
+            //usuwam z bazy ten projektu
+            return ProjectEntry.findByIdAndRemove(projectId);
+        })
+        .then(projectEntry => {
+            //rezultat zapisywania do bazy
+            res.status(200).json({message: 'Project removed!', projectId: projectEntry._id})
+        })
+        .catch(error => {
+            if(!error.statusCode){
+                error.statusCode = 500;
+            }
+            next(error);
+        });
+
+}
+
 
 //edycja nazwy projektu
 exports.updateProjectName = (req, res,next) => {
     //resultaty validacji
     const error = validationResult(req);
+
+    //console.log("updateProjectName");
+    //console.log(projectId);
+    //console.log(projectName);
+
     if(!error.isEmpty()){
         const error = new Error('Validation failed');
         error.statusCode = 422;
-        throw errow;
+        console.log(error)
+        throw error;
     }
 
-    const projectId = req.params.projectId;
-    const projectName = req.body.projectName;
+    const projectId = req.body.projectId;
+    const newprojectName = req.body.newProjectName;
 
     ProjectEntry.findById(projectId)
         .then(projectEntry => {
             if(!projectEntry){
                 const error = new Error('Could not find the project entry');
                 error.statusCode = 404;
-                throw errow;
+                throw error;
             }
 
             //zapisuje do bazy update
-            projectEntry.projectName = projectName;
+            projectEntry.name = newprojectName;
             return projectEntry.save();
         })
         .then(projectEntry => {

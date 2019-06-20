@@ -8,6 +8,9 @@ const router = express.Router();
 // odbieranie listy projektow GET projects/
 router.get('', projectsListController.getProjectsList);
 
+//usuwanie projektu
+router.delete('/:projectId',projectsListController.deleteProject);
+
 // tworzenie nowego projektu POST projects/
 //z prosciutka validacja
 router.post('', [
@@ -18,9 +21,14 @@ router.post('', [
 
 //update projektu PUT
 router.put('/:projectId',[
-    body('projectName')
+    body('newProjectName')
         .trim()
         .isLength({ min: 3 }),
+    body('projectId')
+        .trim()
+        .isLength({ min: 2 })
 ],projectsListController.updateProjectName);
+
+
 
 module.exports = router;

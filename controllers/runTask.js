@@ -3,7 +3,7 @@ const Task = require('../models/dockerTask');
 
 exports.runTask = (taskType, fileAudio, fileTxt = null) => {
     
-    
+    console.log(fileAudio)
     //nazwa pliku w katalogu repo
     const audioFileName = fileAudio[0].filename;
     if(fileTxt){
@@ -83,8 +83,6 @@ exports.runTask = (taskType, fileAudio, fileTxt = null) => {
             //odpytuje baze co sekunde czy ukonczony jest task
             // To start the loop
 
-            
-  
 
             let checkerdb = setInterval(function(){
                 
@@ -94,7 +92,6 @@ exports.runTask = (taskType, fileAudio, fileTxt = null) => {
                         if(task.done) {
                             console.log('Task done!');
                             clearInterval(checkerdb);
-                            
                         }
                         if(task.result){
                             console.log('Result: ' + task.result);

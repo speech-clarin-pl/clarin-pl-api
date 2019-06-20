@@ -1,14 +1,35 @@
+const fs = require('fs');
 const path = require('path');
 const express = require('express');
 const bodyParser = require('body-parser'); //do validacji
 const mongoose = require('mongoose'); //do komunikacji z baza
 const multer = require('multer'); //for handlind multipart/form-data - upload files
 
+const compression = require('compression');
+const filemanagerMiddleware = require('@opuscapita/filemanager-server').middleware;
+const logger = require('@opuscapita/filemanager-server').logger;
+const env = require('./.env');
+
+const config = {
+    fsRoot: path.resolve(__dirname, './repo'),
+    rootName: 'Repozytorium'
+  };
+
+//fs.writeFileSync(
+    //path.resolve(__dirname, './static/env.js'),
+    //'window.env = ' + JSON.stringify(env) + ';'
+//);
+
+
+
+
 //importuje routes
 const projectsListRoutes = require('./routes/projectsList');
 const recognitionRoutes =  require('./routes/recognitionTool');
 
 const app = express();
+
+app.use(compression());
 
 //konfiguracja gdzie zapisywac pliki
 const fileStorage = multer.diskStorage({
@@ -62,6 +83,10 @@ app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     next();
 });
+
+const baseUrl = process.env.BASE_URL || '/';
+app.use(baseUrl, filemanagerMiddleware(config));
+//app.use(baseUrl, express.static(path.resolve(__dirname, './static')));
 
 //forwarduje kazde nadchodzace rzadanie do tych roterow
 app.use('/projectsList', projectsListRoutes);
