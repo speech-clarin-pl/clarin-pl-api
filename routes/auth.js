@@ -5,6 +5,7 @@ const router = express.Router();
 const User = require('../models/user');
 const authController = require('../controllers/auth');
 
+//################ rejestracja ##############
 router.put('/registration',[
     body('email').isEmail().withMessage('Please write a valid email')
         .custom((value, {req}) => {
@@ -19,5 +20,9 @@ router.put('/registration',[
     body('password').trim().isLength({min: 6}),
     body('name').trim().not().isEmpty()
 ], authController.registration);
+
+//############## logowanie ############
+
+router.post('/login',authController.login);
 
 module.exports = router;
