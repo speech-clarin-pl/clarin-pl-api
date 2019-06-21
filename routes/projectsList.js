@@ -1,26 +1,28 @@
 const express = require('express');
 const { body } = require('express-validator/check'); // for validation
 
+const isAuth = require('../middleware/is-auth');
+
 const projectsListController = require('../controllers/projectsList');
 
 const router = express.Router();
 
 // odbieranie listy projektow GET projects/
-router.get('', projectsListController.getProjectsList);
+router.get('', isAuth, projectsListController.getProjectsList);
 
 //usuwanie projektu
-router.delete('/:projectId',projectsListController.deleteProject);
+router.delete('/:projectId',isAuth,projectsListController.deleteProject);
 
 // tworzenie nowego projektu POST projects/
 //z prosciutka validacja
-router.post('', [
+router.post('', isAuth ,[
     body('projectName')
         .trim()
         .isLength({min: 3 }),
 ], projectsListController.createProject);
 
 //update projektu PUT
-router.put('/:projectId',[
+router.put('/:projectId', isAuth, [
     body('newProjectName')
         .trim()
         .isLength({ min: 3 }),

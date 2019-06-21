@@ -18,10 +18,12 @@ const userSchema = new Schema({
         type: String,
         default: 'new user'
     },
-    projects: {
-        type: Schema.Types.ObjectId,
-        ref: 'ProjectEntry'
-    }
+    projects: [
+        {
+            type: Schema.Types.ObjectId,
+            ref: 'ProjectEntry'
+        }
+    ]
 });
 
 module.exports = mongoose.model('User', userSchema);

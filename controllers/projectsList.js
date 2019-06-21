@@ -5,17 +5,19 @@ const {validationResult} = require('express-validator/check');
 
 //importuje model wpisu projektu
 const ProjectEntry = require('../models/projectEntry');
+const User = require('../models/user');
 
 //kontroler do wydobywania listy projektow
 exports.getProjectsList = (req, res, next) => {
 
-    ProjectEntry.find({owner: 'You'}).sort({"createdAt": "desc"})
+    ProjectEntry.find({owner: req.userId}).sort({"createdAt": "desc"})
         .then(projectsList => {
             if(!projectsList){
                 const error = new Error('Could not find any project');
                 error.statusCode = 404;
                 throw error;
             }
+
 
             res.status(200).json({message: 'Projects list featched!', projects: projectsList})
         })
@@ -56,11 +58,12 @@ exports.createProject = (req, res, next) => {
     }
 
     const reqProjectName = req.body.projectName;
+    let owner;
 
     //tworze nowy wpis w bazie za pomoca modelu
     const projectEntry = new ProjectEntry({
         name: reqProjectName,
-        owner: 'You',
+        owner: req.userId,
         accessToRead: [],
         accessToEdit: []
     });
@@ -68,11 +71,25 @@ exports.createProject = (req, res, next) => {
     //zapisuje do bazy
     projectEntry
         .save()
-        .then(entry => {
-            console.log(entry);
+        .then(result => {
+            //znajduje uzytkownika w bazie
+            return User.findById(req.userId);
+        })
+        .then(user => {
+
+            //teraz to jest zalogowany user
+            //wydobywam wiec projekty tylko tego usera
+            owner = user;
+            console.log(user)
+            user.projects.push(projectEntry);
+            return user.save();
+
+        })
+        .then(result => {
             res.status(201).json({
                 message: 'The project created successfully!',
-                project: entry
+                project: projectEntry,
+                owner: {_id: owner._id, name: owner.name}
             });
         })
         .catch(error => {
@@ -93,21 +110,40 @@ exports.deleteProject = (req,res,next) => {
     ProjectEntry.findById(projectId)
         .then(projectEntry => {
 
+            
+
             if(!projectEntry){
                 const error = new Error('Could not find the project entry');
                 error.statusCode = 404;
                 throw error;
             }
 
-            // TO DO: tutaj sprawdzic czy usuwany post nalezy do zalogowanego usera
+            //sprawdzam czy updatu dokonuje zalogowana osoba
+            if(projectEntry.owner.toString() !== req.userId){
+                const error = new Error('Not authorized!');
+                error.statusCode = 403;
+                throw error;
+            }
+
             // TO DO: tutaj tez usunac projekt z wszystkimi plikami uzytkownika
             
             //usuwam z bazy ten projektu
             return ProjectEntry.findByIdAndRemove(projectId);
         })
         .then(projectEntry => {
-            //rezultat zapisywania do bazy
-            res.status(200).json({message: 'Project removed!', projectId: projectEntry._id})
+            
+            let projectToDelete = projectEntry;
+            return User.findById(req.userId);
+            
+        })
+        .then(user => {
+            //czyszcze relacje z colekcja usera- tam tez trzeba wyrzucic referencje do projektu
+            user.projects.pull(projectId);
+            return user.save();
+           
+        })
+        .then(result => {
+            res.status(200).json({message: 'Project removed!', projectId: projectId})
         })
         .catch(error => {
             if(!error.statusCode){
@@ -124,8 +160,8 @@ exports.updateProjectName = (req, res,next) => {
     //resultaty validacji
     const error = validationResult(req);
 
-    //console.log("updateProjectName");
-    //console.log(projectId);
+    console.log("updateProjectName");
+    console.log(req.headers);
     //console.log(projectName);
 
     if(!error.isEmpty()){
@@ -143,6 +179,13 @@ exports.updateProjectName = (req, res,next) => {
             if(!projectEntry){
                 const error = new Error('Could not find the project entry');
                 error.statusCode = 404;
+                throw error;
+            }
+
+            //sprawdzam czy updatu dokonuje zalogowana osoba
+            if(projectEntry.owner.toString() !== req.userId){
+                const error = new Error('Not authorized!');
+                error.statusCode = 403;
                 throw error;
             }
 

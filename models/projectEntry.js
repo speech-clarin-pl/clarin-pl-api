@@ -8,7 +8,8 @@ const projectEntrySchema = new Schema({
         required: true
     },
     owner: {
-        type: Object,
+        type: Schema.Types.ObjectId,
+        ref: 'User',
         required: true,
     },
     accessToRead: {

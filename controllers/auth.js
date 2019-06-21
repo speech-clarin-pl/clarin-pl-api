@@ -46,10 +46,6 @@ exports.registration = (req, res, next) => {
         next(error);
     });
 
-    console.log("poza")
-
-
-
 }
 
 
@@ -87,9 +83,9 @@ exports.login = (req, res, next) => {
                 email: loadedUser.email, 
                 userId: loadedUser._id.toString()
             }, 'olaujelajajo',
-            {expiresIn: '3h'});
+            {expiresIn: '10h'});
 
-            res.status(200).json({token: token, userId: loadedUser._id.toString()});
+            res.status(200).json({token: token, userId: loadedUser._id.toString(), userName:loadedUser.name });
         })
         .catch(error => {
             if(!error.statusCode){
