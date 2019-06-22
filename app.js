@@ -5,6 +5,8 @@ const bodyParser = require('body-parser'); //do validacji
 const mongoose = require('mongoose'); //do komunikacji z baza
 const multer = require('multer'); //for handlind multipart/form-data - upload files
 
+global.__basedir = __dirname;
+
 const compression = require('compression');
 //const filemanagerMiddleware = require('@opuscapita/filemanager-server').middleware;
 //const logger = require('@opuscapita/filemanager-server').logger;

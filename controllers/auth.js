@@ -2,6 +2,12 @@ const User = require('../models/user');
 const {validationResult} = require('express-validator/check');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const fs = require('fs');
+const path = require('path');
+var mkdirp = require("mkdirp"); //do tworzenia folderu
+//var rimraf = require("rimraf"); 
+var appRoot = require('app-root-path'); //zwraca roota aplikacji
+
 
 exports.registration = (req, res, next) => {
     const errors = validationResult(req);
@@ -33,10 +39,25 @@ exports.registration = (req, res, next) => {
 
         return user.save();
     })
-    .then(result => {
+    .then(user => {
 
-        console.log(result)
-        res.status(201).json({message: 'User created', userId: result._id})
+        console.log(user)
+
+        //tutaj tworzenie folderu z id uzytkownika w repo
+        const dirpath = appRoot + '/repo/'+user._id;
+        mkdirp(dirpath, function(err) {
+            // if any errors then print the errors to our console
+            if (err) {
+                console.log(err);
+                return err;
+            } else {
+                // else print a success message.
+                console.log("Successfully created user directory");
+                res.status(201).json({message: 'User created', userId: user._id})
+            }
+          });
+
+         
     })
     .catch(error => {
         console.log(error)

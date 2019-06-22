@@ -7,6 +7,10 @@ const {validationResult} = require('express-validator/check');
 const ProjectEntry = require('../models/projectEntry');
 const User = require('../models/user');
 
+var mkdirp = require("mkdirp"); //do tworzenia folderu
+var rimraf = require("rimraf"); 
+var appRoot = require('app-root-path'); //zwraca roota aplikacji
+
 //kontroler do wydobywania listy projektow
 exports.getProjectsList = (req, res, next) => {
 
@@ -86,11 +90,26 @@ exports.createProject = (req, res, next) => {
 
         })
         .then(result => {
-            res.status(201).json({
-                message: 'The project created successfully!',
-                project: projectEntry,
-                owner: {_id: owner._id, name: owner.name}
+
+            //tutaj tworzenie folder z plikami projektu dla danego usera
+            const dirpath = appRoot + '/repo/'+owner._id+'/'+projectEntry._id;
+            mkdirp(dirpath, function(err) {
+                // if any errors then print the errors to our console
+                if (err) {
+                    console.log(err);
+                    return err;
+                } else {
+                    // else print a success message.
+                    console.log("Successfully created project directory for this user");
+                    res.status(201).json({
+                        message: 'The project created successfully!',
+                        project: projectEntry,
+                        owner: {_id: owner._id, name: owner.name}
+                    });
+                }
             });
+
+            
         })
         .catch(error => {
             if(!error.statusCode){
@@ -125,9 +144,9 @@ exports.deleteProject = (req,res,next) => {
                 throw error;
             }
 
-            // TO DO: tutaj tez usunac projekt z wszystkimi plikami uzytkownika
+
             
-            //usuwam z bazy ten projektu
+            //usuwam z bazy ten projekt
             return ProjectEntry.findByIdAndRemove(projectId);
         })
         .then(projectEntry => {
@@ -143,6 +162,19 @@ exports.deleteProject = (req,res,next) => {
            
         })
         .then(result => {
+            //usuwam wszystkie pliki w projekcie danego uzytkownika
+            const dirpath = appRoot + '/repo/'+req.userId + '/'+projectId;
+            console.log(dirpath)
+            rimraf(dirpath, function(err) {
+                if (err) {
+                    console.log(err);
+                    return err;
+                } else {
+                    console.log("Successfully deleted a user directory");
+                }
+               
+              });
+
             res.status(200).json({message: 'Project removed!', projectId: projectId})
         })
         .catch(error => {
