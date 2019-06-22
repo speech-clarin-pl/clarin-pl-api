@@ -33,6 +33,7 @@ const fileFilter = (req, file, cb) => {
 //importuje routes
 const projectsListRoutes = require('./routes/projectsList');
 const recognitionRoutes =  require('./routes/recognitionTool');
+const repoRoutes = require('./routes/repo');
 const authRoutes =  require('./routes/auth');
 
 //####################################################
@@ -40,16 +41,21 @@ const authRoutes =  require('./routes/auth');
 
 const app = express();
 
-// fs.writeFileSync(
-//     path.resolve(__dirname, './static/env.js'),
-//     'window.env = ' + JSON.stringify(env) + ';'
-// );
-
 //do kompresji...
 app.use(compression());
 
+// rozwiazanie dla cross-origin...
+app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    next();
+});
+
 // dla rzadan zakodowanych w application/json
 app.use(bodyParser.json());
+
+
 
 //tutaj musze odebraz zadanie o zalogowanym uzytkowniu i odpowiednio utworzyc katalogi
 app.use((req, res, next) => {
@@ -74,13 +80,7 @@ app.use(multer({storage: fileStorage}).array('audioFiles'));
 //tutaj ustawiam katalog repo aby byl statyczny i widoczny publicznie - tymczasowo
 app.use('/repo/', express.static(path.join(__dirname, 'repo/')));
 
-// rozwiazanie dla cross-origin...
-app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    next();
-});
+
 
 // const baseUrl = process.env.BASE_URL || '/';
 // const config = {
@@ -93,6 +93,7 @@ app.use((req, res, next) => {
 //forwarduje kazde nadchodzace rzadanie do tych roterow
 app.use('/projectsList', projectsListRoutes);
 app.use('/recognition', recognitionRoutes);
+app.use('/repoFiles', repoRoutes);
 app.use('/auth', authRoutes);
 
 //error handling...
