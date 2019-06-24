@@ -62,16 +62,7 @@ app.use((req, res, next) => {
 //tutaj musze odebraz zadanie o zalogowanym uzytkowniu 
 //i odpowiednio wskazac do jakiego katalogu ma uploadowac pliki
 app.use((req, res, next) => {
-//     const projectId = req.projectId;
-//     const userId = req.userId;
-//     const projectIdbody = req.body.projectId;
-//     const userIdbody = req.body.userId;
-//     console.log(projectId);
-//     console.log(userId);
-//     console.log(projectIdbody);
-//     console.log(userIdbody);
-//    // console.log(userId);
-//     req.userStorage = appRoot + '/repo/' + userId + '/' + projectId + '/';
+
     next();
 });
 
@@ -92,27 +83,7 @@ let upload = multer({
 }).array('audioFiles');
 
 app.use(upload,function (req, res, next) {
-    // //przenosze pliki scizniete z multera do katalogu uzytkownika
-    // const projectId = req.body.projectId;
-    // const userId = req.body.userId;
-
-    // if(req.files){
-    //     //przenosze wszystkie wgrane pliki
-    //     for (var i=0; i< req.files.length; i++){
-    //         const orygFileName = req.files[i].originalname;
-    //         const createdFileName = req.files[i].filename;
-    //         const whereSaved = req.files[i].path;
-    //         //console.log(createdFileName)
-
-    //         //docelowy katalog
-    //         var dir = appRoot + '/repo/'+userId+'/'+projectId;
-    //         fs.move(whereSaved, dir + '/' + createdFileName, function (err) {
-    //                  if (err) {
-    //                      return console.error(err);
-    //                  }
-    //             });
-    //         }
-    //     }
+     //to do
         next();
     });
     

@@ -1,5 +1,6 @@
-const fs = require('fs');
+const fs = require('fs-extra');
 const path = require('path');
+const appRoot = require('app-root-path'); //zwraca roota aplikacji 
 
 /** Retrieve file paths from a given folder and its subfolders. */
 exports.getFilePaths = (folderPath) => {
@@ -16,9 +17,14 @@ exports.getFilePaths = (folderPath) => {
         if (file) {
             //przenosze plik
             console.log("przenosze plik: " + file);
-            console.log("do katalogu ")
-            var dir = appRoot + '/repo/' + userId + '/' + projectId;
+            
+            let dir = appRoot + '/repo/' + userId + '/' + projectId;
+            console.log("------------------------")
+            console.log("do katalogu " + dir )
+            console.log(userId)
+            console.log(projectId)
             console.log(dir)
+
             fs.move('./repo/' + file, dir + '/' + file, function (err) {
                 if (err) {
                     console.error(err);

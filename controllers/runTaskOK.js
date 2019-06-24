@@ -46,35 +46,65 @@ exports.runTaskOK = (taskType, fileAudio, fileTxt = null,
             .save()
             .then(task => {
 
-                savedId = task._id; 
+                savedId = task._id;
                 console.log('Creacted task: ' + savedId);
 
                 //odpytuje baze co sekunde czy ukonczony jest task
                 // To start the loop
 
+                console.log("waiting for task to finish....")
                 let checkerdb = setInterval(function () {
-                    console.log("waiting for task to finish....")
+
                     Task.findById(savedId)
                         .then(task => {
                             if (task.done) {
+                                console.log('TASK UKONCZONY')
+                                //console.log(task)
+                                if (!task.error) {
 
-                                //wtedy przenosze resultaty do katalogu uzytkownika
-                                const file = task.input;
-                                utils.moveFileToUserRepo(projectId, userId, file)
-                                    .then(dir => {
-                                        console.log('Task done!');
-                                        resolve(task);
-                                        clearInterval(checkerdb);
-                                    })
-                                    .catch(err => {
-                                        reject(err);
-                                        clearInterval(checkerdb);
-                                    })
-                                
+                                    //console.log('przenosze pliki do katalogu usera')
+                                    //wtedy przenosze resultaty do katalogu uzytkownika
+                                    const audioFile = task.input;
+                                    const resultFile = task.result;
+                                    //console.log(audioFile)
+                                    //console.log(resultFile)
+
+                                    utils.moveFileToUserRepo(projectId, userId, audioFile)
+                                        .then(dir => {
+
+                                            console.log('udalo sie przeniesc plik audio do katalogu usera')
+                                            if (task.result) {
+
+                                                //console.log('mamy task result')
+                                                //console.log(task)
+                                                //console.log('przenosze rezultat do katalogu usera')
+                                                utils.moveFileToUserRepo(projectId, userId, resultFile)
+                                                    .then(dir => {
+                                                        console.log('udalo sie przeniesc plik rezultatow do katalogu usera')
+                                                        resolve(task);
+                                                    })
+                                                    .catch(err => {
+                                                        console.log('error z przeniesieniem pliku rezultatow do katalogu usera!');
+                                                        reject(err);
+
+                                                    })
+                                            }
+                                        })
+                                        .catch(err => {
+                                            console.log('problem z przeniesieniem pliku/ow!');
+                                            reject(err);
+
+                                        });
+
+                                } else {
+                                    console.log('WYSTAPIL ERROR W DOCKERZE!!!!!')
+                                    reject(error);
+                                    clearInterval(checkerdb);
+                                }
+
+                                clearInterval(checkerdb);
                             }
-                            if (task.result) {
-                                console.log('Task Result: ' + task.result);
-                            }
+
                         })
                         .catch(error => {
                             console.log('Error: ' + error);

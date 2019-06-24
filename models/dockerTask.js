@@ -25,6 +25,14 @@ const task = new Schema({
     input: {
         type: String,
         required: true
+    },
+    result: {
+        type: String,
+        required: false
+    },
+    error: {
+        type: String,
+        required: false
     }
     
 }, {timestamps: true});

@@ -32,14 +32,13 @@ exports.startFileRecognitionOK =  (req, res,next) => {
         })
         .catch(err => {
             console.log(' PROBLEM Z TASKIEM ');
-            if(!error.statusCode){
-                error.statusCode = 500;
+            if(!err.statusCode){
+                err.statusCode = 500;
             }
-            next(error);
+            next(err);
         })
 
-        console.log('KONIEC: startFileRecognitionOK')
-
+        //console.log('KONIEC: startFileRecognitionOK')
 }
 
 // zapisuje plik na dysku i robie rozpoznawanie
