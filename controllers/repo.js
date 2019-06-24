@@ -64,21 +64,17 @@ exports.getRepoFiles = (req,res,next) => {
 
       //sciezki zawieraja pewne sciezki wiec je przeksztalcam na relatywne
       const userfiles = repoFiles.map(path => {
-
               const relativePath = path.replace(repoPath,'');
               let fileEntry = {
                   key: relativePath,
                   modified: +moment().subtract(15, 'days'),
                   size: 4.2 * 1024 * 1024,
               }
-
               return fileEntry;
+      })
 
-          })
-
-      console.log(userfiles);
+     // console.log(userfiles);
       
-
       res.status(200).json({message: 'Files for this project and user featched!', files: userfiles})
 
 }

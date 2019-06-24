@@ -1,27 +1,45 @@
 //importuje model wpisu projektu
 const Task = require('../models/dockerTask');
+const appRoot = require('app-root-path'); //zwraca roota aplikacji   
 
-exports.runTask = (taskType, fileAudio, fileTxt = null) => {
-    
+exports.moveFileToUserRepo = (projectId, userId, file, req, res, next  ) => {
+
+    if (file) {
+        //przenosze plik
+        var dir = appRoot + '/repo/' + userId + '/' + projectId;
+        fs.move('./repo/'+file, dir + '/' + file, function (err) {
+            if (err) {
+                return console.error(err);
+            }
+        });
+    }
+    next();
+}
+
+
+exports.runTask = (taskType, fileAudio, fileTxt = null,
+    req, res, next,
+    userId, projectId, sentEntryId, callback) => {
+
+    console.log("PIERWSZE RUN TRASK!!!");
+    console.log("fileAudio!!!");
     console.log(fileAudio)
     //nazwa pliku w katalogu repo
-    const audioFileName = fileAudio[0].filename;
-    if(fileTxt){
-        const textFileName = fileTxt[0].filename;
+    const audioFileName = fileAudio;
+    if (fileTxt) {
+        const textFileName = fileTxt;
     }
-  
+
     task = {
         task: taskType,
         in_progress: false,
         done: false,
         time: new Date().toUTCString(),
-        //"zwraca w postaci: Wed, 19 Jun 2019 16:40:26 GMT"
-        //a w workerze jest w postaci: 2019-06-19T15:23:34.767+00:00
     }
 
-    
-    switch(taskType){
-        
+
+    switch (taskType) {
+
 
         // case ('text_normalize' ||
         //     'ffmpeg' ||
@@ -29,30 +47,32 @@ exports.runTask = (taskType, fileAudio, fileTxt = null) => {
         //     'diarize' ||
         //     'vad'
         // ):
-        case('recognize'):
+        case ('recognize'):
 
-            task = {...task, input: audioFileName};
-            console.log('RUN TASK')
+            task = { ...task, input: audioFileName };
+            console.log('RUN TASK RECOGNIZE')
             console.log(task)
             break;
         case (
             'forcealign' ||
             'segmentalign'
         ):
-            if(fileTxt){
-                task = {...task, input: {
-                    audio: audioFileName,
-                    text: textFileName
+            if (fileTxt) {
+                task = {
+                    ...task, input: {
+                        audio: audioFileName,
+                        text: textFileName
                     }
                 };
             }
-            
+
 
             break;
         case (
             taskType === 'kws'
         ):
-            task = {...task, input: {
+            task = {
+                ...task, input: {
                     audio: audioFileName,
                     text: textFileName
                 }
@@ -75,7 +95,7 @@ exports.runTask = (taskType, fileAudio, fileTxt = null) => {
     dockerTask
         .save()
         .then(task => {
-            
+
             savedId = task._id; // bylo inserted_id ?
             console.log('Creacted task:' + savedId);
             console.log('Waiting for completion');
@@ -84,18 +104,24 @@ exports.runTask = (taskType, fileAudio, fileTxt = null) => {
             // To start the loop
 
 
-            let checkerdb = setInterval(function(){
-                
+            let checkerdb = setInterval(function () {
+                console.log("waiting to task finish....")
                 Task.findById(savedId)
                     .then(task => {
-                        console.log(task);
-                        if(task.done) {
+                        //console.log(task);
+                        if (task.done) {
                             console.log('Task done!');
+                            //tutaj powinienem przeniesc zapisane pliki w repo do katalogu uzytkownika
+                            //i dac odpowiedz przegladarce
+                            //tutaj przechowuje polozenie pliku po jego przeniesieniu do katalogu zytkownika projektu
+                            //const finalFileDest = appRoot + '/repo/' + userId + '/' + projectId + '/' + createdFileName;
+                            callback(null, res,'Task is done!');
+                            
                             clearInterval(checkerdb);
                         }
-                        if(task.result){
+                        if (task.result) {
                             console.log('Result: ' + task.result);
-                        } 
+                        }
                     })
                     .catch(error => {
                         console.log('Error: ' + error);
@@ -103,21 +129,18 @@ exports.runTask = (taskType, fileAudio, fileTxt = null) => {
                     });
             }, 1000);
 
-            //jak nie ma odpowiedzi to zatrzymuje po 1min
-            setTimeout(()=>{
+            //jak nie ma odpowiedzi w ciagu 30min to zatrzymuje
+            setTimeout(() => {
                 console.log('STOPPED AS NO RESPONSE FROM DOCKER');
                 clearInterval(checkerdb);
             }, 1800000);
             //docelowo na 30min czyli 1800000
-
-            
-            
         })
         .catch(error => {
             console.log("ERROR IN runTask");
             console.log(error);
         })
 
-
+    next();
 }
 

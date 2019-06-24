@@ -4,7 +4,7 @@ const recognitionToolController = require('../controllers/recognitionTool');
 const router = express.Router();
 
 // POST /recognition/singleFile
-router.post('/singleFile', recognitionToolController.startFileRecognition);
+router.post('/singleFile', recognitionToolController.startFileRecognitionOK);
 
 // POST /recognition/multipleFiles
 router.post('/multipleFiles', recognitionToolController.startBatchRecognition);

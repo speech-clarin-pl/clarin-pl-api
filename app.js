@@ -1,9 +1,11 @@
-const fs = require('fs');
+const fs = require('fs-extra');
 const path = require('path');
 const express = require('express');
 const bodyParser = require('body-parser'); //do validacji
 const mongoose = require('mongoose'); //do komunikacji z baza
 const multer = require('multer'); //for handlind multipart/form-data - upload files
+const appRoot = require('app-root-path'); //zwraca roota aplikacji
+
 
 global.__basedir = __dirname;
 
@@ -28,8 +30,6 @@ const fileFilter = (req, file, cb) => {
 }
 
 
-
-
 //importuje routes
 const projectsListRoutes = require('./routes/projectsList');
 const recognitionRoutes =  require('./routes/recognitionTool');
@@ -40,6 +40,10 @@ const authRoutes =  require('./routes/auth');
 //###############################################
 
 const app = express();
+
+// dla rzadan zakodowanych w application/json
+app.use(bodyParser.urlencoded());
+app.use(bodyParser.json());
 
 //do kompresji...
 app.use(compression());
@@ -52,14 +56,22 @@ app.use((req, res, next) => {
     next();
 });
 
-// dla rzadan zakodowanych w application/json
-app.use(bodyParser.json());
 
 
 
-//tutaj musze odebraz zadanie o zalogowanym uzytkowniu i odpowiednio utworzyc katalogi
+//tutaj musze odebraz zadanie o zalogowanym uzytkowniu 
+//i odpowiednio wskazac do jakiego katalogu ma uploadowac pliki
 app.use((req, res, next) => {
-    req.userStorage = './repo/idUsera/idProjektu/'
+//     const projectId = req.projectId;
+//     const userId = req.userId;
+//     const projectIdbody = req.body.projectId;
+//     const userIdbody = req.body.userId;
+//     console.log(projectId);
+//     console.log(userId);
+//     console.log(projectIdbody);
+//     console.log(userIdbody);
+//    // console.log(userId);
+//     req.userStorage = appRoot + '/repo/' + userId + '/' + projectId + '/';
     next();
 });
 
@@ -68,13 +80,43 @@ app.use((req, res, next) => {
   //konfiguracja gdzie zapisywac pliki
 const fileStorage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, req.userStorage);
+        cb(null, './repo');
     },
     filename: (req, file, cb) => {
         cb(null, new Date().toISOString() + '-' + file.originalname);
     }
 });
-app.use(multer({storage: fileStorage}).array('audioFiles'));
+
+let upload = multer({
+    storage: fileStorage
+}).array('audioFiles');
+
+app.use(upload,function (req, res, next) {
+    // //przenosze pliki scizniete z multera do katalogu uzytkownika
+    // const projectId = req.body.projectId;
+    // const userId = req.body.userId;
+
+    // if(req.files){
+    //     //przenosze wszystkie wgrane pliki
+    //     for (var i=0; i< req.files.length; i++){
+    //         const orygFileName = req.files[i].originalname;
+    //         const createdFileName = req.files[i].filename;
+    //         const whereSaved = req.files[i].path;
+    //         //console.log(createdFileName)
+
+    //         //docelowy katalog
+    //         var dir = appRoot + '/repo/'+userId+'/'+projectId;
+    //         fs.move(whereSaved, dir + '/' + createdFileName, function (err) {
+    //                  if (err) {
+    //                      return console.error(err);
+    //                  }
+    //             });
+    //         }
+    //     }
+        next();
+    });
+    
+ 
 
 
 //tutaj ustawiam katalog repo aby byl statyczny i widoczny publicznie - tymczasowo
