@@ -17,7 +17,7 @@ router.put('/renameFolder/', isAuth, repoController.renameFolder);
 //router.put('/moveFolder/:projectId', isAuth, repoController.moveFolder);
 
 //DELETE /repoFiles/deleteFolder/userId - usuwa folder OK
-router.delete('/deleteFolder/:projectId', isAuth, repoController.deleteFolder);
+router.delete('/deleteFolder/', isAuth, repoController.deleteFolder);
 
 //DELETE /repoFiles/deleteFile/userId - usuwa folder
 router.delete('/deleteFile/', isAuth, repoController.deleteFile);
