@@ -1,15 +1,39 @@
 const fs = require('fs-extra');
-const path = require('path');
 const appRoot = require('app-root-path'); //zwraca roota aplikacji 
+const path = require('path');
+var emptyDir = require('empty-dir');
 
-/** Retrieve file paths from a given folder and its subfolders. */
-exports.getFilePaths = (folderPath) => {
-    const entryPaths = fs.readdirSync(folderPath).map(entry => path.join(folderPath, entry));
-    const filePaths = entryPaths.filter(entryPath => fs.statSync(entryPath).isFile());
-    const dirPaths = entryPaths.filter(entryPath => !filePaths.includes(entryPath));
-    const dirFiles = dirPaths.reduce((prev, curr) => prev.concat(getFilePaths(curr)), []);
-    return [...filePaths, ...dirFiles];
-  };
+exports.readDir = (dir, callback) => {
+
+    let files = [];
+
+    walkDir = (dir, callbackWK) => {
+
+        fs.readdirSync(dir).forEach( f => {
+            let dirPath = path.join(dir, f);
+            let isDirectory = fs.statSync(dirPath).isDirectory();
+           
+            //console.log(dirPath)
+            if(isDirectory){
+                let isEmptyDir = emptyDir.sync(dirPath);
+                if(isEmptyDir){
+                    files.push(path.join(dir, f) + '/');
+                }
+                //callback(path.join(dir, f));
+                walkDir(dirPath, callback) ;
+            } else {
+                files.push(path.join(dir, f));
+                //callback(path.join(dir, f));
+            }
+        });
+        //callbackWK(files)
+    }
+
+    walkDir(dir);
+    callback(files);
+
+}
+
 
   // przenosi plik z glownego repo do katalogu uzytkownika i jego projektu
   exports.moveFileToUserRepo = (projectId, userId, file) => {

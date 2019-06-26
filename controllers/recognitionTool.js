@@ -35,6 +35,7 @@ exports.startFileRecognitionOK =  (req, res,next) => {
             if(!err.statusCode){
                 err.statusCode = 500;
             }
+            res.status(500).json({ message: "Something went wrong!", sentEntryId: { sentEntryId } });
             next(err);
         })
 

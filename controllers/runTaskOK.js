@@ -58,7 +58,7 @@ exports.runTaskOK = (taskType, fileAudio, fileTxt = null,
                     Task.findById(savedId)
                         .then(task => {
                             if (task.done) {
-                                console.log('TASK UKONCZONY')
+                                console.log('TASK UKONCZONY Z RESULTATEM....')
                                 //console.log(task)
                                 if (!task.error) {
 
@@ -98,8 +98,10 @@ exports.runTaskOK = (taskType, fileAudio, fileTxt = null,
 
                                 } else {
                                     console.log('WYSTAPIL ERROR W DOCKERZE!!!!!')
-                                    reject(error);
+                                    console.log(task)
                                     clearInterval(checkerdb);
+                                    reject(error);
+                                   
                                 }
 
                                 clearInterval(checkerdb);
@@ -108,8 +110,8 @@ exports.runTaskOK = (taskType, fileAudio, fileTxt = null,
                         })
                         .catch(error => {
                             console.log('Error: ' + error);
-                            reject(error);
                             clearInterval(checkerdb);
+                            reject(error);
                         });
                 }, 1000);
 

@@ -5,6 +5,7 @@ const bodyParser = require('body-parser'); //do validacji
 const mongoose = require('mongoose'); //do komunikacji z baza
 const multer = require('multer'); //for handlind multipart/form-data - upload files
 const appRoot = require('app-root-path'); //zwraca roota aplikacji
+//var cors = require('cors');
 
 
 global.__basedir = __dirname;
@@ -41,6 +42,17 @@ const authRoutes =  require('./routes/auth');
 
 const app = express();
 
+
+// rozwiazanie dla cross-origin...
+app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    next();
+});
+
+//app.use(cors());
+
 // dla rzadan zakodowanych w application/json
 app.use(bodyParser.urlencoded());
 app.use(bodyParser.json());
@@ -48,13 +60,7 @@ app.use(bodyParser.json());
 //do kompresji...
 app.use(compression());
 
-// rozwiazanie dla cross-origin...
-app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    next();
-});
+
 
 
 
