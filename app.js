@@ -5,6 +5,7 @@ const bodyParser = require('body-parser'); //do validacji
 const mongoose = require('mongoose'); //do komunikacji z baza
 const multer = require('multer'); //for handlind multipart/form-data - upload files
 const appRoot = require('app-root-path'); //zwraca roota aplikacji
+const config = require('./config.js');
 //var cors = require('cors');
 
 
@@ -34,6 +35,7 @@ const fileFilter = (req, file, cb) => {
 //importuje routes
 const projectsListRoutes = require('./routes/projectsList');
 const recognitionRoutes =  require('./routes/recognitionTool');
+const segmentationRoutes = require('./routes/segmentationTool');
 const repoRoutes = require('./routes/repo');
 const authRoutes =  require('./routes/auth');
 
@@ -112,6 +114,7 @@ app.use('/repo/', express.static(path.join(__dirname, 'repo/')));
 //forwarduje kazde nadchodzace rzadanie do tych roterow
 app.use('/projectsList', projectsListRoutes);
 app.use('/recognition', recognitionRoutes);
+app.use('/segmentation', segmentationRoutes);
 app.use('/repoFiles', repoRoutes);
 app.use('/auth', authRoutes);
 
@@ -129,7 +132,7 @@ mongoose
     .connect('mongodb://127.0.0.1:27017/workers')
     .then(result => {
 
-        app.listen(1234);
+        app.listen(config.port);
         console.log("POLACZONY")
     })
     .catch(error => {

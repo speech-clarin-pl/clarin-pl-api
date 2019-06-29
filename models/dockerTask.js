@@ -23,7 +23,7 @@ const task = new Schema({
         default: new Date().toUTCString(),
     },
     input: {
-        type: String,
+        type: Schema.Types.Mixed,
         required: true
     },
     result: {

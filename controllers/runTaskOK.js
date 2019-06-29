@@ -8,11 +8,19 @@ exports.runTaskOK = (taskType, fileAudio, fileTxt = null,
     userId, projectId, sentEntryId) => {
     return new Promise((resolve, reject) => {
 
+         console.log('PARAMETRY W RUN TASK: ')
+         console.log(taskType)
+         console.log(fileAudio)
+         console.log(fileTxt)
+         console.log(userId)
+         console.log(projectId)
+         console.log(sentEntryId)
+
         //nazwa pliku w katalogu repo
         const audioFileName = fileAudio;
-        if (fileTxt) {
-            const textFileName = fileTxt;
-        }
+        const textFileName = fileTxt;
+    
+        console.log(textFileName)
 
         // buduje wpis do bazy danych
         task = {
@@ -24,11 +32,34 @@ exports.runTaskOK = (taskType, fileAudio, fileTxt = null,
 
         //rozpoznaje rodzaj tasku
         switch (taskType) {
-            case ('recognize'):
+            case ('text_normalize' ||
+                  'ffmpeg' ||
+                  'recognize' ||
+                  'diarize' || 
+                  'vad'):
                 task = { ...task, input: audioFileName };
-                console.log('RUN TASK RECOGNIZE')
+                console.log('RUN TASK')
                 console.log(task)
                 break;
+            case ('forcealign' ||
+                  'segmentalign'):
+                task = { ...task, 
+                    input: {
+                        audio: audioFileName,
+                        text: textFileName
+                    } };
+                console.log('RUN SEGMENTATION')
+                console.log(task)
+                break;
+            case ('kws'):
+              task = { ...task, 
+                  input: {
+                      audio: audioFileName,
+                      keywords: textFileName
+                  } };
+              console.log('RUN KWS')
+              console.log(task)
+              break;
             default:
                 console.log("ERROR: Unknown task " + taskType);
         }
@@ -49,59 +80,152 @@ exports.runTaskOK = (taskType, fileAudio, fileTxt = null,
                 savedId = task._id;
                 console.log('Creacted task: ' + savedId);
 
+
+
                 //odpytuje baze co sekunde czy ukonczony jest task
                 // To start the loop
-
                 console.log("waiting for task to finish....")
                 let checkerdb = setInterval(function () {
 
                     Task.findById(savedId)
                         .then(task => {
+
+                            
+
                             if (task.done) {
                                 console.log('TASK UKONCZONY Z RESULTATEM....')
                                 //console.log(task)
                                 if (!task.error) {
 
-                                    //console.log('przenosze pliki do katalogu usera')
-                                    //wtedy przenosze resultaty do katalogu uzytkownika
-                                    const audioFile = task.input;
-                                    const resultFile = task.result;
-                                    //console.log(audioFile)
-                                    //console.log(resultFile)
+                                    let audioFile = null;
+                                    let resultFile = null;
+                                    let txtFile = null;
 
-                                    utils.moveFileToUserRepo(projectId, userId, audioFile)
-                                        .then(dir => {
+                                    //rozpoznaje rodzaj tasku
+                                    switch (taskType) {
+                                        case ('text_normalize' ||
+                                            'ffmpeg' ||
+                                            'recognize' ||
+                                            'diarize' || 
+                                            'vad'):
 
-                                            console.log('udalo sie przeniesc plik audio do katalogu usera')
-                                            if (task.result) {
+                                            audioFile = task.input;
+                                            resultFile = task.result;
+                                           
+                                            utils.moveFileToUserRepo(projectId, userId, audioFile)
+                                                .then(dir => {
+        
+                                                    console.log('udalo sie przeniesc plik audio do katalogu usera')
+                                                    if (task.result) {
+        
+                                                        //console.log('mamy task result')
+                                                        //console.log(task)
+                                                        //console.log('przenosze rezultat do katalogu usera')
+                                                        utils.moveFileToUserRepo(projectId, userId, resultFile)
+                                                            .then(dir => {
+                                                                console.log('udalo sie przeniesc plik rezultatow do katalogu usera')
+                                                                resolve(task);
+                                                            })
+                                                            .catch(err => {
+                                                                console.log('error z przeniesieniem pliku rezultatow do katalogu usera!');
+                                                                reject(err);
+                                                            })
+                                                    }
+                                                })
+                                                .catch(err => {
+                                                    console.log('problem z przeniesieniem pliku/ow!');
+                                                    reject(err);
+        
+                                                });                                            
+                                            
+                                            break;
+                                        case ('forcealign' ||
+                                            'segmentalign'):
 
-                                                //console.log('mamy task result')
-                                                //console.log(task)
-                                                //console.log('przenosze rezultat do katalogu usera')
-                                                utils.moveFileToUserRepo(projectId, userId, resultFile)
-                                                    .then(dir => {
-                                                        console.log('udalo sie przeniesc plik rezultatow do katalogu usera')
-                                                        resolve(task);
-                                                    })
-                                                    .catch(err => {
-                                                        console.log('error z przeniesieniem pliku rezultatow do katalogu usera!');
-                                                        reject(err);
+                                            audioFile = task.input.audio;
+                                            txtFile = task.input.text;
+                                            resultFile = task.result;
+                                           
+                                            utils.moveFileToUserRepo(projectId, userId, audioFile)
+                                                .then(dir => {
+                                                    utils.moveFileToUserRepo(projectId, userId, txtFile)
+                                                        .then(dir => {
+                                                            if (task.result) {
+        
+                                                                //console.log('mamy task result')
+                                                                //console.log(task)
+                                                                //console.log('przenosze rezultat do katalogu usera')
+                                                                utils.moveFileToUserRepo(projectId, userId, resultFile)
+                                                                    .then(dir => {
+                                                                        console.log('udalo sie przeniesc plik rezultatow do katalogu usera')
+                                                                        resolve(task);
+                                                                    })
+                                                                    .catch(err => {
+                                                                        console.log('error z przeniesieniem pliku rezultatow do katalogu usera!');
+                                                                        reject(err);
+                                                                    })
+                                                            }
+                                                        })
+                                                        .catch(err => {
+                                                            console.log('problem z przeniesieniem pliku txt!');
+                                                            reject(err);
+                                                        })
+                                                })
+                                                .catch(err => {
+                                                    console.log('problem z przeniesieniem pliku audio!');
+                                                    reject(err);
+        
+                                                });   
+                                            
+                                            break;
+                                        case ('kws'):
 
-                                                    })
-                                            }
-                                        })
-                                        .catch(err => {
-                                            console.log('problem z przeniesieniem pliku/ow!');
-                                            reject(err);
+                                            audioFile = task.input.audio;
+                                            txtFile = task.input.keywords;
+                                            resultFile = task.result;
+                                           
+                                            utils.moveFileToUserRepo(projectId, userId, audioFile)
+                                                .then(dir => {
+                                                    utils.moveFileToUserRepo(projectId, userId, txtFile)
+                                                        .then(dir => {
+                                                            if (task.result) {
+        
+                                                                //console.log('mamy task result')
+                                                                //console.log(task)
+                                                                //console.log('przenosze rezultat do katalogu usera')
+                                                                utils.moveFileToUserRepo(projectId, userId, resultFile)
+                                                                    .then(dir => {
+                                                                        console.log('udalo sie przeniesc plik rezultatow do katalogu usera')
+                                                                        resolve(task);
+                                                                    })
+                                                                    .catch(err => {
+                                                                        console.log('error z przeniesieniem pliku rezultatow do katalogu usera!');
+                                                                        reject(err);
+                                                                    })
+                                                            }
+                                                        })
+                                                        .catch(err => {
+                                                            console.log('problem z przeniesieniem pliku txt!');
+                                                            reject(err);
+                                                        })
+                                                })
+                                                .catch(err => {
+                                                    console.log('problem z przeniesieniem pliku audio!');
+                                                    reject(err);
+        
+                                                });                                           
+                                        
+                                            break;
+                                        default:
+                                            console.log("ERROR: Unknown task " + taskType);
+                                    }
 
-                                        });
 
                                 } else {
                                     console.log('WYSTAPIL ERROR W DOCKERZE!!!!!')
                                     console.log(task)
                                     clearInterval(checkerdb);
                                     reject(error);
-                                   
                                 }
 
                                 clearInterval(checkerdb);
@@ -120,6 +244,10 @@ exports.runTaskOK = (taskType, fileAudio, fileTxt = null,
                     clearInterval(checkerdb);
                 }, 1800000);
                 //docelowo na 30min czyli 1800000
+
+
+                
+
             })
             .catch(error => {
                 console.log("ERROR IN runTask");

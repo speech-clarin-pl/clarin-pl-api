@@ -6,6 +6,7 @@ const rimraf = require("rimraf");
 const appRoot = require('app-root-path'); //zwraca roota aplikacji
 const moment = require('moment');
 const utilsForFiles = require('../utils/utils');
+const config = require('../config');
 
 
 //##########################################
@@ -174,10 +175,14 @@ exports.getRepoFiles = (req, res, next) => {
       //const fileSize = 4.2 * 1024 * 1024;
       const fileSize = fs.statSync(path).size;
 
+    
+      const urltopass = config.publicApiAddress + path.replace(appRoot, '');
+
       let fileEntry = {
         key: relativePath,
         modified: fileModified,
         size: fileSize,
+        url: urltopass
       }
       return fileEntry;
     })
