@@ -30,33 +30,70 @@ exports.runTaskOK = (taskType, fileAudio, fileTxt = null,
             time: new Date().toUTCString(),
         }
 
+        let inputType = 0;
+        //0 when only filename
+        //1 when audio and text provided
+        //2 when audio and keywords provided
+
         //rozpoznaje rodzaj tasku
         switch (taskType) {
-            case ('text_normalize' ||
-                  'ffmpeg' ||
-                  'recognize' ||
-                  'diarize' || 
-                  'vad'):
+            case('text_normalize'):
                 task = { ...task, input: audioFileName };
-                console.log('RUN TASK')
+                inputType = 0;
+                console.log('RUN TASK text_normalize')
                 console.log(task)
                 break;
-            case ('forcealign' ||
-                  'segmentalign'):
+            case('ffmpeg'):
+                task = { ...task, input: audioFileName };
+                inputType = 0;
+                console.log('RUN TASK ffmpeg')
+                console.log(task)
+                break;
+            case('recognize'):
+                task = { ...task, input: audioFileName };
+                inputType = 0;
+                console.log('RUN TASK recognize')
+                console.log(task)
+                break;
+            case('diarize'):
+                task = { ...task, input: audioFileName };
+                inputType = 0;
+                console.log('RUN TASK diarize')
+                console.log(task)
+                break;
+            case ('vad'):
+                task = { ...task, input: audioFileName };
+                inputType = 0;
+                console.log('RUN vad')
+                console.log(task)
+                break;
+            case ('forcealign'):
                 task = { ...task, 
                     input: {
                         audio: audioFileName,
                         text: textFileName
                     } };
-                console.log('RUN SEGMENTATION')
+                inputType = 1;
+                console.log('RUN SEGMENTATION forcealign')
                 console.log(task)
                 break;
+            case ('segmentalign'):
+                    task = { ...task, 
+                         input: {
+                            audio: audioFileName,
+                            text: textFileName
+                        } };
+              inputType = 1;
+              console.log('RUN SEGMENTATION segmentalign')
+              console.log(task)
+              break;
             case ('kws'):
               task = { ...task, 
                   input: {
                       audio: audioFileName,
                       keywords: textFileName
                   } };
+              inputType = 2;
               console.log('RUN KWS')
               console.log(task)
               break;
@@ -80,8 +117,6 @@ exports.runTaskOK = (taskType, fileAudio, fileTxt = null,
                 savedId = task._id;
                 console.log('Creacted task: ' + savedId);
 
-
-
                 //odpytuje baze co sekunde czy ukonczony jest task
                 // To start the loop
                 console.log("waiting for task to finish....")
@@ -89,8 +124,6 @@ exports.runTaskOK = (taskType, fileAudio, fileTxt = null,
 
                     Task.findById(savedId)
                         .then(task => {
-
-                            
 
                             if (task.done) {
                                 console.log('TASK UKONCZONY Z RESULTATEM....')
@@ -102,12 +135,8 @@ exports.runTaskOK = (taskType, fileAudio, fileTxt = null,
                                     let txtFile = null;
 
                                     //rozpoznaje rodzaj tasku
-                                    switch (taskType) {
-                                        case ('text_normalize' ||
-                                            'ffmpeg' ||
-                                            'recognize' ||
-                                            'diarize' || 
-                                            'vad'):
+                                    switch (inputType) {
+                                        case (0):
 
                                             audioFile = task.input;
                                             resultFile = task.result;
@@ -139,8 +168,7 @@ exports.runTaskOK = (taskType, fileAudio, fileTxt = null,
                                                 });                                            
                                             
                                             break;
-                                        case ('forcealign' ||
-                                            'segmentalign'):
+                                        case (1):
 
                                             audioFile = task.input.audio;
                                             txtFile = task.input.text;
@@ -178,7 +206,7 @@ exports.runTaskOK = (taskType, fileAudio, fileTxt = null,
                                                 });   
                                             
                                             break;
-                                        case ('kws'):
+                                        case (2):
 
                                             audioFile = task.input.audio;
                                             txtFile = task.input.keywords;

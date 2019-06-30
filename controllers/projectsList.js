@@ -1,5 +1,7 @@
 const fs = require('fs');
 const path = require('path');
+const moment = require('moment');
+const fsextra = require('fs-extra');
 
 const {validationResult} = require('express-validator/check');
 
@@ -22,6 +24,10 @@ exports.getProjectsList = (req, res, next) => {
                 throw error;
             }
 
+
+           // console.log(projectsList)
+           // console.log("-----------------")
+           // console.log(formatterProjectsList)
 
             res.status(200).json({message: 'Projects list featched!', projects: projectsList})
         })
@@ -99,13 +105,25 @@ exports.createProject = (req, res, next) => {
                     console.log(err);
                     return err;
                 } else {
-                    // else print a success message.
-                    console.log("Successfully created project directory for this user");
-                    res.status(201).json({
-                        message: 'The project created successfully!',
-                        project: projectEntry,
-                        owner: {_id: owner._id, name: owner.name}
-                    });
+
+                    //kopiuje pliki demo do repo usera
+                    fsextra.copy(appRoot + '/repo/demo_files', dirpath + '/demo_files', function (err) {
+                        if (err) {
+                          console.error(err);
+                          return err;
+                        } else {
+                          
+                           // else print a success message.
+                            console.log("Successfully created project directory for this user");
+                            res.status(201).json({
+                                message: 'The project created successfully!',
+                                project: projectEntry,
+                                owner: {_id: owner._id, name: owner.name}
+                            });
+                        }
+                      });
+
+                   
                 }
             });
 
