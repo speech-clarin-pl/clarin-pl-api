@@ -7,7 +7,7 @@ const multer = require('multer'); //for handlind multipart/form-data - upload fi
 const appRoot = require('app-root-path'); //zwraca roota aplikacji
 const config = require('./config.js');
 //var cors = require('cors');
-
+const db_path = process.env.DB_PATH || 'mongodb://127.0.0.1:27017/workers';
 
 global.__basedir = __dirname;
 
@@ -129,7 +129,7 @@ app.use((error, req, res, next) => {
 
 //najpierw lacze sie z baza a nastepnie startuje serwer
 mongoose
-    .connect('mongodb://127.0.0.1:27017/workers')
+    .connect(db_path)
     .then(result => {
 
         app.listen(config.port);
