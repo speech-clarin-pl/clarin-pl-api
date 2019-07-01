@@ -19,7 +19,6 @@ const compression = require('compression');
 
 //konfiguracja jakich typow plikow oczekujemy
 const fileFilter = (req, file, cb) => {
-
     if (file.mimetype === 'audio/mpeg' ||
         file.mimetype === 'audio/mp3' ||
         file.mimetype === 'audio/vnd.wav'
@@ -30,7 +29,6 @@ const fileFilter = (req, file, cb) => {
         cb(null, false);
     }
 }
-
 
 //importuje routes
 const projectsListRoutes = require('./routes/projectsList');
@@ -43,7 +41,6 @@ const authRoutes =  require('./routes/auth');
 //###############################################
 
 const app = express();
-
 
 // rozwiazanie dla cross-origin...
 app.use((req, res, next) => {
@@ -61,18 +58,6 @@ app.use(bodyParser.json());
 
 //do kompresji...
 app.use(compression());
-
-
-
-
-
-
-//tutaj musze odebraz zadanie o zalogowanym uzytkowniu 
-//i odpowiednio wskazac do jakiego katalogu ma uploadowac pliki
-app.use((req, res, next) => {
-
-    next();
-});
 
 //konfiguracja multera - narazie akceptuje pojedynczy plik
 //app.use(multer({storage: fileStorage, fileFilter: fileFilter}).single('audioFile'));
@@ -95,12 +80,10 @@ app.use(upload,function (req, res, next) {
         next();
     });
     
- 
 
 
 //tutaj ustawiam katalog repo aby byl statyczny i widoczny publicznie - tymczasowo
 app.use('/repo/', express.static(path.join(__dirname, 'repo/')));
-
 
 
 // const baseUrl = process.env.BASE_URL || '/';

@@ -21,11 +21,6 @@ exports.registration = (req, res, next) => {
     const name = req.body.name+'';
     const password = req.body.password+'';
 
-    //console.log(email)
-    //console.log(name)
-    //console.log(password)
-
-    //haszuje haslo
     bcrypt.hash(password,12)
     .then(hashedPass => {
 
@@ -34,8 +29,6 @@ exports.registration = (req, res, next) => {
             password: hashedPass,
             name: name
         });
-
-        //console.log(user)
 
         return user.save();
     })
@@ -103,7 +96,7 @@ exports.login = (req, res, next) => {
             const token = jwt.sign({
                 email: loadedUser.email, 
                 userId: loadedUser._id.toString()
-            }, 'olaujelajajo',
+            }, 'qwer1234QWER!@#$',
             {expiresIn: '10h'});
 
             res.status(200).json({token: token, userId: loadedUser._id.toString(), userName:loadedUser.name });

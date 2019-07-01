@@ -75,7 +75,8 @@ exports.createProject = (req, res, next) => {
         name: reqProjectName,
         owner: req.userId,
         accessToRead: [],
-        accessToEdit: []
+        accessToEdit: [],
+        projectCreated: moment().format('MMMM Do YYYY, h:mm:ss a'),
     });
 
     //zapisuje do bazy
