@@ -6,6 +6,8 @@ const mongoose = require('mongoose'); //do komunikacji z baza
 const multer = require('multer'); //for handlind multipart/form-data - upload files
 const appRoot = require('app-root-path'); //zwraca roota aplikacji
 const config = require('./config.js');
+const log = require('simple-node-logger').createSimpleLogger('projectLogs.log'); //logging
+
 //var cors = require('cors');
 const db_path = process.env.DB_PATH || 'mongodb://127.0.0.1:27017/workers';
 

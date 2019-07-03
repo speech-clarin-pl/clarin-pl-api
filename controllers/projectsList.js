@@ -106,23 +106,39 @@ exports.createProject = (req, res, next) => {
                     console.log(err);
                     return err;
                 } else {
+                    
+                    //kopiuje pliki z demo do katalogu usera
+                    try {
+                        fs.statSync(appRoot + '/repo/demo_files');
 
-                    //kopiuje pliki demo do repo usera
-                    fsextra.copy(appRoot + '/repo/demo_files', dirpath + '/demo_files', function (err) {
-                        if (err) {
-                          console.error(err);
-                          return err;
-                        } else {
-                          
-                           // else print a success message.
-                            console.log("Successfully created project directory for this user");
-                            res.status(201).json({
-                                message: 'The project created successfully!',
-                                project: projectEntry,
-                                owner: {_id: owner._id, name: owner.name}
-                            });
-                        }
-                      });
+                         //kopiuje pliki demo do repo usera
+                        fsextra.copy(appRoot + '/repo/demo_files', dirpath + '/demo_files', function (err) {
+                            if (err) {
+                            console.error(err);
+                            return err;
+                            } else {
+                            
+                            // else print a success message.
+                                console.log("Successfully created project directory for this user");
+                                res.status(201).json({
+                                    message: 'The project created successfully!',
+                                    project: projectEntry,
+                                    owner: {_id: owner._id, name: owner.name}
+                                });
+                            }
+                        });
+
+                    } catch(e) {
+                        console.log("BLAD W PRZENOSZENIU KATALOGU DEMO");
+                        console.log("STWORZONO PROJEKT BEZ KATALOGU DEMO");
+                        res.status(201).json({
+                            message: 'The project created successfully!',
+                            project: projectEntry,
+                            owner: {_id: owner._id, name: owner.name}
+                        });
+                    }
+
+                   
 
                    
                 }
