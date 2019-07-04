@@ -164,6 +164,8 @@ exports.getRepoFiles = (req, res, next) => {
   //sciezka do plikow danego usera i danego projektu
   const repoPath = appRoot + "/repo/" + userId + "/" + projectId;
 
+  const repoStatic = userId + "/" + projectId;
+
   utilsForFiles.readDir(repoPath, function (filePaths) {
     //sciezki zawieraja pewne sciezki wiec je przeksztalcam na relatywne
     const userfiles = filePaths.map(path => {
@@ -176,8 +178,17 @@ exports.getRepoFiles = (req, res, next) => {
       const fileSize = fs.statSync(path).size;
 
     
-      const urltopass = config.publicApiAddress + path.replace(appRoot, '');
+      //const urltopass = config.publicApiAddress + path.replace(appRoot, '');
+      
+      const urltopass = config.publicApiAddress + '/' + repoStatic + relativePath;
 
+      console.log(urltopass)
+      console.log(path)
+      console.log(relativePath)
+      console.log(appRoot)
+
+      //const urltopass = config.publicApiAddress + path.replace(appRoot, '');
+      
       let fileEntry = {
         key: relativePath,
         modified: fileModified,

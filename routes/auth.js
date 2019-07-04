@@ -15,8 +15,7 @@ router.put('/registration',[
                     return Promise.reject('Email address already exists!');
                 }
             })
-        })
-        .normalizeEmail(),
+        }),
     body('password').trim().isLength({min: 6}),
     body('name').trim().not().isEmpty()
 ], authController.registration);

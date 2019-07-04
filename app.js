@@ -7,6 +7,7 @@ const multer = require('multer'); //for handlind multipart/form-data - upload fi
 const appRoot = require('app-root-path'); //zwraca roota aplikacji
 const config = require('./config.js');
 const log = require('simple-node-logger').createSimpleLogger('projectLogs.log'); //logging
+var cors = require('cors');
 
 //var cors = require('cors');
 const db_path = process.env.DB_PATH || 'mongodb://127.0.0.1:27017/workers';
@@ -44,15 +45,20 @@ const authRoutes =  require('./routes/auth');
 
 const app = express();
 
-// rozwiazanie dla cross-origin...
+//app.use(cors());
+
+//rozwiazanie dla cross-origin...
+// var allowedOrigins = ['http://clarin.korzinek.com:1234', 
+// 'http://localhost:1234', 'http://clarin.korzinek.com:80', 'http://clarin.korzinek.com'];
+
 app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+    res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Length, Content-Type, Accept, Authorization');
     next();
 });
 
-//app.use(cors());
+
 
 // dla rzadan zakodowanych w application/json
 app.use(bodyParser.urlencoded());
@@ -85,7 +91,8 @@ app.use(upload,function (req, res, next) {
 
 
 //tutaj ustawiam katalog repo aby byl statyczny i widoczny publicznie - tymczasowo
-app.use('/repo/', express.static(path.join(__dirname, 'repo/')));
+app.use(express.static(path.join(__dirname, 'repo/')));
+
 
 
 // const baseUrl = process.env.BASE_URL || '/';
@@ -102,6 +109,10 @@ app.use('/recognition', recognitionRoutes);
 app.use('/segmentation', segmentationRoutes);
 app.use('/repoFiles', repoRoutes);
 app.use('/auth', authRoutes);
+
+// app.use('/repo',cors(),( req, res, next) => {
+//     next();
+// })
 
 //error handling...
 app.use((error, req, res, next) => {
