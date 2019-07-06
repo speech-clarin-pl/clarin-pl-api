@@ -176,8 +176,7 @@ exports.getRepoFiles = (req, res, next) => {
 
       //const fileSize = 4.2 * 1024 * 1024;
       const fileSize = fs.statSync(path).size;
-
-    
+      
       //const urltopass = config.publicApiAddress + path.replace(appRoot, '');
       
       const urltopass = config.publicApiAddress + '/' + repoStatic + relativePath;
