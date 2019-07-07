@@ -6,7 +6,7 @@ const rimraf = require("rimraf");
 const appRoot = require('app-root-path'); //zwraca roota aplikacji
 const moment = require('moment');
 const utilsForFiles = require('../utils/utils');
-const config = require('../config');
+const config = require('../config.js');
 
 
 //##########################################
