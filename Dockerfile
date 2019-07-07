@@ -1,13 +1,11 @@
-FROM node
+FROM node:slim
 
-WORKDIR /usr/src/app
-
-RUN npm install -g serve
+WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm install 
+RUN npm install -g
 
 COPY . .
 
-CMD [ "npm", "start" ]
+CMD [ "node", "app.js" ]
