@@ -104,6 +104,26 @@ exports.deleteFile = (req, res, next) => {
 }
 
 //##########################################
+//#### file download ######
+//#######################################
+exports.downloadFile = (req,res,next) => {
+  const userId = req.query.userId;
+  const projectId = req.query.projectId;
+  const fileKey = req.query.fileKey;
+
+
+
+  const pathToDownload = config.publicApiAddress + '/'+userId + "/" + projectId + fileKey;
+
+  console.log('DOWNLOAD FILE');
+  console.log(pathToDownload)
+
+  //res.download(pathToDownload);
+  res.status(200).json({pathToDownload: pathToDownload, message: 'you can download the file'});
+
+}
+
+//##########################################
 //#### zmieniam nazwe pliku ######
 //#######################################
 exports.renameFile = (req, res, next) => {

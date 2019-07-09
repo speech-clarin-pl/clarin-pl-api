@@ -4,8 +4,7 @@ const router = express.Router();
 const isAuth = require('../middleware/is-auth');
 
 
-// GET /repoFiles/userId - do pobierania listy plikow
-router.get('/:projectId', isAuth, repoController.getRepoFiles);
+
 
 //POST /repoFiles/createFolder  - tworzy folder OK
 router.post('/createFolder', isAuth, repoController.createFolder);
@@ -22,8 +21,14 @@ router.delete('/deleteFolder/', isAuth, repoController.deleteFolder);
 //DELETE /repoFiles/deleteFile/userId - usuwa folder
 router.delete('/deleteFile/', isAuth, repoController.deleteFile);
 
+//DELETE /repoFiles/downloadFile/userId - usuwa folder
+router.get('/downloadFile/', isAuth, repoController.downloadFile);
+
 //PUT /repoFiles/renameFile/userId - do zmiany nazwy pliku
 router.put('/renameFile/', isAuth, repoController.renameFile);
+
+// GET /repoFiles/userId - do pobierania listy plikow
+router.get('/:projectId', isAuth, repoController.getRepoFiles);
 
 //PUT /repoFiles/renameFile/userId - do zmiany nazwy pliku
 //router.put('/moveFile/:projectId', isAuth, repoController.moveFile);
