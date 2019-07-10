@@ -1,5 +1,9 @@
 const jwt = require('jsonwebtoken');
 
+const config = require('../config');
+const dotenv = require('dotenv');
+dotenv.config();
+
 module.exports = (req, res, next) => {
     //sprawdzam czy token jest poprawny
     const authHeader = req.get('Authorization');
@@ -13,7 +17,7 @@ module.exports = (req, res, next) => {
     const token = authHeader.split(' ')[1];
     let decodedToken;
     try {
-        decodedToken = jwt.verify(token, 'qwer1234QWER!@#$');
+        decodedToken = jwt.verify(token, config.tokenKey);
     } catch (err){
         err.statusCode = 500;
         throw err;

@@ -3,9 +3,6 @@ const repoController = require('../controllers/repo');
 const router = express.Router();
 const isAuth = require('../middleware/is-auth');
 
-
-
-
 //POST /repoFiles/createFolder  - tworzy folder OK
 router.post('/createFolder', isAuth, repoController.createFolder);
 
@@ -32,8 +29,6 @@ router.get('/:projectId', isAuth, repoController.getRepoFiles);
 
 //PUT /repoFiles/renameFile/userId - do zmiany nazwy pliku
 //router.put('/moveFile/:projectId', isAuth, repoController.moveFile);
-
-
 
 
 module.exports = router;

@@ -4,9 +4,14 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
 const path = require('path');
+const config = require('../config');
+const dotenv = require('dotenv');
+dotenv.config();
+
 var mkdirp = require("mkdirp"); //do tworzenia folderu
 //var rimraf = require("rimraf"); 
 var appRoot = require('app-root-path'); //zwraca roota aplikacji
+
 
 
 exports.registration = (req, res, next) => {
@@ -96,7 +101,7 @@ exports.login = (req, res, next) => {
             const token = jwt.sign({
                 email: loadedUser.email, 
                 userId: loadedUser._id.toString()
-            }, 'qwer1234QWER!@#$',
+            }, config.tokenKey,
             {expiresIn: '10h'});
 
             res.status(200).json({token: token, userId: loadedUser._id.toString(), userName:loadedUser.name });
