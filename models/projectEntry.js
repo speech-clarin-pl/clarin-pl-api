@@ -23,7 +23,13 @@ const projectEntrySchema = new Schema({
     accessToEdit: {
         type: Array,
         required: false,
-    }
+    },
+    files: [
+        {
+            type: Schema.Types.ObjectId,
+            ref: 'ProjectFile'
+        }
+    ]
 }, {timestamps: true});
 
 module.exports = mongoose.model('ProjectEntry', projectEntrySchema);

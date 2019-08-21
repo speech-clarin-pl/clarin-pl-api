@@ -2,11 +2,13 @@ const fs = require('fs');
 const path = require('path');
 const moment = require('moment');
 const fsextra = require('fs-extra');
+const utilsForFiles = require('../utils/utils');
 
 const {validationResult} = require('express-validator/check');
 
 //importuje model wpisu projektu
 const ProjectEntry = require('../models/projectEntry');
+const ProjectFile = require('../models/projectFile');
 const User = require('../models/user');
 
 var mkdirp = require("mkdirp"); //do tworzenia folderu
@@ -23,11 +25,6 @@ exports.getProjectsList = (req, res, next) => {
                 error.statusCode = 404;
                 throw error;
             }
-
-
-           // console.log(projectsList)
-           // console.log("-----------------")
-           // console.log(formatterProjectsList)
 
             res.status(200).json({message: 'Projects list featched!', projects: projectsList})
         })
@@ -67,22 +64,30 @@ exports.createProject = (req, res, next) => {
         throw error;
     }
 
+
+    //--------------------------
+
     const reqProjectName = req.body.projectName;
     let owner;
+    let createdProject;
 
     //tworze nowy wpis w bazie za pomoca modelu
-    const projectEntry = new ProjectEntry({
+    let projectEntry = new ProjectEntry({
         name: reqProjectName,
         owner: req.userId,
         accessToRead: [],
         accessToEdit: [],
         projectCreated: moment().format('MMMM Do YYYY, h:mm:ss a'),
+        files: [],
     });
 
     //zapisuje do bazy
     projectEntry
         .save()
-        .then(result => {
+        .then(resultPE => {
+
+            createdProject = resultPE;
+
             //znajduje uzytkownika w bazie
             return User.findById(req.userId);
         })
@@ -91,39 +96,72 @@ exports.createProject = (req, res, next) => {
             //teraz to jest zalogowany user
             //wydobywam wiec projekty tylko tego usera
             owner = user;
-            console.log(user)
+            //console.log(user)
             user.projects.push(projectEntry);
             return user.save();
-
         })
-        .then(result => {
+        .then(resultUser => {
 
             //tutaj tworzenie folder z plikami projektu dla danego usera
             const dirpath = appRoot + '/repo/'+owner._id+'/'+projectEntry._id;
             mkdirp(dirpath, function(err) {
-                // if any errors then print the errors to our console
+
+                // if any errors then print the errors to  console
                 if (err) {
                     console.log(err);
                     return err;
                 } else {
                     
-                    //kopiuje pliki z demo do katalogu usera
                     try {
-                        fs.statSync(appRoot + '/repo/demo_files');
+                        //fs.statSync(appRoot + '/repo/demo_files');
 
                          //kopiuje pliki demo do repo usera
                         fsextra.copy(appRoot + '/repo/demo_files', dirpath + '/demo_files', function (err) {
+                            
                             if (err) {
-                            console.error(err);
-                            return err;
+                                console.error(err);
+                                return err;
                             } else {
                             
-                            // else print a success message.
-                                console.log("Successfully created project directory for this user");
-                                res.status(201).json({
-                                    message: 'The project created successfully!',
-                                    project: projectEntry,
-                                    owner: {_id: owner._id, name: owner.name}
+                                //dodaje te pliki demo bo bazy danych
+
+                                utilsForFiles.readDir(dirpath + '/demo_files', function (filePaths) {
+                                    //sciezki zawieraja pewne sciezki wiec je przeksztalcam na relatywne
+                                    const demofiles = filePaths.map(path => {
+
+                                        const relativePath = path.replace(dirpath, '');
+                                        const fileModified = +moment(fs.statSync(path).mtime);
+                                        const fileSize = fs.statSync(path).size;
+                                    
+                                        //tworze nowy wpis w bazie za pomoca modelu
+                                        const projectFile = new ProjectFile({
+                                            name: relativePath,
+                                            fileSize: fileSize,
+                                            fileModified: fileModified,
+                                            projectOwner: createdProject._id,
+                                        });
+
+                                        projectEntry.files.push(projectFile);
+
+                                        return projectFile;
+                                    })
+
+                                    //zapisuje pliki w kolekcji z plikami z odniesieniem do projektu
+
+                                    ProjectFile.insertMany(demofiles)
+                                    .then(df => {
+                                        console.log("zapisuje projectEntry")
+                                        projectEntry.save()
+                                        .then(resultProjectentry => {
+                                            // else print a success message.
+                                            console.log("Successfully created project directory for this user");
+                                            res.status(201).json({
+                                                message: 'The project created successfully!',
+                                                project: projectEntry,
+                                                owner: {_id: owner._id, name: owner.name}
+                                            });
+                                        }) 
+                                    })
                                 });
                             }
                         });
@@ -137,14 +175,8 @@ exports.createProject = (req, res, next) => {
                             owner: {_id: owner._id, name: owner.name}
                         });
                     }
-
-                   
-
-                   
                 }
             });
-
-            
         })
         .catch(error => {
             if(!error.statusCode){
@@ -159,12 +191,12 @@ exports.deleteProject = (req,res,next) => {
     const projectId = req.body.idprojektu;
 
     console.log("DELETE PROJECT")
-    console.log(req.body.idprojektu)
+    console.log(req.body.idprojektu);
+
+    let projectToDelete;
 
     ProjectEntry.findById(projectId)
         .then(projectEntry => {
-
-            
 
             if(!projectEntry){
                 const error = new Error('Could not find the project entry');
@@ -178,28 +210,28 @@ exports.deleteProject = (req,res,next) => {
                 error.statusCode = 403;
                 throw error;
             }
-
-
             
             //usuwam z bazy ten projekt
             return ProjectEntry.findByIdAndRemove(projectId);
         })
         .then(projectEntry => {
             
-            let projectToDelete = projectEntry;
+            projectToDelete = projectEntry;
             return User.findById(req.userId);
-            
         })
         .then(user => {
             //czyszcze relacje z colekcja usera- tam tez trzeba wyrzucic referencje do projektu
             user.projects.pull(projectId);
-            return user.save();
-           
+
+            //czyszcze wszystkie pliki ktorych projectOwner to usuwany projekt 
+            ProjectFile.deleteMany({projectOwner: projectToDelete._id})
+            .then(pf => {
+                return user.save();
+            })
         })
         .then(result => {
             //usuwam wszystkie pliki w projekcie danego uzytkownika
             const dirpath = appRoot + '/repo/'+req.userId + '/'+projectId;
-            console.log(dirpath)
             rimraf(dirpath, function(err) {
                 if (err) {
                     console.log(err);
@@ -207,7 +239,6 @@ exports.deleteProject = (req,res,next) => {
                 } else {
                     console.log("Successfully deleted a user directory");
                 }
-               
               });
 
             res.status(200).json({message: 'Project removed!', projectId: projectId})

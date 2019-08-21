@@ -3,7 +3,6 @@ const Task = require('../models/dockerTask');
 const appRoot = require('app-root-path'); //zwraca roota aplikacji   
 const utils = require('../utils/utils');
 
-
 exports.runTaskOK = (taskType, fileAudio, fileTxt = null,
     userId, projectId, sentEntryId) => {
     return new Promise((resolve, reject) => {

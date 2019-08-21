@@ -111,8 +111,6 @@ exports.downloadFile = (req,res,next) => {
   const projectId = req.query.projectId;
   const fileKey = req.query.fileKey;
 
-
-
   const pathToDownload = config.publicApiAddress + '/'+userId + "/" + projectId + fileKey;
 
   console.log('DOWNLOAD FILE');
@@ -163,8 +161,8 @@ exports.getRepoFiles = (req, res, next) => {
   const userId = req.userId;
   const projectId = req.query.projectId;
 
-  console.log(userId);
-  console.log(projectId);
+  //console.log(userId);
+  //console.log(projectId);
 
   //tymczasowo symulacja damych
   //one mjusza byc dynamicznie z node generowane
