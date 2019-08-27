@@ -24,6 +24,9 @@ router.get('/downloadFile/', isAuth, repoController.downloadFile);
 //PUT /repoFiles/renameFile/userId - do zmiany nazwy pliku
 router.put('/renameFile/', isAuth, repoController.renameFile);
 
+//PUT /repoFiles/editTxtFile/userId - do edycji pliku tekstowego
+router.put('/editTxtFile/', isAuth, repoController.editTxtFile);
+
 // GET /repoFiles/userId - do pobierania listy plikow
 router.get('/:projectId', isAuth, repoController.getRepoFiles);
 

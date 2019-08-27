@@ -15,11 +15,12 @@ const projectFile = new Schema({
         type: String,
         required: true
     },
-    projectOwner: {
-        type: Schema.Types.ObjectId,
-        ref: 'ProjectEntry',
-        required: true,
-    },
+    connectedWithFiles: [
+        {
+            type: Schema.Types.ObjectId,
+            ref: 'ProjectFile'
+        }
+    ]
 }, {timestamps: true});
 
 module.exports = mongoose.model('ProjectFile', projectFile);

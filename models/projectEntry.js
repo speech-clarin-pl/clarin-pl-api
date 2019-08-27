@@ -26,8 +26,7 @@ const projectEntrySchema = new Schema({
     },
     files: [
         {
-            type: Schema.Types.ObjectId,
-            ref: 'ProjectFile'
+            type: Schema.Types.Mixed,
         }
     ]
 }, {timestamps: true});

@@ -122,6 +122,32 @@ exports.downloadFile = (req,res,next) => {
 }
 
 //##########################################
+//#### update zawartości pliku txt ######
+//#######################################
+exports.editTxtFile = (req, res, next) => {
+
+  console.log('editTxtFile')
+
+  const fileKey = req.body.key;
+  const newContent = req.body.newContent;
+  const userId = req.body.userId;
+  const projectId = req.body.projectId;
+
+  const repoPath = appRoot + "/repo/" + userId + "/" + projectId;
+
+  fs.writeFile(repoPath + "/" + fileKey, newContent, (err) => {
+    // throws an error, you could also catch it here
+    if (err) throw err;
+
+    // success case, the file was saved
+    res.status(200).json({ message: 'File has been updated!', key: fileKey });
+  });
+
+
+ 
+}
+
+//##########################################
 //#### zmieniam nazwe pliku ######
 //#######################################
 exports.renameFile = (req, res, next) => {

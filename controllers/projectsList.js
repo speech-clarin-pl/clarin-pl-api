@@ -64,7 +64,6 @@ exports.createProject = (req, res, next) => {
         throw error;
     }
 
-
     //--------------------------
 
     const reqProjectName = req.body.projectName;
@@ -116,64 +115,69 @@ exports.createProject = (req, res, next) => {
                         //fs.statSync(appRoot + '/repo/demo_files');
 
                          //kopiuje pliki demo do repo usera
-                        fsextra.copy(appRoot + '/repo/demo_files', dirpath + '/demo_files', function (err) {
-                            
-                            if (err) {
-                                console.error(err);
-                                return err;
-                            } else {
-                            
+                         fsextra.copy(appRoot + '/repo/demo_files', dirpath + '/demo_files')
+                            .then(() => {
+
                                 //dodaje te pliki demo bo bazy danych
 
-                                utilsForFiles.readDir(dirpath + '/demo_files', function (filePaths) {
-                                    //sciezki zawieraja pewne sciezki wiec je przeksztalcam na relatywne
-                                    const demofiles = filePaths.map(path => {
+                                const sciezkaDoDemo = dirpath + '/demo_files';
+                                let nazwapliku;
 
-                                        const relativePath = path.replace(dirpath, '');
-                                        const fileModified = +moment(fs.statSync(path).mtime);
-                                        const fileSize = fs.statSync(path).size;
-                                    
-                                        //tworze nowy wpis w bazie za pomoca modelu
-                                        const projectFile = new ProjectFile({
-                                            name: relativePath,
-                                            fileSize: fileSize,
-                                            fileModified: fileModified,
-                                            projectOwner: createdProject._id,
-                                        });
-
-                                        projectEntry.files.push(projectFile);
-
-                                        return projectFile;
-                                    })
-
-                                    //zapisuje pliki w kolekcji z plikami z odniesieniem do projektu
-
-                                    ProjectFile.insertMany(demofiles)
-                                    .then(df => {
-                                        console.log("zapisuje projectEntry")
-                                        projectEntry.save()
-                                        .then(resultProjectentry => {
-                                            // else print a success message.
-                                            console.log("Successfully created project directory for this user");
-                                            res.status(201).json({
-                                                message: 'The project created successfully!',
-                                                project: projectEntry,
-                                                owner: {_id: owner._id, name: owner.name}
-                                            });
-                                        }) 
-                                    })
+                                nazwapliku = 'test.txt';
+                                const test_txt = new ProjectFile({
+                                    name: '/'+nazwapliku,
+                                    fileSize: fs.statSync(sciezkaDoDemo + '/'+nazwapliku).size,
+                                    fileModified: +moment(fs.statSync(sciezkaDoDemo + '/'+nazwapliku).mtime),
+                                    connectedWithFiles: []
                                 });
-                            }
-                        });
+
+                                nazwapliku = 'test.wav';
+                                const test_wav = new ProjectFile({
+                                    name: '/'+nazwapliku,
+                                    fileSize: fs.statSync(sciezkaDoDemo + '/'+nazwapliku).size,
+                                    fileModified: +moment(fs.statSync(sciezkaDoDemo + '/'+nazwapliku).mtime),
+                                    connectedWithFiles: []
+                                });
+
+                                //tworze powiazania między plikami w demo
+                                test_txt.connectedWithFiles.push(test_wav._id);
+                                test_wav.connectedWithFiles.push(test_txt._id);
+
+                                //dodaje pliki demo do projektu
+                                projectEntry.files.push(test_txt);
+                                projectEntry.files.push(test_wav);
+
+                                //zapisuje pliki w kolekcji z plikami z odniesieniem do projektu
+                                projectEntry.save()
+                                .then(resultProjectentry => {
+
+                                    // else print a success message.
+                                    console.log("Successfully created project directory for this user");
+                                    res.status(201).json({
+                                        message: 'The project created successfully!',
+                                        project: projectEntry,
+                                        owner: {_id: owner._id, name: owner.name}
+                                    });
+                                })
+                            })
+                            .catch(err => {
+                                console.error(err);
+                                return err;
+                            })
+
 
                     } catch(e) {
                         console.log("BLAD W PRZENOSZENIU KATALOGU DEMO");
-                        console.log("STWORZONO PROJEKT BEZ KATALOGU DEMO");
+                        const error = new Error('No demo files in the server!');
+                        error.statusCode = 501;
+                        throw error;
+                        /*
                         res.status(201).json({
                             message: 'The project created successfully!',
                             project: projectEntry,
                             owner: {_id: owner._id, name: owner.name}
                         });
+                        */
                     }
                 }
             });
@@ -223,11 +227,7 @@ exports.deleteProject = (req,res,next) => {
             //czyszcze relacje z colekcja usera- tam tez trzeba wyrzucic referencje do projektu
             user.projects.pull(projectId);
 
-            //czyszcze wszystkie pliki ktorych projectOwner to usuwany projekt 
-            ProjectFile.deleteMany({projectOwner: projectToDelete._id})
-            .then(pf => {
-                return user.save();
-            })
+            return user.save();
         })
         .then(result => {
             //usuwam wszystkie pliki w projekcie danego uzytkownika
