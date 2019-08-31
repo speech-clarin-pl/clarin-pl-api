@@ -5,10 +5,27 @@ const appRoot = require('app-root-path'); //zwraca roota aplikacji
 
 
 exports.startFileRecognitionOK =  (req, res,next) => {
-    const sentAudioFile = req.files[0].filename;   //audio file
-    const sentEntryId = req.body.audioFilesIds;    //id audio entry
+    const audioFrom = req.body.audioFrom;
     const projectId = req.body.projectId;          //project Id
     const userId = req.body.userId;                 //userId
+    const sentEntryId = req.body.audioFilesIds;    //id audio entry
+
+    // sprawdzam czy wysłany został plik audio 
+    //czy tylko obiekt go opisujący (gdy uzytkownik przeciagnal z repo)
+
+    let sentAudioFile;
+
+    if(audioFrom=="local"){
+        sentAudioFile = req.files[0].filename;   //audio file or object describing the audio if it comes from repo
+    } else if(audioFrom=="repo"){
+        sentAudioFile = req.body.audioFiles;
+        //plik już jest w katalogu użytkownika - musze go tam zlokalizowac
+
+    }
+
+
+    console.log("AAAAAAA")
+    console.log(sentAudioFile)
 
     if(!sentAudioFile){
         const error = new Error('No file provided');

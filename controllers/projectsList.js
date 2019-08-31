@@ -100,9 +100,10 @@ exports.createProject = (req, res, next) => {
             return user.save();
         })
         .then(resultUser => {
-
             //tutaj tworzenie folder z plikami projektu dla danego usera
             const dirpath = appRoot + '/repo/'+owner._id+'/'+projectEntry._id;
+
+          
             mkdirp(dirpath, function(err) {
 
                 // if any errors then print the errors to  console
@@ -110,9 +111,16 @@ exports.createProject = (req, res, next) => {
                     console.log(err);
                     return err;
                 } else {
-                    
                     try {
                         //fs.statSync(appRoot + '/repo/demo_files');
+
+                         //tworze folder na wlasne pliki
+                        mkdirp(dirpath + '/my_files', function(err) {
+                            if (err) {
+                                console.log(err);
+                                return err;
+                            }
+                        })
 
                          //kopiuje pliki demo do repo usera
                          fsextra.copy(appRoot + '/repo/demo_files', dirpath + '/demo_files')
@@ -164,8 +172,6 @@ exports.createProject = (req, res, next) => {
                                 console.error(err);
                                 return err;
                             })
-
-
                     } catch(e) {
                         console.log("BLAD W PRZENOSZENIU KATALOGU DEMO");
                         const error = new Error('No demo files in the server!');
@@ -249,7 +255,6 @@ exports.deleteProject = (req,res,next) => {
             }
             next(error);
         });
-
 }
 
 

@@ -126,7 +126,7 @@ exports.runTaskOK = (taskType, fileAudio, fileTxt = null,
 
                             if (task.done) {
                                 console.log('TASK UKONCZONY Z RESULTATEM....')
-                                //console.log(task)
+                                console.log(task)
                                 if (!task.error) {
 
                                     let audioFile = null;

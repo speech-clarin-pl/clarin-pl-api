@@ -60,19 +60,29 @@ app.use(compression());
 //multer configuration for storing files. It accepts array of files...
 const fileStorage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, './repo');
+        cb(null, './repo/uploaded_temp');
     },
     filename: (req, file, cb) => {
         cb(null, file.originalname + '-' + new Date().toISOString() );
     }
 });
 
+const fileFilter = (req, file, cb) => {
+    var type = file.mimetype;
+    var typeArray = type.split("/");
+    if (typeArray[0] == "audio") {
+      cb(null, true);
+    }else {
+      cb(null, false);
+    }
+  }
+
 let upload = multer({
-    storage: fileStorage
+    storage: fileStorage,
+    fileFilter: fileFilter
 }).array('audioFiles');
 
 app.use(upload,function (req, res, next) {
-     
      next();
 });
 
