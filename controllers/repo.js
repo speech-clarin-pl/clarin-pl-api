@@ -10,6 +10,60 @@ const config = require('../config.js');
 
 
 //##########################################
+//#### upload Plików do repo ######
+//#######################################
+exports.uploadFiles = (req, res, next) => {
+  console.log('Files upload')
+
+  const filesToSave = req.files;
+  const folderKey = req.body.folderKey;
+  const userId = req.body.userId;
+  const projectId = req.body.projectId;
+
+  console.log(filesToSave)
+  console.log(folderKey)
+  console.log(userId)
+  console.log(projectId)
+
+  //musze przenieść plik z plikow tymczasowych do katalogu repo użytkownika
+  const finalFileDest = appRoot + '/repo/' + userId + '/' + projectId + '/';
+
+
+  let listablednychplikow = [];
+  let listaplikowOK = [];
+  for (let i=0; i< filesToSave.length; i++){
+    fs.move(appRoot + '/repo/uploaded_temp/' + filesToSave[i].filename, finalFileDest + folderKey + filesToSave[i].originalname, { overwrite: true }, function (err) {
+      if (err) {
+          console.log("error in move file")
+          console.error(err);
+          listablednychplikow.push(filesToSave[i]);
+      } else {
+        listaplikowOK.push(filesToSave[i]);
+      }
+    });
+  }
+  
+  if(listablednychplikow.length > 0){
+    res.status(500).json({ message: 'At least one file has not been uploaded'});
+  } else {
+    res.status(200).json({ message: 'files have been uploaded'});
+  }
+
+  
+  // const repoPath = appRoot + "/repo/" + userId + "/" + projectId;
+
+  // fs.mkdirs(repoPath + '/' + key, function (err) {
+  //   if (err) {
+  //     res.status(500).json({ message: 'Problem with folder creation!', key: key });
+  //     return console.error(err);
+  //   }
+
+  //   res.status(201).json({ message: 'Folder has been created!', key: key });
+  // });
+
+}
+
+//##########################################
 //#### tworze folder ######
 //#######################################
 exports.createFolder = (req, res, next) => {
@@ -30,9 +84,6 @@ exports.createFolder = (req, res, next) => {
 
     res.status(201).json({ message: 'Folder has been created!', key: key });
   });
-
-  //TO DO rzeczywiste stworzenie pliku w nodejs
-
 
 }
 

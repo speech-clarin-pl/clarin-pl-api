@@ -3,6 +3,9 @@ const repoController = require('../controllers/repo');
 const router = express.Router();
 const isAuth = require('../middleware/is-auth');
 
+//POST /repoFiles/uploadFiles  - tworzy folder OK
+router.post('/uploadFiles', isAuth, repoController.uploadFiles);
+
 //POST /repoFiles/createFolder  - tworzy folder OK
 router.post('/createFolder', isAuth, repoController.createFolder);
 
