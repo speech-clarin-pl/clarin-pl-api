@@ -20,7 +20,6 @@ exports.startFileRecognitionOK =  (req, res,next) => {
     } else if(audioFrom=="repo"){
         sentAudioFile = req.body.audioFiles;
         //plik już jest w katalogu użytkownika - musze go tam zlokalizowac
-
     }
 
 

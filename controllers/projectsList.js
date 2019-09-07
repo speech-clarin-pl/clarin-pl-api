@@ -133,7 +133,8 @@ exports.createProject = (req, res, next) => {
 
                                 nazwapliku = 'test.txt';
                                 const test_txt = new ProjectFile({
-                                    name: '/'+nazwapliku,
+                                    name: nazwapliku,
+                                    fileKey: 'demo_files/' + nazwapliku,
                                     fileSize: fs.statSync(sciezkaDoDemo + '/'+nazwapliku).size,
                                     fileModified: +moment(fs.statSync(sciezkaDoDemo + '/'+nazwapliku).mtime),
                                     connectedWithFiles: []
@@ -141,7 +142,8 @@ exports.createProject = (req, res, next) => {
 
                                 nazwapliku = 'test.wav';
                                 const test_wav = new ProjectFile({
-                                    name: '/'+nazwapliku,
+                                    name: nazwapliku,
+                                    fileKey: 'demo_files/' + nazwapliku,
                                     fileSize: fs.statSync(sciezkaDoDemo + '/'+nazwapliku).size,
                                     fileModified: +moment(fs.statSync(sciezkaDoDemo + '/'+nazwapliku).mtime),
                                     connectedWithFiles: []

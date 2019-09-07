@@ -7,6 +7,9 @@ const appRoot = require('app-root-path'); //zwraca roota aplikacji
 const moment = require('moment');
 const utilsForFiles = require('../utils/utils');
 const config = require('../config.js');
+//importuje model wpisu projektu
+const ProjectEntry = require('../models/projectEntry');
+const ProjectFile = require('../models/projectFile');
 
 
 //##########################################
@@ -28,26 +31,91 @@ exports.uploadFiles = (req, res, next) => {
   //musze przenieść plik z plikow tymczasowych do katalogu repo użytkownika
   const finalFileDest = appRoot + '/repo/' + userId + '/' + projectId + '/';
 
-
   let listablednychplikow = [];
   let listaplikowOK = [];
-  for (let i=0; i< filesToSave.length; i++){
-    fs.move(appRoot + '/repo/uploaded_temp/' + filesToSave[i].filename, finalFileDest + folderKey + filesToSave[i].originalname, { overwrite: true }, function (err) {
-      if (err) {
-          console.log("error in move file")
-          console.error(err);
-          listablednychplikow.push(filesToSave[i]);
-      } else {
-        listaplikowOK.push(filesToSave[i]);
+
+  let filesToSaveInDB = [];
+
+  ProjectEntry.findById(projectId)
+  .then(foundPD => {
+
+    for (let i=0; i< filesToSave.length; i++){
+
+      let oryginalName = filesToSave[i].originalname;
+
+      //sprawdzam czy plik o takiej samej nazwie nie istnieje już w bazie
+      let czyistnieje = false;
+      for (let s=0; s< foundPD.files.length; s++){
+        let f = foundPD.files[s];
+        if(f.name === oryginalName){
+          
+          let gdziedot = oryginalName.lastIndexOf('.');
+          let nazwaplikubezext = oryginalName.substring(0,gdziedot);
+          let fileext = oryginalName.substring(gdziedot + 1);
+
+          //dodaje liczbe w nawiasie do pliku ktory juz istnieje
+          nazwaplikubezext = nazwaplikubezext + '_(copy)';
+          oryginalName = nazwaplikubezext + '.' + fileext;
+          break;
+        }
       }
-    });
-  }
+      
+
+      const fullFinalFilePath = finalFileDest + folderKey + oryginalName;
+    //   filesToSaveInDB.push(plik);
+
+      fs.move(appRoot + '/repo/uploaded_temp/' + filesToSave[i].filename, fullFinalFilePath, { overwrite: false })
+      .then(()=>{
+        // console.log("grupuje pliki do wstawienia do bazy");
+          const plik = new ProjectFile({
+            name: oryginalName,
+            fileKey: folderKey + oryginalName,
+            fileSize: fs.statSync(fullFinalFilePath).size,
+            fileModified: +moment(fs.statSync(fullFinalFilePath).mtime),
+            connectedWithFiles: []
+          });
+          foundPD.files.push(plik);
+
+          //po ostatnim pliku w kolejce zapisuje entry do bazy
+          if(i == filesToSave.length -1){
+             foundPD.save()
+               .then(updatedPE => {
+                  console.log("pdatedPD")
+                  console.log(updatedPE);
+                  res.status(200).json({ message: 'files have been uploaded'});
+              })
+              .catch(err => {
+                  console.error(err);
+                  return err;
+              })
+          }
+
+      })
+      .catch(()=>{
+        console.error(err);
+        return err;
+      })
+    }
+
+    // console.log("przegladam przygotowane pliki")
+    // console.log(filesToSaveInDB.length) 
+    // console.log(filesToSaveInDB) 
+    //  for (let i=0; i< filesToSaveInDB.length; i++){
+    //    console.log(filesToSaveInDB[i]);
+    //    foundPD.files.push(filesToSaveInDB[i]);
+    //  }
+     
   
-  if(listablednychplikow.length > 0){
-    res.status(500).json({ message: 'At least one file has not been uploaded'});
-  } else {
-    res.status(200).json({ message: 'files have been uploaded'});
-  }
+    
+  })
+
+
+
+
+
+   
+  
+  
 
   
   // const repoPath = appRoot + "/repo/" + userId + "/" + projectId;
