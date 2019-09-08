@@ -2,12 +2,18 @@
 const Task = require('../models/dockerTask');
 const appRoot = require('app-root-path'); //zwraca roota aplikacji   
 const utils = require('../utils/utils');
+const moment = require('moment');
+const fs = require('fs-extra');
+const ProjectEntry = require('../models/projectEntry');
+const ProjectFile = require('../models/projectFile');
+const User = require('../models/user');
 
-exports.runTaskOK = (taskType, fileAudio, fileTxt = null,
+exports.runTaskOK = (taskType, fileKey, fileId = null, fileAudio, fileTxt = null,
     userId, projectId, sentEntryId) => {
     return new Promise((resolve, reject) => {
 
          console.log('PARAMETRY W RUN TASK: ')
+         console.log(fileKey)
          console.log(taskType)
          console.log(fileAudio)
          console.log(fileTxt)
@@ -139,32 +145,87 @@ exports.runTaskOK = (taskType, fileAudio, fileTxt = null,
 
                                             audioFile = task.input;
                                             resultFile = task.result;
-                                           
-                                            utils.moveFileToUserRepo(projectId, userId, audioFile)
-                                                .then(dir => {
-        
-                                                    console.log('udalo sie przeniesc plik audio do katalogu usera')
-                                                    if (task.result) {
-        
-                                                        //console.log('mamy task result')
-                                                        //console.log(task)
-                                                        //console.log('przenosze rezultat do katalogu usera')
-                                                        utils.moveFileToUserRepo(projectId, userId, resultFile)
-                                                            .then(dir => {
-                                                                console.log('udalo sie przeniesc plik rezultatow do katalogu usera')
-                                                                resolve(task);
-                                                            })
-                                                            .catch(err => {
-                                                                console.log('error z przeniesieniem pliku rezultatow do katalogu usera!');
-                                                                reject(err);
-                                                            })
-                                                    }
+
+                                            //console.log('zmieniam uprawnienia do pliku')
+                                            // fs.chmod(appRoot + '/repo/uploaded_temp/' + resultFile, 0700, function(err){
+                                            //     if(err) throw err;
+                                            // });
+
+                                            //najpierw znajduje plik ktory jest poddawany rozpoznawaniu
+                                            let recognizedAudioFile = null;
+                                            ProjectEntry.findById(projectId)
+                                            .then(foundPE=> {
+                                                recognizedAudioFile = foundPE.files.find(file => {
+                                                    return file._id == fileId
                                                 })
-                                                .catch(err => {
-                                                    console.log('problem z przeniesieniem pliku/ow!');
-                                                    reject(err);
+
+                                                const recResult = new ProjectFile({
+                                                    name: utils.addSuffixToFileName(recognizedAudioFile.name,'_rec','txt'),
+                                                    fileKey: utils.getRepoPathFromKey(fileKey) + '/' + utils.addSuffixToFileName(recognizedAudioFile.name,'_rec','txt'),
+                                                    fileSize: fs.statSync(appRoot + '/repo/uploaded_temp/' + resultFile).size,
+                                                    fileModified: +moment(fs.statSync(appRoot + '/repo/uploaded_temp/' + resultFile).mtime),
+                                                    connectedWithFiles: recognizedAudioFile._id,
+                                                });
+
+                                                foundPE.files.push(recResult)
+                                                foundPE.save()
+                                                .then(()=>{
+
+                                                    //przenosze plik z rozpoznawania do katalogu uzytkownika repo i robie powiazanie w bazie danych
+                                            
+                                                    let moveFrom = appRoot + '/repo/uploaded_temp/' + resultFile;
+                                                    let moveTo = appRoot + '/repo/' + userId + '/' + projectId + '/' + utils.getRepoPathFromKey(fileKey) + '/' + utils.addSuffixToFileName(recognizedAudioFile.name,'_rec','txt');
+                                                    console.log('przenosze wynik rozpoznawania')
+                                                    console.log(moveFrom)
+                                                    console.log(moveTo)
+                                                    fs.move(moveFrom, moveTo,{ overwrite: true })
+                                                    .then(()=>{
+                                                        resolve(task);
+                                                    })
+                                                    .catch((err)=>{
+                                                        console.log('problem z przeniesieniem pliku wynikowego recognition!');
+                                                        reject(err);
+                                                    })
+
+                                                    
+                                                })
+                                                .catch(err=>{
+                                                    console.log(err);
+                                                    throw err;
+                                                })
+
+                                            })
+
+                                            
+
+                                         
+                                            
+                                           
+                                            // utils.moveFileToUserRepo(projectId, userId, audioFile)
+                                            //     .then(dir => {
         
-                                                });                                            
+                                            //         console.log('udalo sie przeniesc plik audio do katalogu usera')
+                                            //         if (task.result) {
+        
+                                            //             //console.log('mamy task result')
+                                            //             //console.log(task)
+                                            //             //console.log('przenosze rezultat do katalogu usera')
+                                            //             utils.moveFileToUserRepo(projectId, userId, resultFile)
+                                            //                 .then(dir => {
+                                            //                     console.log('udalo sie przeniesc plik rezultatow do katalogu usera')
+                                            //                     resolve(task);
+                                            //                 })
+                                            //                 .catch(err => {
+                                            //                     console.log('error z przeniesieniem pliku rezultatow do katalogu usera!');
+                                            //                     reject(err);
+                                            //                 })
+                                            //         }
+                                            //     })
+                                            //     .catch(err => {
+                                            //         console.log('problem z przeniesieniem pliku/ow!');
+                                            //         reject(err);
+        
+                                            //     });                                            
                                             
                                             break;
                                         case (1):
@@ -271,9 +332,6 @@ exports.runTaskOK = (taskType, fileAudio, fileTxt = null,
                     clearInterval(checkerdb);
                 }, 1800000);
                 //docelowo na 30min czyli 1800000
-
-
-                
 
             })
             .catch(error => {

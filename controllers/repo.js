@@ -10,6 +10,7 @@ const config = require('../config.js');
 //importuje model wpisu projektu
 const ProjectEntry = require('../models/projectEntry');
 const ProjectFile = require('../models/projectFile');
+const User = require('../models/user');
 
 
 //##########################################
@@ -97,37 +98,7 @@ exports.uploadFiles = (req, res, next) => {
       })
     }
 
-    // console.log("przegladam przygotowane pliki")
-    // console.log(filesToSaveInDB.length) 
-    // console.log(filesToSaveInDB) 
-    //  for (let i=0; i< filesToSaveInDB.length; i++){
-    //    console.log(filesToSaveInDB[i]);
-    //    foundPD.files.push(filesToSaveInDB[i]);
-    //  }
-     
-  
-    
   })
-
-
-
-
-
-   
-  
-  
-
-  
-  // const repoPath = appRoot + "/repo/" + userId + "/" + projectId;
-
-  // fs.mkdirs(repoPath + '/' + key, function (err) {
-  //   if (err) {
-  //     res.status(500).json({ message: 'Problem with folder creation!', key: key });
-  //     return console.error(err);
-  //   }
-
-  //   res.status(201).json({ message: 'Folder has been created!', key: key });
-  // });
 
 }
 
@@ -326,39 +297,80 @@ exports.getRepoFiles = (req, res, next) => {
 
   //sciezka do plikow danego usera i danego projektu
   const repoPath = appRoot + "/repo/" + userId + "/" + projectId;
-
   const repoStatic = userId + "/" + projectId;
 
-  utilsForFiles.readDir(repoPath, function (filePaths) {
-    //sciezki zawieraja pewne sciezki wiec je przeksztalcam na relatywne
-    const userfiles = filePaths.map(path => {
-      const relativePath = path.replace(repoPath, '');
+  //szukam plików w bazie danych dla danego usera
+  let znalezionyPE = null;
+  ProjectEntry.findById(projectId)
+  .then(foundPE => {
+        znalezionyPE = foundPE;
+        
+      //sprawdzam czy wlacicielem jest zalogowany uzytkownik
+      return User.findById(userId);
+  })
+  .then(user=>{
 
-      //const fileModified =  +moment().subtract(15, 'days');
-      const fileModified = +moment(fs.statSync(path).mtime);
+      if(user._id == userId){
 
-      //const fileSize = 4.2 * 1024 * 1024;
-      const fileSize = fs.statSync(path).size;
-      
-      //const urltopass = config.publicApiAddress + path.replace(appRoot, '');
-      
-      const urltopass = config.publicApiAddress + '/' + repoStatic + relativePath;
+        let listOfUserFiles = znalezionyPE.files.map(file =>{
 
-      console.log(urltopass)
-      console.log(path)
-      console.log(relativePath)
-      console.log(appRoot)
+          const urltopass = config.publicApiAddress + '/' + repoStatic + '/' + file.fileKey;
 
-      //const urltopass = config.publicApiAddress + path.replace(appRoot, '');
-      
-      let fileEntry = {
-        key: relativePath,
-        modified: fileModified,
-        size: fileSize,
-        url: urltopass
+          let fileEntry = {
+            key: file.fileKey,
+            fileId: file._id,
+            modified: file.fileModified,
+            size: file.fileSize,
+            url: urltopass
+          }
+
+          return fileEntry;
+        });
+
+        res.status(200).json({ message: 'Files for this project and user featched!', files: listOfUserFiles })
+
+      } else {
+        let error = new Error('Not authorized access');
+        error.statusCode = 401;
+        throw error;
       }
-      return fileEntry;
-    })
-    res.status(200).json({ message: 'Files for this project and user featched!', files: userfiles })
-  });
+  })
+  .catch(err =>{
+        let error = new Error('Error with loading user files to repo');
+        error.statusCode = 500;
+        throw error;
+  })
+
+  // utilsForFiles.readDir(repoPath, function (filePaths) {
+  //   //sciezki zawieraja pewne sciezki wiec je przeksztalcam na relatywne
+  //   const userfiles = filePaths.map(path => {
+  //     const relativePath = path.replace(repoPath, '');
+
+  //     //const fileModified =  +moment().subtract(15, 'days');
+  //     const fileModified = +moment(fs.statSync(path).mtime);
+
+  //     //const fileSize = 4.2 * 1024 * 1024;
+  //     const fileSize = fs.statSync(path).size;
+      
+  //     //const urltopass = config.publicApiAddress + path.replace(appRoot, '');
+      
+  //     const urltopass = config.publicApiAddress + '/' + repoStatic + relativePath;
+
+  //     console.log(urltopass)
+  //     console.log(path)
+  //     console.log(relativePath)
+  //     console.log(appRoot)
+
+  //     //const urltopass = config.publicApiAddress + path.replace(appRoot, '');
+      
+  //     let fileEntry = {
+  //       key: relativePath,
+  //       modified: fileModified,
+  //       size: fileSize,
+  //       url: urltopass
+  //     }
+  //     return fileEntry;
+  //   })
+  //   res.status(200).json({ message: 'Files for this project and user featched!', files: userfiles })
+  // });
 }

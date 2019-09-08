@@ -2,7 +2,11 @@
 const dockerTaskController = require('./runTask');
 const dockerTaskControllerOK = require('./runTaskOK');
 const appRoot = require('app-root-path'); //zwraca roota aplikacji    
-
+const fs = require('fs-extra');
+const ProjectEntry = require('../models/projectEntry');
+const ProjectFile = require('../models/projectFile');
+const User = require('../models/user');
+const utils = require('../utils/utils');
 
 exports.startFileRecognitionOK =  (req, res,next) => {
     const audioFrom = req.body.audioFrom;
@@ -17,45 +21,83 @@ exports.startFileRecognitionOK =  (req, res,next) => {
 
     if(audioFrom=="local"){
         sentAudioFile = req.files[0].filename;   //audio file or object describing the audio if it comes from repo
+        
+       
+    
     } else if(audioFrom=="repo"){
-        sentAudioFile = req.body.audioFiles;
-        //plik już jest w katalogu użytkownika - musze go tam zlokalizowac
-    }
+        sentAudioFile = JSON.parse(req.body.audioFiles);
 
+        if(!sentAudioFile){
+            const error = new Error('No file provided');
+            error.statusCode = 422;
+            throw error;
+        }
 
-    console.log("AAAAAAA")
-    console.log(sentAudioFile)
+         //jeżli plik pochodzi z repo,  Wyszukuje go z bazy danych i kopiuje tymczasowo do 
+         //repo/uploaded_temp
 
-    if(!sentAudioFile){
-        const error = new Error('No file provided');
-        error.statusCode = 422;
-        throw error;
-    }
+        let sentFileId = sentAudioFile.fileId;
 
-    console.log("FILE RECOGNITION");
-
-    //tutaj uruchamiam task z dockera
-    dockerTaskControllerOK.runTaskOK(
-        "recognize",
-        sentAudioFile,
-        null,
-        userId,
-        projectId,
-        sentEntryId)
-        .then(task =>{
-            console.log(' TASK ZAKONCZONY SUKCESEM');
-            res.status(201).json({ message: "task finished with sucess", sentEntryId: { sentEntryId } });
+        let foundProjectEntry = null;
+        ProjectEntry.findById(projectId)
+        .then(foundPE=>{
+            foundProjectEntry = foundPE;
+            return User.findById(userId);
         })
-        .catch(err => {
-            console.log(' PROBLEM Z TASKIEM ');
-            if(!err.statusCode){
-                err.statusCode = 500;
-            }
-            res.status(500).json({ message: "Something went wrong!", sentEntryId: { sentEntryId } });
-            next(err);
-        })
+        .then(user=>{
+            //mam pewnosc ze to jest projekt uzytkownika...
+            //wiec wyszukuje z bazy wpis dotyczacy pliku ktory zostal przeciagniety
+            const draggedFile = foundProjectEntry.files.find(file => {
+                return file._id == sentFileId;
+            })
 
-        //console.log('KONIEC: startFileRecognitionOK')
+            const draggedFileName = draggedFile.name;
+            const draggedFileKey = draggedFile.fileKey;
+            const draggedFileSize = draggedFile.fileSize;
+            const draggedFileModified = draggedFile.fileModified;
+
+            //KOPIUJE TEN PLIK DO KATALOGU 'repo/uploaded_temp' dla dokera do przetworzenia
+
+            let fileFrom = appRoot + '/repo/' + userId + '/' + projectId + '/' + draggedFileKey ;
+            
+            //buduje unikatowa nazwe dla pliku dla bezpieczenstwa dodajac date
+            let newOryginalName = utils.addSuffixToFileName(draggedFileName,userId + '-'+new Date().toISOString());
+
+            let fileTo = appRoot + '/repo/uploaded_temp/' + newOryginalName;
+
+            console.log(fileFrom)
+            console.log(fileTo)
+
+            fs.copy(fileFrom, fileTo)
+            .then(()=>{
+               // gdy plik juz jest w katalogu repo/uploaded_files moge rozpoczac rozpoznawanie
+   
+                //tutaj uruchamiam task z dockera
+                dockerTaskControllerOK.runTaskOK(
+                    "recognize",
+                    draggedFileKey,
+                    sentFileId,
+                    newOryginalName,
+                    null,
+                    userId,
+                    projectId,
+                    sentEntryId)
+                    .then(task =>{
+                        console.log(' TASK ZAKONCZONY SUKCESEM');
+                        res.status(201).json({ message: "task finished with sucess", sentEntryId: { sentEntryId } });
+                    })
+                    .catch(err => {
+                        console.log(' PROBLEM Z TASKIEM ');
+                        if(!err.statusCode){
+                            err.statusCode = 500;
+                        }
+                        res.status(500).json({ message: "Something went wrong!", sentEntryId: { sentEntryId } });
+                        next(err);
+                    })
+                })
+            })
+    }
+ 
 }
 
 // zapisuje plik na dysku i robie rozpoznawanie

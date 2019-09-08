@@ -44,6 +44,27 @@ exports.bytesToSize = (bytes) => {
     return `${(bytes / (1024 ** i)).toFixed(1)} ${sizes[i]}`;
   }
 
+  //add sufix to the name of given file
+  exports.addSuffixToFileName = (fileName, suffix, ext=null) =>{
+    let gdziedot = fileName.lastIndexOf('.');
+    let nazwaplikubezext = fileName.substring(0,gdziedot);
+    let fileext;
+    if(ext==null){
+         fileext = fileName.substring(gdziedot + 1);
+    } else {
+        fileext = ext;
+    }
+    nazwaplikubezext = nazwaplikubezext + suffix;
+    return nazwaplikubezext + '.' + fileext;
+  }
+
+  //zwraca ścieżkę katalogu w repo w którym jest plik
+  exports.getRepoPathFromKey = (fileKey) =>{
+    let gdzieslash = fileKey.lastIndexOf('/');
+    let sciezka = fileKey.substring(0,gdzieslash);
+    return sciezka;
+  }
+
 
   // przenosi plik z glownego repo do katalogu uzytkownika i jego projektu
   exports.moveFileToUserRepo = (projectId, userId, file) => {
@@ -53,13 +74,13 @@ exports.bytesToSize = (bytes) => {
             console.log("przenosze plik: " + file);
             
             let dir = appRoot + '/repo/' + userId + '/' + projectId;
-            console.log("------------------------")
-            console.log("do katalogu " + dir )
-            console.log(userId)
-            console.log(projectId)
-            console.log(dir)
+            //console.log("------------------------")
+            //console.log("do katalogu " + dir )
+           // console.log(userId)
+            //console.log(projectId)
+           // console.log(dir)
 
-            fs.move('./repo/' + file, dir + '/' + file, function (err) {
+            fs.move('./repo/uploaded_temp/' + file, dir + '/' + file, function (err) {
                 if (err) {
                     console.error(err);
                     reject(err);
