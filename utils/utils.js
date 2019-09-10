@@ -65,6 +65,13 @@ exports.bytesToSize = (bytes) => {
     return sciezka;
   }
 
+   //zwraca ścieżkę katalogu w repo w którym jest plik
+   exports.getFileNameFromRepoKey = (fileKey) =>{
+    let gdzieslash = fileKey.lastIndexOf('/');
+    let filename = fileKey.substring(gdzieslash+1);
+    return filename;
+  }
+
 
   // przenosi plik z glownego repo do katalogu uzytkownika i jego projektu
   exports.moveFileToUserRepo = (projectId, userId, file) => {

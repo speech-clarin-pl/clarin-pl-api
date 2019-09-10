@@ -115,6 +115,7 @@ exports.createProject = (req, res, next) => {
                         //fs.statSync(appRoot + '/repo/demo_files');
 
                          //tworze folder na wlasne pliki
+                         
                         mkdirp(dirpath + '/my_files', function(err) {
                             if (err) {
                                 console.log(err);
@@ -129,9 +130,9 @@ exports.createProject = (req, res, next) => {
                                 //dodaje te pliki demo bo bazy danych
 
                                 const sciezkaDoDemo = dirpath + '/demo_files';
+                                
                                 let nazwapliku;
-
-                                nazwapliku = 'test.txt';
+                                nazwapliku = 'test_rec.txt';
                                 const test_txt = new ProjectFile({
                                     name: nazwapliku,
                                     fileKey: 'demo_files/' + nazwapliku,
@@ -149,6 +150,16 @@ exports.createProject = (req, res, next) => {
                                     connectedWithFiles: []
                                 });
 
+                                //folder na wlasne pliki
+                                nazwapliku = 'my_files';
+                                const my_files_folder = new ProjectFile({
+                                    name: nazwapliku,
+                                    fileKey: nazwapliku + '/',
+                                    fileSize: 0,
+                                    fileModified: 0,
+                                    connectedWithFiles: []
+                                });
+
                                 //tworze powiazania między plikami w demo
                                 test_txt.connectedWithFiles.push(test_wav._id);
                                 test_wav.connectedWithFiles.push(test_txt._id);
@@ -156,7 +167,9 @@ exports.createProject = (req, res, next) => {
                                 //dodaje pliki demo do projektu
                                 projectEntry.files.push(test_txt);
                                 projectEntry.files.push(test_wav);
+                                projectEntry.files.push(my_files_folder);
 
+                                
                                 //zapisuje pliki w kolekcji z plikami z odniesieniem do projektu
                                 projectEntry.save()
                                 .then(resultProjectentry => {

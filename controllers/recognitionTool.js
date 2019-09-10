@@ -22,6 +22,39 @@ exports.startFileRecognitionOK =  (req, res,next) => {
     if(audioFrom=="local"){
         sentAudioFile = req.files[0].filename;   //audio file or object describing the audio if it comes from repo
         
+        let newOryginalName = sentAudioFile;
+
+        console.log("pochodzi z local: " + sentAudioFile)
+
+        console.log(sentEntryId)
+        if(!sentAudioFile){
+            const error = new Error('No file provided');
+            error.statusCode = 422;
+            throw error;
+        }
+
+         //tutaj uruchamiam task z dockera
+         dockerTaskControllerOK.runTaskOK(
+            "recognize",
+            null,
+            null,
+            newOryginalName,
+            null,
+            userId,
+            projectId,
+            sentEntryId)
+            .then(task =>{
+                console.log(' TASK ZAKONCZONY SUKCESEM');
+                res.status(201).json({ message: "task finished with sucess", sentEntryId: { sentEntryId } });
+            })
+            .catch(err => {
+                console.log(' PROBLEM Z TASKIEM ');
+                if(!err.statusCode){
+                    err.statusCode = 500;
+                }
+                res.status(500).json({ message: "Something went wrong!", sentEntryId: { sentEntryId } });
+                next(err);
+            })
        
     
     } else if(audioFrom=="repo"){

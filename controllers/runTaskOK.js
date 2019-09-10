@@ -8,24 +8,25 @@ const ProjectEntry = require('../models/projectEntry');
 const ProjectFile = require('../models/projectFile');
 const User = require('../models/user');
 
-exports.runTaskOK = (taskType, fileKey, fileId = null, fileAudio, fileTxt = null,
+exports.runTaskOK = (taskType, fileKey = null, fileId = null, fileAudio, fileTxt = null,
     userId, projectId, sentEntryId) => {
     return new Promise((resolve, reject) => {
 
          console.log('PARAMETRY W RUN TASK: ')
-         console.log(fileKey)
          console.log(taskType)
+         console.log(fileKey) //jezeli jest przeciagniety z lokalnego to null
+         console.log(fileId) //jezeli jest przeciagniety z lokalnego to null
          console.log(fileAudio)
-         console.log(fileTxt)
+         console.log(fileTxt)  // tylko do segmentacji
          console.log(userId)
          console.log(projectId)
-         console.log(sentEntryId)
+         console.log(sentEntryId) // jezeli z lokalnego to null
 
         //nazwa pliku w katalogu repo
         const audioFileName = fileAudio;
         const textFileName = fileTxt;
     
-        console.log(textFileName)
+       // console.log(textFileName)
 
         // buduje wpis do bazy danych
         task = {
@@ -123,7 +124,7 @@ exports.runTaskOK = (taskType, fileKey, fileId = null, fileAudio, fileTxt = null
                 console.log('Creacted task: ' + savedId);
 
                 //odpytuje baze co sekunde czy ukonczony jest task
-                // To start the loop
+            
                 console.log("waiting for task to finish....")
                 let checkerdb = setInterval(function () {
 
@@ -135,8 +136,8 @@ exports.runTaskOK = (taskType, fileKey, fileId = null, fileAudio, fileTxt = null
                                 console.log(task)
                                 if (!task.error) {
 
-                                    let audioFile = null;
-                                    let resultFile = null;
+                                    let audioFile = null; //file w uploaded_temp
+                                    let resultFile = null; //results w uploaded_temp
                                     let txtFile = null;
 
                                     //rozpoznaje rodzaj tasku
@@ -146,19 +147,104 @@ exports.runTaskOK = (taskType, fileKey, fileId = null, fileAudio, fileTxt = null
                                             audioFile = task.input;
                                             resultFile = task.result;
 
-                                            //console.log('zmieniam uprawnienia do pliku')
-                                            // fs.chmod(appRoot + '/repo/uploaded_temp/' + resultFile, 0700, function(err){
-                                            //     if(err) throw err;
-                                            // });
+                                           
 
-                                            //najpierw znajduje plik ktory jest poddawany rozpoznawaniu
+                                            //najpierw znajduje plik ktory jest poddawany rozpoznawaniu w bazie danych
                                             let recognizedAudioFile = null;
+
                                             ProjectEntry.findById(projectId)
                                             .then(foundPE=> {
+                                                
+                                                
+
+                                                //przenosze plik z rozpoznawania do katalogu uzytkownika repo i robie powiazanie w bazie danych
+                                                let moveFrom = appRoot + '/repo/uploaded_temp/' + resultFile;
+                                                let resultFileName;
+
+                                                //jezeli plik pochodzi z local 
+                                                if(fileId==null){
+                                                   // resultFileName = utils.addSuffixToFileName(utils.getFileNameFromRepoKey(fileKey),'_rec','txt')
+                                                //jezeli plik pochodzi z repo
+                                                } else {
+                                                    resultFileName = utils.addSuffixToFileName(utils.getFileNameFromRepoKey(fileKey),'_rec','txt')
+                                                }
+
+                                                
+                                                
+                                                let moveTo = appRoot + '/repo/' + userId + '/' + projectId + '/' + utils.getRepoPathFromKey(fileKey) + '/' + resultFileName ;
+                                                //console.log(foundPE)
+                                                console.log('przenosze wynik rozpoznawania')
+                                                //console.log(moveFrom)
+                                                //console.log(moveTo);
+
+
+                                                fs.move(moveFrom, moveTo,{ overwrite: true })
+                                                .then(()=>{
+
+                                                    //wydobywam z bazy danych plik który został poddany rozpoznawaniu
+                                                    recognizedAudioFile = foundPE.files.find(file => {
+                                                        return file._id == fileId
+                                                    })
+                                                    //console.log("recognizedAudioFile")
+                                                    //console.log(recognizedAudioFile);
+
+                                                    //sprawdzam czy przypadkiem plik txt rozpoznawania o tej samej nazwie juz nie istnieje
+                                                    //jezeli tak to nie zapisuje nowego w bazie - pliki zostana nadpisane rozpoznawaniem
+                                                    //na serwerze i ich zawartość bedzie sie różniła - ale nie wpis w repo
+
+                                                    if(recognizedAudioFile.connectedWithFiles.length == 0){
+                                                        //zapisuje plik rozpoznawania w bazie danych
+                                                        const recResult = new ProjectFile({
+                                                            name: resultFileName,
+                                                            fileKey: utils.getRepoPathFromKey(fileKey) + '/' + resultFileName ,
+                                                            fileSize: fs.statSync(moveTo).size,
+                                                            fileModified: +moment(fs.statSync(moveTo).mtime),
+                                                            connectedWithFiles: recognizedAudioFile._id,
+                                                        });
+
+                                                        ProjectEntry.findOneAndUpdate({"_id": projectId}, {$push: {"files": recResult}})
+                                                        .then((updatedResultFile)=>{
+                                                            //console.log("updatedResultFile");
+                                                            //console.log(updatedResultFile)
+
+                                                            // robie powiązanie w pliku audio do pliku wyniku wynikowebo w bazie
+                                                            ProjectEntry.findOneAndUpdate({"files": {$elemMatch: {"_id": recognizedAudioFile._id}}}, {$push: {"files.$.connectedWithFiles": recResult._id}})
+                                                            .then(updatedResultFile=>{
+
+                                                                // teraz jeszcze czyszcze wgrany plik audio do uploaded_temp
+                                                                fs.remove(appRoot + '/repo/uploaded_temp/' + audioFile)
+                                                                .then(()=>{
+                                                                    resolve(task);
+                                                                })
+                                                            })
+
+                                                        })
+                                                    } else {
+                                                        console.log("Plik z rozpoznawaniem już istnieje o tej samej nazwie dlatego nie robie updatu w bazie!!")
+                                                        // teraz jeszcze czyszcze wgrany plik audio do uploaded_temp
+                                                        fs.remove(appRoot + '/repo/uploaded_temp/' + audioFile)
+                                                        .then(()=>{
+                                                            resolve(task);
+                                                        })
+                                                    }
+
+                                                })
+                                                .catch((err)=>{
+                                                    console.log('problem z przeniesieniem pliku wynikowego recognition!');
+                                                    reject(err);
+                                                })
+
+                                            })
+
+                                            break;
+
+                                                
+                                               /* 
                                                 recognizedAudioFile = foundPE.files.find(file => {
                                                     return file._id == fileId
                                                 })
 
+    
                                                 const recResult = new ProjectFile({
                                                     name: utils.addSuffixToFileName(recognizedAudioFile.name,'_rec','txt'),
                                                     fileKey: utils.getRepoPathFromKey(fileKey) + '/' + utils.addSuffixToFileName(recognizedAudioFile.name,'_rec','txt'),
@@ -167,12 +253,19 @@ exports.runTaskOK = (taskType, fileKey, fileId = null, fileAudio, fileTxt = null
                                                     connectedWithFiles: recognizedAudioFile._id,
                                                 });
 
+                                                //dodaje odniesienie w recognizedAudioFile do pliku txt
+                                                recognizedAudioFile.connectedWithFiles.push(recResult._id);
+                                                
+                                                // to do - jak zaktualizować...
+                                                ProjectEntry.updateOne({$and: [{"_id": projectId},{"files._id":fileId}]},{$set: {"files.$": recResult}});
+
+                                                // to tez trzeba poprawic...
                                                 foundPE.files.push(recResult)
+
                                                 foundPE.save()
                                                 .then(()=>{
 
                                                     //przenosze plik z rozpoznawania do katalogu uzytkownika repo i robie powiazanie w bazie danych
-                                            
                                                     let moveFrom = appRoot + '/repo/uploaded_temp/' + resultFile;
                                                     let moveTo = appRoot + '/repo/' + userId + '/' + projectId + '/' + utils.getRepoPathFromKey(fileKey) + '/' + utils.addSuffixToFileName(recognizedAudioFile.name,'_rec','txt');
                                                     console.log('przenosze wynik rozpoznawania')
@@ -193,8 +286,9 @@ exports.runTaskOK = (taskType, fileKey, fileId = null, fileAudio, fileTxt = null
                                                     console.log(err);
                                                     throw err;
                                                 })
+                                                */
 
-                                            })
+                                           
 
                                             
 
@@ -227,7 +321,7 @@ exports.runTaskOK = (taskType, fileKey, fileId = null, fileAudio, fileTxt = null
         
                                             //     });                                            
                                             
-                                            break;
+                                            
                                         case (1):
 
                                             audioFile = task.input.audio;
