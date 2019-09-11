@@ -58,6 +58,48 @@ exports.bytesToSize = (bytes) => {
     return nazwaplikubezext + '.' + fileext;
   }
 
+  //zwraca nazwe pliku z wersji z dodaną data (multer tak robi)
+  exports.getFileNameFromEncodedMulter = (encodedFileName) =>{
+
+    let filename='';
+    //pomysł jest taki aby zwracać ciąg do drugiej znalezionej od tyłu kropki..
+
+    let gdziekropki = this.charPos(encodedFileName,'.');
+    let gdziemyslniki = this.charPos(encodedFileName,'-');
+
+    let pozycjaPrzedOstatniej = gdziekropki[gdziekropki.length -2];
+    let pozycja = gdziemyslniki[gdziemyslniki.length -3];
+
+    //jezeli plik ma rozszerzenie...
+    if(gdziekropki.length >= 2){
+        
+        filename = encodedFileName.substring(0,pozycjaPrzedOstatniej);
+        //wnioskuje rozszerzenie
+        filename = filename + encodedFileName.substring(pozycjaPrzedOstatniej,pozycja);
+    }else{
+        //plik nie mial rozszerzenia ale jest ciagle ok
+        //wtedy biore przed 3 myslnik przed myslinikeim
+        
+        
+        filename = encodedFileName.substring(0,pozycja);
+    }
+    
+    
+    return filename;
+  }
+
+  
+  //zwraca wystepowanie okreslonego znaku w stringu
+  exports.charPos = (str, char) => {
+    return str
+           .split("")
+           .map(function (c, i) { if (c == char) return i; })
+           .filter(function (v) { return v >= 0; });
+  }
+  
+
+ 
+
   //zwraca ścieżkę katalogu w repo w którym jest plik
   exports.getRepoPathFromKey = (fileKey) =>{
     let gdzieslash = fileKey.lastIndexOf('/');

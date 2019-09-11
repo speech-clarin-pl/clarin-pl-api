@@ -94,7 +94,8 @@ exports.startFileRecognitionOK =  (req, res,next) => {
             let fileFrom = appRoot + '/repo/' + userId + '/' + projectId + '/' + draggedFileKey ;
             
             //buduje unikatowa nazwe dla pliku dla bezpieczenstwa dodajac date
-            let newOryginalName = utils.addSuffixToFileName(draggedFileName,userId + '-'+new Date().toISOString());
+            //let newOryginalName = utils.addSuffixToFileName(draggedFileName,userId + '-'+new Date().toISOString());
+            let newOryginalName = draggedFileName + '-'+new Date().toISOString();
 
             let fileTo = appRoot + '/repo/uploaded_temp/' + newOryginalName;
 
