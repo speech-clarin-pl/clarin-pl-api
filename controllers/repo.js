@@ -5,12 +5,13 @@ const mkdirp = require("mkdirp"); //do tworzenia folderu
 const rimraf = require("rimraf");
 const appRoot = require('app-root-path'); //zwraca roota aplikacji
 const moment = require('moment');
-const utilsForFiles = require('../utils/utils');
+const utils = require('../utils/utils');
 const config = require('../config.js');
 //importuje model wpisu projektu
 const ProjectEntry = require('../models/projectEntry');
 const ProjectFile = require('../models/projectFile');
 const User = require('../models/user');
+
 
 
 //##########################################
@@ -34,71 +35,64 @@ exports.uploadFiles = (req, res, next) => {
 
   let listablednychplikow = [];
   let listaplikowOK = [];
-
   let filesToSaveInDB = [];
 
   ProjectEntry.findById(projectId)
-  .then(foundPD => {
+    .then(foundPD => {
 
-    for (let i=0; i< filesToSave.length; i++){
+      for (let i = 0; i < filesToSave.length; i++) {
 
-      let oryginalName = filesToSave[i].originalname;
+        let oryginalName = filesToSave[i].originalname;
 
-      //sprawdzam czy plik o takiej samej nazwie nie istnieje już w bazie
-      let czyistnieje = false;
-      for (let s=0; s< foundPD.files.length; s++){
-        let f = foundPD.files[s];
-        if(f.name === oryginalName){
-          
-          let gdziedot = oryginalName.lastIndexOf('.');
-          let nazwaplikubezext = oryginalName.substring(0,gdziedot);
-          let fileext = oryginalName.substring(gdziedot + 1);
-
-          //dodaje liczbe w nawiasie do pliku ktory juz istnieje
-          nazwaplikubezext = nazwaplikubezext + '_(copy)';
-          oryginalName = nazwaplikubezext + '.' + fileext;
-          break;
+        //sprawdzam czy plik o takiej samej nazwie nie istnieje już w w tym samym katalogu w bazie
+        //jezeli istnieje to dodaje prefix _(copy)
+        for (let s = 0; s < foundPD.files.length; s++) {
+          let f = foundPD.files[s];
+          if ((folderKey + f.name) == (folderKey + oryginalName)) {
+            oryginalName = utils.addSuffixToFileName(oryginalName, '_(copy)');
+            break;
+          }
         }
-      }
-      
 
-      const fullFinalFilePath = finalFileDest + folderKey + oryginalName;
-    //   filesToSaveInDB.push(plik);
+        const fullFinalFilePath = finalFileDest + folderKey + oryginalName;
 
-      fs.move(appRoot + '/repo/uploaded_temp/' + filesToSave[i].filename, fullFinalFilePath, { overwrite: false })
-      .then(()=>{
-        // console.log("grupuje pliki do wstawienia do bazy");
-          const plik = new ProjectFile({
-            name: oryginalName,
-            fileKey: folderKey + oryginalName,
-            fileSize: fs.statSync(fullFinalFilePath).size,
-            fileModified: +moment(fs.statSync(fullFinalFilePath).mtime),
-            connectedWithFiles: []
-          });
-          foundPD.files.push(plik);
+        //przenosze wgrane pliki z folderu temp do repo uzytkownika
+        fs.move(appRoot + '/repo/uploaded_temp/' + filesToSave[i].filename, fullFinalFilePath, { overwrite: false })
+          .then(() => {
+            // console.log("grupuje pliki do wstawienia do bazy");
+            const plik = new ProjectFile({
+              name: oryginalName,
+              fileKey: folderKey + oryginalName,
+              fileSize: fs.statSync(fullFinalFilePath).size,
+              fileModified: +moment(fs.statSync(fullFinalFilePath).mtime),
+              connectedWithFiles: []
+            });
+            foundPD.files.push(plik);
 
-          //po ostatnim pliku w kolejce zapisuje entry do bazy
-          if(i == filesToSave.length -1){
-             foundPD.save()
-               .then(updatedPE => {
+            //po ostatnim pliku w kolejce zapisuje entry do bazy
+            //bo juz wszystkie pliki sa zupdatowane
+            if (i == filesToSave.length - 1) {
+
+              ProjectEntry.updateOne({ "_id": projectId }, { "files": foundPD.files })
+                .then(updatedPE => {
                   console.log("pdatedPD")
                   console.log(updatedPE);
-                  res.status(200).json({ message: 'files have been uploaded'});
-              })
-              .catch(err => {
+                  res.status(200).json({ message: 'files have been uploaded' });
+                })
+                .catch(err => {
                   console.error(err);
                   return err;
-              })
-          }
+                })
+            }
 
-      })
-      .catch(()=>{
-        console.error(err);
-        return err;
-      })
-    }
+          })
+          .catch(() => {
+            console.error(err);
+            return err;
+          })
+      }
 
-  })
+    })
 
 }
 
@@ -121,9 +115,23 @@ exports.createFolder = (req, res, next) => {
       return console.error(err);
     }
 
-    res.status(201).json({ message: 'Folder has been created!', key: key });
-  });
+    //zapisuje w bazie nowy folder
+    const newFolder = new ProjectFile({
+      name: key.substring(key.length - 1),
+      fileKey: key,
+      fileSize: 0,
+      fileModified: 0,
+      connectedWithFiles: []
+    });
 
+    ProjectEntry.findOneAndUpdate({ "_id": projectId }, { $push: { "files": newFolder } })
+      .then(() => {
+        res.status(201).json({ message: 'Folder has been created!', key: key });
+      })
+      .catch((err) => {
+        console.log(err)
+      })
+  });
 }
 
 //##########################################
@@ -142,7 +150,35 @@ exports.renameFolder = (req, res, next) => {
     if (err) console.log('ERROR: ' + err);
   });
 
-  res.status(200).json({ message: 'Folder has been renamed!', oldKey: oldKey, newKey: newKey });
+  //zmieniam nazwe tego folderu w bazie danych
+  ProjectEntry.findById(projectId)
+    .then(foundPE => {
+
+      //sukam w zapisanych plikach edytowany folder 
+      //oraz musze zrobic update we wszystkich plikachj które zawieraja 
+      //go jako key
+
+      let wszystkiePliki = foundPE.files;
+      for (let i = 0; i < wszystkiePliki.length; i++) {
+        let plik = wszystkiePliki[i];
+        let oldFileKey = plik.fileKey;
+        if (oldFileKey.includes(oldKey)) {
+          let newFileKey = oldFileKey.replace(oldKey, newKey);
+          plik.name = utils.getFileNameFromRepoKey(newFileKey);
+          plik.fileKey = newFileKey;
+          wszystkiePliki[i] = plik;
+        }
+      }
+
+      //robie update wszystkich plikow w projekcie
+      // do ewentualnego poprawienia w przyszlosci efektywnosc tego rozwiazania
+      //aby nie edytowac calej listy tylko te zupdatowane
+
+      ProjectEntry.findOneAndUpdate({ "_id": projectId }, { "files": wszystkiePliki })
+        .then(updatedPE => {
+          res.status(200).json({ message: 'Folder has been renamed!', oldKey: oldKey, newKey: newKey });
+        })
+    })
 }
 
 //##########################################
@@ -165,11 +201,31 @@ exports.deleteFolder = (req, res, next) => {
   const repoPath = appRoot + "/repo/" + userId + "/" + projectId;
 
   rimraf(repoPath + '/' + folderKey, function (err) {
-      if (err) throw err;
-      // if no error, file has been deleted successfully
-      console.log('Folder deleted!');
-      res.status(200).json({ message: 'Folder has been removed!', folderKey: folderKey });
-    });
+    if (err) throw err;
+    // if no error, file has been deleted successfully
+    console.log('Folder deleted!');
+
+    ProjectEntry.findById(projectId)
+      .then(foundPE => {
+        //usuwam z tabicy wszystkie elementy ktore posiadaja dany folderKey w fileKey
+        let wszystkiePliki = foundPE.files;
+        let filteredPliki = wszystkiePliki.filter(plik => {
+          return !plik.fileKey.includes(folderKey)
+        })
+
+        //robie update wszystkich plikow w projekcie
+        // do ewentualnego poprawienia w przyszlosci efektywnosc tego rozwiazania
+        //aby nie edytowac calej listy tylko te zupdatowane
+
+        ProjectEntry.findOneAndUpdate({ "_id": projectId }, { "files": filteredPliki })
+          .then(updatedPE => {
+            res.status(200).json({ message: 'Folder has been removed!', folderKey: folderKey });
+          })
+
+      })
+
+  })
+
 
 }
 
@@ -187,27 +243,38 @@ exports.deleteFile = (req, res, next) => {
 
   fs.unlink(repoPath + '/' + fileKey, function (err) {
     if (err) throw err;
-    // if no error, file has been deleted successfully
-    console.log('File deleted!');
-    res.status(200).json({ message: 'File has been removed!', fileKey: fileKey });
+    
+    // tutaj trzeba zrobić update tylko jednego wpisu w tablicy files w bazie danych
+
+    ProjectEntry.updateOne({ "_id": projectId}, { $pull: { "files": {"fileKey":fileKey} } })
+    .then(()=>{
+      res.status(200).json({ message: 'File has been removed!', fileKey: fileKey });
+      console.log('File deleted!');
+    })
+    .catch((err)=>{
+      console.log('Can not remove the file from DB');
+      console.log(err);
+    })
+  
+   
   });
 }
 
 //##########################################
 //#### file download ######
 //#######################################
-exports.downloadFile = (req,res,next) => {
+exports.downloadFile = (req, res, next) => {
   const userId = req.query.userId;
   const projectId = req.query.projectId;
   const fileKey = req.query.fileKey;
 
-  const pathToDownload = config.publicApiAddress + '/'+userId + "/" + projectId + fileKey;
+  const pathToDownload = config.publicApiAddress + '/' + userId + "/" + projectId + fileKey;
 
   console.log('DOWNLOAD FILE');
   console.log(pathToDownload)
 
   //res.download(pathToDownload);
-  res.status(200).json({pathToDownload: pathToDownload, message: 'you can download the file'});
+  res.status(200).json({ pathToDownload: pathToDownload, message: 'you can download the file' });
 
 }
 
@@ -234,7 +301,7 @@ exports.editTxtFile = (req, res, next) => {
   });
 
 
- 
+
 }
 
 //##########################################
@@ -255,7 +322,26 @@ exports.renameFile = (req, res, next) => {
     if (err) console.log('ERROR: ' + err);
   });
 
-  res.status(200).json({ message: 'File has been renamed!', oldKey: oldKey, newKey: newKey });
+   //robimy update w bazie danych
+   ProjectEntry.findById(projectId)
+   .then(foundPE=>{
+
+     let foundfile = foundPE.files.find(file=>{
+       return file.fileKey == oldKey;
+     })
+
+     foundfile.fileKey = newKey;
+     foundfile.name = utils.getFileNameFromRepoKey(newKey);
+     console.log(foundfile)
+
+
+     ProjectEntry.findOneAndUpdate({ "files": { $elemMatch: { "_id": foundfile._id } } }, { "files.$": foundfile })
+     .then(foundPE => {
+       res.status(200).json({ message: 'File has been renamed!', oldKey: oldKey, newKey: newKey });
+     })
+   })
+
+  
 }
 
 //##########################################
@@ -302,17 +388,17 @@ exports.getRepoFiles = (req, res, next) => {
   //szukam plików w bazie danych dla danego usera
   let znalezionyPE = null;
   ProjectEntry.findById(projectId)
-  .then(foundPE => {
-        znalezionyPE = foundPE;
-        
+    .then(foundPE => {
+      znalezionyPE = foundPE;
+
       //sprawdzam czy wlacicielem jest zalogowany uzytkownik
       return User.findById(userId);
-  })
-  .then(user=>{
+    })
+    .then(user => {
 
-      if(user._id == userId){
+      if (user._id == userId) {
 
-        let listOfUserFiles = znalezionyPE.files.map(file =>{
+        let listOfUserFiles = znalezionyPE.files.map(file => {
 
           const urltopass = config.publicApiAddress + '/' + repoStatic + '/' + file.fileKey;
 
@@ -334,12 +420,12 @@ exports.getRepoFiles = (req, res, next) => {
         error.statusCode = 401;
         throw error;
       }
-  })
-  .catch(err =>{
-        let error = new Error('Error with loading user files to repo');
-        error.statusCode = 500;
-        throw error;
-  })
+    })
+    .catch(err => {
+      let error = new Error('Error with loading user files to repo');
+      error.statusCode = 500;
+      throw error;
+    })
 
   // utilsForFiles.readDir(repoPath, function (filePaths) {
   //   //sciezki zawieraja pewne sciezki wiec je przeksztalcam na relatywne
@@ -351,9 +437,9 @@ exports.getRepoFiles = (req, res, next) => {
 
   //     //const fileSize = 4.2 * 1024 * 1024;
   //     const fileSize = fs.statSync(path).size;
-      
+
   //     //const urltopass = config.publicApiAddress + path.replace(appRoot, '');
-      
+
   //     const urltopass = config.publicApiAddress + '/' + repoStatic + relativePath;
 
   //     console.log(urltopass)
@@ -362,7 +448,7 @@ exports.getRepoFiles = (req, res, next) => {
   //     console.log(appRoot)
 
   //     //const urltopass = config.publicApiAddress + path.replace(appRoot, '');
-      
+
   //     let fileEntry = {
   //       key: relativePath,
   //       modified: fileModified,
