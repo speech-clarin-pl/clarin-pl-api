@@ -44,6 +44,14 @@ exports.bytesToSize = (bytes) => {
     return `${(bytes / (1024 ** i)).toFixed(1)} ${sizes[i]}`;
   }
 
+
+  //cut the extension from filename
+  exports.getFileNameWithNoExt = (fileName) =>{
+    let gdziedot = fileName.lastIndexOf('.');
+    let nazwaplikubezext = fileName.substring(0,gdziedot);
+    return nazwaplikubezext;
+  }
+
   //add sufix to the name of given file
   exports.addSuffixToFileName = (fileName, suffix, ext=null) =>{
     let gdziedot = fileName.lastIndexOf('.');
@@ -97,8 +105,6 @@ exports.bytesToSize = (bytes) => {
            .filter(function (v) { return v >= 0; });
   }
   
-
- 
 
   //zwraca ścieżkę katalogu w repo w którym jest plik
   exports.getRepoPathFromKey = (fileKey) =>{

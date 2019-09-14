@@ -90,7 +90,6 @@ exports.startFileRecognitionOK =  (req, res,next) => {
             const draggedFileModified = draggedFile.fileModified;
 
             //KOPIUJE TEN PLIK DO KATALOGU 'repo/uploaded_temp' dla dokera do przetworzenia
-
             let fileFrom = appRoot + '/repo/' + userId + '/' + projectId + '/' + draggedFileKey ;
             
             //buduje unikatowa nazwe dla pliku dla bezpieczenstwa dodajac date
@@ -110,7 +109,9 @@ exports.startFileRecognitionOK =  (req, res,next) => {
                 dockerTaskControllerOK.runTaskOK(
                     "recognize",
                     draggedFileKey,
+                    null,
                     sentFileId,
+                    null,
                     newOryginalName,
                     null,
                     userId,

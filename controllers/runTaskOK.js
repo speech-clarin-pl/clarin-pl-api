@@ -8,14 +8,16 @@ const ProjectEntry = require('../models/projectEntry');
 const ProjectFile = require('../models/projectFile');
 const User = require('../models/user');
 
-exports.runTaskOK = (taskType, fileKey = null, fileId = null, fileAudio, fileTxt = null,
+exports.runTaskOK = (taskType, fileKey = null, fileTxtKey = null, fileId = null, fileTxtId = null, fileAudio, fileTxt = null,
     userId, projectId, sentEntryId) => {
     return new Promise((resolve, reject) => {
 
         console.log('PARAMETRY W RUN TASK: ')
         console.log(taskType)
         console.log(fileKey) //jezeli jest przeciagniety z lokalnego to null
+        console.log(fileTxtKey) //jezeli jest przeciagniety z lokalnego to null
         console.log(fileId) //jezeli jest przeciagniety z lokalnego to null
+        console.log(fileTxtId) //jezeli jest przeciagniety z lokalnego to null
         console.log(fileAudio)
         console.log(fileTxt)  // tylko do segmentacji
         console.log(userId)
@@ -161,7 +163,7 @@ exports.runTaskOK = (taskType, fileKey = null, fileId = null, fileAudio, fileTxt
 
                                                     //przenosze plik z rozpoznawania do katalogu uzytkownika repo i robie powiazanie w bazie danych
                                                     let moveFrom = appRoot + '/repo/uploaded_temp/' + resultFile;
-                                                    
+
                                                     let orygFN = null;
 
                                                     //jezeli plik pochodzi z local 
@@ -251,7 +253,6 @@ exports.runTaskOK = (taskType, fileKey = null, fileId = null, fileAudio, fileTxt
                                                             } else {
                                                                 //jezeli plik pochodzi z repo 
 
-
                                                                 //wydobywam z bazy danych plik który został poddany rozpoznawaniu
                                                                 recognizedAudioFile = foundPE.files.find(file => {
                                                                     return file._id == fileId
@@ -307,10 +308,169 @@ exports.runTaskOK = (taskType, fileKey = null, fileId = null, fileAudio, fileTxt
                                             break;
                                         case (1):
 
+
+
                                             audioFile = task.input.audio;
                                             txtFile = task.input.text;
                                             resultFile = task.result;
 
+                                            //najpierw znajduje pliki ktory sa do segmentacji
+                                            let segmentedAudioFile = null;
+                                            let segmentedTxtFile = null;
+
+                                            ProjectEntry.findById(projectId)
+                                                .then(foundPE => {
+
+                                                    //przenosze plik wynikowy z segmentacji do katalogu uzytkownika repo i robie powiazanie w bazie danych
+                                                    let moveResultFrom = appRoot + '/repo/uploaded_temp/' + resultFile;
+
+                                                    let orygResultFN = null;
+
+                                                    let orygAudioName = utils.getFileNameFromEncodedMulter(audioFile);
+                                                    let orygTxtName = utils.getFileNameFromEncodedMulter(txtFile);
+
+                                                    //jezeli plik pochodzi z local 
+                                                    if (fileId == null) {
+                                                        //buduje fileKey sztucznie, zakladajac ze pliki zapisuja sie w katalogu my_files
+
+                                                        //wydobywam oryginalna nazwe pliku z zakodowanej w dacie w katalogu tymczasowym
+                                                        orygResultFN = orygAudioName;
+
+
+                                                        fileKey = 'my_files/' + orygResultFN;
+                                                        fileTxtKey = 'my_files/' + orygTxtName;
+                                                        //console.log("orygFN")
+                                                        //console.log(orygResultFN)
+                                                    }
+
+                                                    //nazwa jaka bedzie mial plik wynikowy w repo uzytkownika
+                                                    let resultFileName = utils.getFileNameWithNoExt(orygAudioName) + '_' + utils.getFileNameWithNoExt(orygTxtName) + '_seg.ctm';
+
+                                                    let moveResultsTo = appRoot + '/repo/' + userId + '/' + projectId + '/' + utils.getRepoPathFromKey(fileKey) + '/' + resultFileName;
+
+                                                    fs.move(moveResultFrom, moveResultsTo, { overwrite: true })
+                                                        .then(() => {
+
+                                                            //jezeli plik pochodzi z local 
+                                                            if (fileId == null) {
+                                                                //przenosze go do repo uzytkownika i wstawiam go do bazy danych
+
+                                                                let moveAudioFrom = appRoot + '/repo/uploaded_temp/' + audioFile;
+                                                                let moveAudioTo = appRoot + '/repo/' + userId + '/' + projectId + '/my_files/' + orygResultFN;
+
+                                                                let finalTxtFileName = utils.getFileNameFromEncodedMulter(txtFile);
+                                                                let moveTxtFrom = appRoot + '/repo/uploaded_temp/' + txtFile;
+                                                                let moveTxtTo = appRoot + '/repo/' + userId + '/' + projectId + '/my_files/' + finalTxtFileName;
+
+                                                                fs.move(moveAudioFrom, moveAudioTo, { overwrite: true })
+                                                                    .then(() => {
+                                                                        fs.move(moveTxtFrom, moveTxtTo, { overwrite: true })
+                                                                            .then(() => {
+
+
+                                                                                //zapisuje pliki audio i txt i results w bazie
+                                                                                const localAudioFile = new ProjectFile({
+                                                                                    name: orygResultFN,
+                                                                                    fileKey: fileKey,
+                                                                                    fileSize: fs.statSync(moveAudioTo).size,
+                                                                                    fileModified: +moment(fs.statSync(moveAudioTo).mtime),
+                                                                                    connectedWithFiles: [],
+                                                                                });
+
+                                                                                const localTxtFile = new ProjectFile({
+                                                                                    name: finalTxtFileName,
+                                                                                    fileKey: fileTxtKey,
+                                                                                    fileSize: fs.statSync(moveTxtTo).size,
+                                                                                    fileModified: +moment(fs.statSync(moveTxtTo).mtime),
+                                                                                    connectedWithFiles: [],
+                                                                                });
+
+                                                                                const segResult = new ProjectFile({
+                                                                                    name: resultFileName,
+                                                                                    fileKey: utils.getRepoPathFromKey(fileKey) + '/' + resultFileName,
+                                                                                    fileSize: fs.statSync(moveResultsTo).size,
+                                                                                    fileModified: +moment(fs.statSync(moveResultsTo).mtime),
+                                                                                    connectedWithFiles: [localAudioFile._id, localTxtFile._id],
+                                                                                });
+
+                                                                                localAudioFile.connectedWithFiles = [localTxtFile._id, segResult._id];
+                                                                                localTxtFile.connectedWithFiles = [localAudioFile._id, segResult._id];
+
+                                                                                //stawiam do foundPE.files nowe pliki wraz z powiazaniami do nich
+                                                                                foundPE.files.push(localAudioFile);
+                                                                                foundPE.files.push(localTxtFile);
+                                                                                foundPE.files.push(segResult);
+
+                                                                                ProjectEntry.updateOne({ "_id": projectId }, { "files": foundPE.files })
+                                                                                    .then(updatedEntry => {
+                                                                                        // teraz jeszcze czyszcze wgrane pliki z uploaded_temp
+                                                                                        resolve(task);
+
+                                                                                    })
+                                                                                    .catch(err => {
+                                                                                        console.log('Problem z updatem listy plików projektu w bazie');
+                                                                                        reject(err);
+                                                                                    })
+
+                                                                            })
+                                                                    })
+                                                            } else {
+                                                                //jezeli plik pochodzi z repo 
+
+                                                                //wydobywam z bazy danych plik który został poddany segmentacji
+                                                                segmentedAudioFile = foundPE.files.find(file => {
+                                                                    return file._id == fileId
+                                                                })
+
+                                                                segmentedTxtFile = foundPE.files.find(file => {
+                                                                    return file._id == fileTxtId
+                                                                })
+
+
+                                                                //zapisuje plik rozpoznawania w bazie danych
+                                                                const segResult = new ProjectFile({
+                                                                    name: resultFileName,
+                                                                    fileKey: utils.getRepoPathFromKey(fileKey) + '/' + resultFileName,
+                                                                    fileSize: fs.statSync(moveResultsTo).size,
+                                                                    fileModified: +moment(fs.statSync(moveResultsTo).mtime),
+                                                                    connectedWithFiles: [segmentedAudioFile._id, segmentedTxtFile._id],
+                                                                });
+
+                                                                ProjectEntry.findOneAndUpdate({ "_id": projectId }, { $push: { "files": segResult } })
+                                                                    .then((updatedResultFile) => {
+
+
+
+                                                                       // resolve(task);
+
+                                                                        // robie powiązanie w pliku audio i do pliku txt do pliku wyniku wynikowebo w bazie
+                                                                       
+                                                                        let allfiles = updatedResultFile.files;
+                                                                        segmentedAudioFile = foundPE.files.find(file => {
+                                                                            return file._id == fileId
+                                                                        })
+                                                                        
+                                                                        
+                                                                        ProjectEntry.findOneAndUpdate({ "files": { $elemMatch: { "_id": segmentedAudioFile._id } } }, { $push: { "files.$.connectedWithFiles": {$each: [segmentedTxtFile._id, segResult._id]} } })
+                                                                        .then(updatedResultFile => {
+
+                                                                            ProjectEntry.findOneAndUpdate({ "files": { $elemMatch: { "_id": segmentedTxtFile._id } } }, { $push: { "files.$.connectedWithFiles": {$each: [segmentedAudioFile._id, segResult._id]} } })
+                                                                            .then((updated)=>{
+                                                                                resolve(task);
+                                                                            })
+                                                                            
+                                                                        })
+                                                                        
+                                                                    })
+
+                                                            }
+                                                        })
+
+
+                                                })
+
+
+                                            /*
                                             utils.moveFileToUserRepo(projectId, userId, audioFile)
                                                 .then(dir => {
                                                     utils.moveFileToUserRepo(projectId, userId, txtFile)
@@ -341,6 +501,7 @@ exports.runTaskOK = (taskType, fileKey = null, fileId = null, fileAudio, fileTxt
                                                     reject(err);
 
                                                 });
+                                                */
 
                                             break;
                                         case (2):
