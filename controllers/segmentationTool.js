@@ -145,59 +145,80 @@ exports.startEntrySegmentation = (req, res, next) => {
                                                 console.log('Plik został przekonwertowany!: ' + fileAudioTo);
                                                 //moge robić dalej rozpoznawanie!
 
+
+
                                                 fs.copy(fileTxtFrom, fileTxtTo)
                                                     .then(() => {
 
                                                         //w tym miejscu sprawdzam długość pliku - jeżeli ponad minute to segmentalign
                                                         //dla krotkich jest forcealign
 
-                                                        // getAudioDurationInSeconds(fileAudioTo).then((duration) => {
-                                                        //     console.log(duration)
-                                                        // console.log(duration)
-                                                        // })
+                                                        let algorytmsegmentacji = 'forcealign';
 
-                                                        // //tutaj uruchamiam task z dockera
-                                                        dockerTaskControllerOK.runTaskOK(
-                                                            "forcealign",
-                                                            draggedAudioFileKey,
-                                                            draggedTxtFileKey,
-                                                            sentAudioFileId,
-                                                            sentTxtFileId,
-                                                            newOryginalAudioName,
-                                                            newOryginalTxtName,
-                                                            userId,
-                                                            projectId,
-                                                            entryId)
-                                                            .then(task => {
-                                                                console.log(' TASK ZAKONCZONY SUKCESEM');
+                                                        try {
+                                                            var process = new ffmpeg(fileAudioTo);
+                                                            process.then(function (audio) {
 
-                                                                // teraz jeszcze czyszcze uploaded_temp
-                                                                fs.remove(fileAudioTo)
-                                                                    .then(() => {
-                                                                        fs.remove(fileTxtTo)
-                                                                            .then(() => {
-                                                                                res.status(201).json({ message: "segmentation task finished with sucess", sentEntryId: { entryId } });
-                                                                            })
-                                                                    })
-                                                            })
-                                                            .catch(err => {
-                                                                console.log(' PROBLEM Z TASKIEM ');
-                                                                if (!err.statusCode) {
-                                                                    err.statusCode = 500;
+                                                                if (audio.metadata.duration.seconds > 60) {
+                                                                    algorytmsegmentacji = 'segmentalign';
+                                                                } else {
+                                                                    algorytmsegmentacji = 'forcealign';
                                                                 }
 
-                                                                // teraz jeszcze czyszcze uploaded_temp
-                                                                fs.remove(fileAudioTo)
-                                                                    .then(() => {
-                                                                        fs.remove(fileTxtTo)
+                                                                // //tutaj uruchamiam task z dockera
+                                                                dockerTaskControllerOK.runTaskOK(
+                                                                    algorytmsegmentacji,
+                                                                    draggedAudioFileKey,
+                                                                    draggedTxtFileKey,
+                                                                    sentAudioFileId,
+                                                                    sentTxtFileId,
+                                                                    newOryginalAudioName,
+                                                                    newOryginalTxtName,
+                                                                    userId,
+                                                                    projectId,
+                                                                    entryId)
+                                                                    .then(task => {
+                                                                        console.log(' TASK ZAKONCZONY SUKCESEM');
+
+                                                                        // teraz jeszcze czyszcze uploaded_temp
+                                                                        fs.remove(fileAudioTo)
                                                                             .then(() => {
-                                                                                res.status(500).json({ message: "Something went wrong!", sentEntryId: { entryId } });
-                                                                                next(err);
+                                                                                fs.remove(fileTxtTo)
+                                                                                    .then(() => {
+                                                                                        res.status(201).json({ message: "segmentation task finished with sucess", sentEntryId: { entryId } });
+                                                                                    })
                                                                             })
                                                                     })
-                                                            })
+                                                                    .catch(err => {
+                                                                        console.log(' PROBLEM Z TASKIEM ');
+                                                                        if (!err.statusCode) {
+                                                                            err.statusCode = 500;
+                                                                        }
+
+                                                                        // teraz jeszcze czyszcze uploaded_temp
+                                                                        fs.remove(fileAudioTo)
+                                                                            .then(() => {
+                                                                                fs.remove(fileTxtTo)
+                                                                                    .then(() => {
+                                                                                        res.status(500).json({ message: "Something went wrong!", sentEntryId: { entryId } });
+                                                                                        next(err);
+                                                                                    })
+                                                                            })
+                                                                    })
+
+
+
+                                                            }, function (err) {
+                                                                console.log('Error: ' + err);
+                                                            });
+                                                        } catch (e) {
+                                                            console.log(e.code);
+                                                            console.log(e.msg);
+                                                        }
+
+
                                                     })
-                                                    .catch(err=>{
+                                                    .catch(err => {
                                                         console.log('Wystapil blad przy kopiowaniu pliku txt:' + err)
                                                     })
                                             })

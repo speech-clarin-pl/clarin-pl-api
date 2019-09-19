@@ -115,13 +115,14 @@ exports.createProject = (req, res, next) => {
                         //fs.statSync(appRoot + '/repo/demo_files');
 
                          //tworze folder na wlasne pliki
-                         
+                         /*
                         mkdirp(dirpath + '/my_files', function(err) {
                             if (err) {
                                 console.log(err);
                                 return err;
                             }
                         })
+                        */
 
                          //kopiuje pliki demo do repo usera
                          fsextra.copy(appRoot + '/repo/demo_files', dirpath + '/demo_files')
@@ -132,8 +133,8 @@ exports.createProject = (req, res, next) => {
                                 const sciezkaDoDemo = dirpath + '/demo_files';
                                 
                                 let nazwapliku;
-                                nazwapliku = 'test_rec.txt';
-                                const test_txt = new ProjectFile({
+                                nazwapliku = 'celnik.wav';
+                                const celnik = new ProjectFile({
                                     name: nazwapliku,
                                     fileKey: 'demo_files/' + nazwapliku,
                                     fileSize: fs.statSync(sciezkaDoDemo + '/'+nazwapliku).size,
@@ -141,8 +142,45 @@ exports.createProject = (req, res, next) => {
                                     connectedWithFiles: []
                                 });
 
-                                nazwapliku = 'test.wav';
-                                const test_wav = new ProjectFile({
+                                nazwapliku = 'kleska.wav';
+                                const kleska = new ProjectFile({
+                                    name: nazwapliku,
+                                    fileKey: 'demo_files/' + nazwapliku,
+                                    fileSize: fs.statSync(sciezkaDoDemo + '/'+nazwapliku).size,
+                                    fileModified: +moment(fs.statSync(sciezkaDoDemo + '/'+nazwapliku).mtime),
+                                    connectedWithFiles: []
+                                });
+
+                                nazwapliku = 'lektor.wav';
+                                const lektor = new ProjectFile({
+                                    name: nazwapliku,
+                                    fileKey: 'demo_files/' + nazwapliku,
+                                    fileSize: fs.statSync(sciezkaDoDemo + '/'+nazwapliku).size,
+                                    fileModified: +moment(fs.statSync(sciezkaDoDemo + '/'+nazwapliku).mtime),
+                                    connectedWithFiles: []
+                                });
+
+                                nazwapliku = 'mowa.wav';
+                                const mowa = new ProjectFile({
+                                    name: nazwapliku,
+                                    fileKey: 'demo_files/' + nazwapliku,
+                                    fileSize: fs.statSync(sciezkaDoDemo + '/'+nazwapliku).size,
+                                    fileModified: +moment(fs.statSync(sciezkaDoDemo + '/'+nazwapliku).mtime),
+                                    connectedWithFiles: []
+                                });
+
+                                nazwapliku = 'opowiesci.wav';
+                                const opowiesci = new ProjectFile({
+                                    name: nazwapliku,
+                                    fileKey: 'demo_files/' + nazwapliku,
+                                    fileSize: fs.statSync(sciezkaDoDemo + '/'+nazwapliku).size,
+                                    fileModified: +moment(fs.statSync(sciezkaDoDemo + '/'+nazwapliku).mtime),
+                                    connectedWithFiles: []
+                                });
+
+
+                                nazwapliku = 'senator.wav';
+                                const senator = new ProjectFile({
                                     name: nazwapliku,
                                     fileKey: 'demo_files/' + nazwapliku,
                                     fileSize: fs.statSync(sciezkaDoDemo + '/'+nazwapliku).size,
@@ -151,23 +189,26 @@ exports.createProject = (req, res, next) => {
                                 });
 
                                 //folder na wlasne pliki
-                                nazwapliku = 'my_files';
-                                const my_files_folder = new ProjectFile({
-                                    name: nazwapliku,
-                                    fileKey: nazwapliku + '/',
-                                    fileSize: 0,
-                                    fileModified: 0,
-                                    connectedWithFiles: []
-                                });
+                                // nazwapliku = 'my_files';
+                                // const my_files_folder = new ProjectFile({
+                                //     name: nazwapliku,
+                                //     fileKey: nazwapliku + '/',
+                                //     fileSize: 0,
+                                //     fileModified: 0,
+                                //     connectedWithFiles: []
+                                // });
 
                                 //tworze powiazania między plikami w demo
-                                test_txt.connectedWithFiles.push(test_wav._id);
-                                test_wav.connectedWithFiles.push(test_txt._id);
+                                //test_txt.connectedWithFiles.push(test_wav._id);
+                                //test_wav.connectedWithFiles.push(test_txt._id);
 
                                 //dodaje pliki demo do projektu
-                                projectEntry.files.push(test_txt);
-                                projectEntry.files.push(test_wav);
-                                projectEntry.files.push(my_files_folder);
+                                projectEntry.files.push(celnik);
+                                projectEntry.files.push(kleska);
+                                projectEntry.files.push(lektor);
+                                projectEntry.files.push(mowa);
+                                projectEntry.files.push(opowiesci);
+                                projectEntry.files.push(senator);
 
                                 
                                 //zapisuje pliki w kolekcji z plikami z odniesieniem do projektu
