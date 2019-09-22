@@ -128,6 +128,10 @@ exports.createProject = (req, res, next) => {
                          fsextra.copy(appRoot + '/repo/demo_files', dirpath + '/demo_files')
                             .then(() => {
 
+                                console.log(appRoot + '/repo/demo_files')
+                                console.log(dirpath + '/demo_files')
+                                console.log("Udalo sie przekopiowac powyzsze pliki i zaczynam procedure zapisywania plikow demo w DB")
+
                                 //dodaje te pliki demo bo bazy danych
 
                                 const sciezkaDoDemo = dirpath + '/demo_files';
@@ -225,6 +229,7 @@ exports.createProject = (req, res, next) => {
                                 })
                             })
                             .catch(err => {
+                                console.log("cos poszlo nie tak z kopiowaniem plikow")
                                 console.error(err);
                                 return err;
                             })

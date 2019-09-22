@@ -51,7 +51,7 @@ app.use((req, res, next) => {
 
 
 // dla rzadan zakodowanych w application/json
-app.use(bodyParser.urlencoded());
+//app.use(bodyParser.urlencoded());
 app.use(bodyParser.json());
 
 //do kompresji...
