@@ -124,12 +124,14 @@ exports.createProject = (req, res, next) => {
                         })
                         */
 
+                       console.log("zaczynam kopiowanie tych plikow")
+                       console.log(appRoot + '/repo/demo_files')
+                       console.log(dirpath + '/demo_files')
+
                          //kopiuje pliki demo do repo usera
                          fsextra.copy(appRoot + '/repo/demo_files', dirpath + '/demo_files')
                             .then(() => {
 
-                                console.log(appRoot + '/repo/demo_files')
-                                console.log(dirpath + '/demo_files')
                                 console.log("Udalo sie przekopiowac powyzsze pliki i zaczynam procedure zapisywania plikow demo w DB")
 
                                 //dodaje te pliki demo bo bazy danych
