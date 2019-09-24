@@ -268,7 +268,7 @@ exports.downloadFile = (req, res, next) => {
   const projectId = req.query.projectId;
   const fileKey = req.query.fileKey;
 
-  const pathToDownload = config.publicApiAddress + '/' + userId + "/" + projectId + fileKey;
+  const pathToDownload = config.publicApiAddress + '/' + userId + "/" + projectId + "/" + fileKey;
 
   console.log('DOWNLOAD FILE');
   console.log(pathToDownload)
