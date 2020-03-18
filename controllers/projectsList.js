@@ -25,7 +25,6 @@ exports.getProjectsList = (req, res, next) => {
                 error.statusCode = 404;
                 throw error;
             }
-
             res.status(200).json({message: 'Projects list featched!', projects: projectsList})
         })
         .catch(error => {
@@ -49,13 +48,15 @@ exports.getProjectsList = (req, res, next) => {
 
 }
 
+// #################################################################################
+// ################### dodawanie nowego projektu ##################################
+// #################################################################################
 
-//dodawanie nowego projektu
 exports.createProject = (req, res, next) => {
 
-    //resultaty validacji
+     //resultaty validacji
     const error = validationResult(req);
-    console.log(req.body.projectName)
+   // console.log(req.body.projectName)
     if(!error.isEmpty()){
         console.log("ERROR")
         console.log(error.array())
@@ -63,8 +64,6 @@ exports.createProject = (req, res, next) => {
         errortothrow.statusCode = 422;
         throw error;
     }
-
-    //--------------------------
 
     const reqProjectName = req.body.projectName;
     let owner;
@@ -91,163 +90,30 @@ exports.createProject = (req, res, next) => {
             return User.findById(req.userId);
         })
         .then(user => {
-
             //teraz to jest zalogowany user
             //wydobywam wiec projekty tylko tego usera
             owner = user;
-            //console.log(user)
             user.projects.push(projectEntry);
             return user.save();
         })
         .then(resultUser => {
+
             //tutaj tworzenie folder z plikami projektu dla danego usera
             const dirpath = appRoot + '/repo/'+owner._id+'/'+projectEntry._id;
 
-          
             mkdirp(dirpath, function(err) {
-
-                // if any errors then print the errors to  console
                 if (err) {
                     console.log(err);
                     return err;
                 } else {
-                    try {
-                        //fs.statSync(appRoot + '/repo/demo_files');
-
-                         //tworze folder na wlasne pliki
-                         /*
-                        mkdirp(dirpath + '/my_files', function(err) {
-                            if (err) {
-                                console.log(err);
-                                return err;
-                            }
-                        })
-                        */
-
-                       console.log("zaczynam kopiowanie tych plikow")
-                       console.log(appRoot + '/repo/demo_files')
-                       console.log(dirpath + '/demo_files')
-
-                         //kopiuje pliki demo do repo usera
-                         fsextra.copy(appRoot + '/repo/demo_files', dirpath + '/demo_files')
-                            .then(() => {
-
-                                console.log("Udalo sie przekopiowac powyzsze pliki i zaczynam procedure zapisywania plikow demo w DB")
-
-                                //dodaje te pliki demo bo bazy danych
-
-                                const sciezkaDoDemo = dirpath + '/demo_files';
-                                
-                                let nazwapliku;
-                                nazwapliku = 'celnik.wav';
-                                const celnik = new ProjectFile({
-                                    name: nazwapliku,
-                                    fileKey: 'demo_files/' + nazwapliku,
-                                    fileSize: fs.statSync(sciezkaDoDemo + '/'+nazwapliku).size,
-                                    fileModified: +moment(fs.statSync(sciezkaDoDemo + '/'+nazwapliku).mtime),
-                                    connectedWithFiles: []
-                                });
-
-                                nazwapliku = 'kleska.wav';
-                                const kleska = new ProjectFile({
-                                    name: nazwapliku,
-                                    fileKey: 'demo_files/' + nazwapliku,
-                                    fileSize: fs.statSync(sciezkaDoDemo + '/'+nazwapliku).size,
-                                    fileModified: +moment(fs.statSync(sciezkaDoDemo + '/'+nazwapliku).mtime),
-                                    connectedWithFiles: []
-                                });
-
-                                nazwapliku = 'lektor.wav';
-                                const lektor = new ProjectFile({
-                                    name: nazwapliku,
-                                    fileKey: 'demo_files/' + nazwapliku,
-                                    fileSize: fs.statSync(sciezkaDoDemo + '/'+nazwapliku).size,
-                                    fileModified: +moment(fs.statSync(sciezkaDoDemo + '/'+nazwapliku).mtime),
-                                    connectedWithFiles: []
-                                });
-
-                                nazwapliku = 'mowa.wav';
-                                const mowa = new ProjectFile({
-                                    name: nazwapliku,
-                                    fileKey: 'demo_files/' + nazwapliku,
-                                    fileSize: fs.statSync(sciezkaDoDemo + '/'+nazwapliku).size,
-                                    fileModified: +moment(fs.statSync(sciezkaDoDemo + '/'+nazwapliku).mtime),
-                                    connectedWithFiles: []
-                                });
-
-                                nazwapliku = 'opowiesci.wav';
-                                const opowiesci = new ProjectFile({
-                                    name: nazwapliku,
-                                    fileKey: 'demo_files/' + nazwapliku,
-                                    fileSize: fs.statSync(sciezkaDoDemo + '/'+nazwapliku).size,
-                                    fileModified: +moment(fs.statSync(sciezkaDoDemo + '/'+nazwapliku).mtime),
-                                    connectedWithFiles: []
-                                });
+                   // TO DO: stworzenie plikow demo
 
 
-                                nazwapliku = 'senator.wav';
-                                const senator = new ProjectFile({
-                                    name: nazwapliku,
-                                    fileKey: 'demo_files/' + nazwapliku,
-                                    fileSize: fs.statSync(sciezkaDoDemo + '/'+nazwapliku).size,
-                                    fileModified: +moment(fs.statSync(sciezkaDoDemo + '/'+nazwapliku).mtime),
-                                    connectedWithFiles: []
-                                });
-
-                                //folder na wlasne pliki
-                                // nazwapliku = 'my_files';
-                                // const my_files_folder = new ProjectFile({
-                                //     name: nazwapliku,
-                                //     fileKey: nazwapliku + '/',
-                                //     fileSize: 0,
-                                //     fileModified: 0,
-                                //     connectedWithFiles: []
-                                // });
-
-                                //tworze powiazania między plikami w demo
-                                //test_txt.connectedWithFiles.push(test_wav._id);
-                                //test_wav.connectedWithFiles.push(test_txt._id);
-
-                                //dodaje pliki demo do projektu
-                                projectEntry.files.push(celnik);
-                                projectEntry.files.push(kleska);
-                                projectEntry.files.push(lektor);
-                                projectEntry.files.push(mowa);
-                                projectEntry.files.push(opowiesci);
-                                projectEntry.files.push(senator);
-
-                                
-                                //zapisuje pliki w kolekcji z plikami z odniesieniem do projektu
-                                projectEntry.save()
-                                .then(resultProjectentry => {
-
-                                    // else print a success message.
-                                    console.log("Successfully created project directory for this user");
-                                    res.status(201).json({
-                                        message: 'The project created successfully!',
-                                        project: projectEntry,
-                                        owner: {_id: owner._id, name: owner.name}
-                                    });
-                                })
-                            })
-                            .catch(err => {
-                                console.log("cos poszlo nie tak z kopiowaniem plikow")
-                                console.error(err);
-                                return err;
-                            })
-                    } catch(e) {
-                        console.log("BLAD W PRZENOSZENIU KATALOGU DEMO");
-                        const error = new Error('No demo files in the server!');
-                        error.statusCode = 501;
-                        throw error;
-                        /*
-                        res.status(201).json({
-                            message: 'The project created successfully!',
-                            project: projectEntry,
-                            owner: {_id: owner._id, name: owner.name}
-                        });
-                        */
-                    }
+                    res.status(201).json({
+                        message: 'The project created successfully!',
+                        project: projectEntry,
+                        owner: {_id: owner._id, name: owner.name}
+                    });
                 }
             });
         })
@@ -258,6 +124,215 @@ exports.createProject = (req, res, next) => {
             next(error);
         })
 }
+
+// //dodawanie nowego projektu
+// exports.createProject = (req, res, next) => {
+
+//     //resultaty validacji
+//     const error = validationResult(req);
+//     console.log(req.body.projectName)
+//     if(!error.isEmpty()){
+//         console.log("ERROR")
+//         console.log(error.array())
+//         const errortothrow = new Error('Validation failed');
+//         errortothrow.statusCode = 422;
+//         throw error;
+//     }
+
+//     //--------------------------
+
+//     const reqProjectName = req.body.projectName;
+//     let owner;
+//     let createdProject;
+
+//     //tworze nowy wpis w bazie za pomoca modelu
+//     let projectEntry = new ProjectEntry({
+//         name: reqProjectName,
+//         owner: req.userId,
+//         accessToRead: [],
+//         accessToEdit: [],
+//         projectCreated: moment().format('MMMM Do YYYY, h:mm:ss a'),
+//         files: [],
+//     });
+
+//     //zapisuje do bazy
+//     projectEntry
+//         .save()
+//         .then(resultPE => {
+
+//             createdProject = resultPE;
+
+//             //znajduje uzytkownika w bazie
+//             return User.findById(req.userId);
+//         })
+//         .then(user => {
+
+//             //teraz to jest zalogowany user
+//             //wydobywam wiec projekty tylko tego usera
+//             owner = user;
+//             //console.log(user)
+//             user.projects.push(projectEntry);
+//             return user.save();
+//         })
+//         .then(resultUser => {
+//             //tutaj tworzenie folder z plikami projektu dla danego usera
+//             const dirpath = appRoot + '/repo/'+owner._id+'/'+projectEntry._id;
+
+          
+//             mkdirp(dirpath, function(err) {
+
+//                 // if any errors then print the errors to  console
+//                 if (err) {
+//                     console.log(err);
+//                     return err;
+//                 } else {
+//                     try {
+//                         //fs.statSync(appRoot + '/repo/demo_files');
+
+//                          //tworze folder na wlasne pliki
+//                          /*
+//                         mkdirp(dirpath + '/my_files', function(err) {
+//                             if (err) {
+//                                 console.log(err);
+//                                 return err;
+//                             }
+//                         })
+//                         */
+
+//                        console.log("zaczynam kopiowanie tych plikow")
+//                        console.log(appRoot + '/repo/demo_files')
+//                        console.log(dirpath + '/demo_files')
+
+//                          //kopiuje pliki demo do repo usera
+//                          fsextra.copy(appRoot + '/repo/demo_files', dirpath + '/demo_files')
+//                             .then(() => {
+
+//                                 console.log("Udalo sie przekopiowac powyzsze pliki i zaczynam procedure zapisywania plikow demo w DB")
+
+//                                 //dodaje te pliki demo bo bazy danych
+
+//                                 const sciezkaDoDemo = dirpath + '/demo_files';
+                                
+//                                 let nazwapliku;
+//                                 nazwapliku = 'celnik.wav';
+//                                 const celnik = new ProjectFile({
+//                                     name: nazwapliku,
+//                                     fileKey: 'demo_files/' + nazwapliku,
+//                                     fileSize: fs.statSync(sciezkaDoDemo + '/'+nazwapliku).size,
+//                                     fileModified: +moment(fs.statSync(sciezkaDoDemo + '/'+nazwapliku).mtime),
+//                                     connectedWithFiles: []
+//                                 });
+
+//                                 nazwapliku = 'kleska.wav';
+//                                 const kleska = new ProjectFile({
+//                                     name: nazwapliku,
+//                                     fileKey: 'demo_files/' + nazwapliku,
+//                                     fileSize: fs.statSync(sciezkaDoDemo + '/'+nazwapliku).size,
+//                                     fileModified: +moment(fs.statSync(sciezkaDoDemo + '/'+nazwapliku).mtime),
+//                                     connectedWithFiles: []
+//                                 });
+
+//                                 nazwapliku = 'lektor.wav';
+//                                 const lektor = new ProjectFile({
+//                                     name: nazwapliku,
+//                                     fileKey: 'demo_files/' + nazwapliku,
+//                                     fileSize: fs.statSync(sciezkaDoDemo + '/'+nazwapliku).size,
+//                                     fileModified: +moment(fs.statSync(sciezkaDoDemo + '/'+nazwapliku).mtime),
+//                                     connectedWithFiles: []
+//                                 });
+
+//                                 nazwapliku = 'mowa.wav';
+//                                 const mowa = new ProjectFile({
+//                                     name: nazwapliku,
+//                                     fileKey: 'demo_files/' + nazwapliku,
+//                                     fileSize: fs.statSync(sciezkaDoDemo + '/'+nazwapliku).size,
+//                                     fileModified: +moment(fs.statSync(sciezkaDoDemo + '/'+nazwapliku).mtime),
+//                                     connectedWithFiles: []
+//                                 });
+
+//                                 nazwapliku = 'opowiesci.wav';
+//                                 const opowiesci = new ProjectFile({
+//                                     name: nazwapliku,
+//                                     fileKey: 'demo_files/' + nazwapliku,
+//                                     fileSize: fs.statSync(sciezkaDoDemo + '/'+nazwapliku).size,
+//                                     fileModified: +moment(fs.statSync(sciezkaDoDemo + '/'+nazwapliku).mtime),
+//                                     connectedWithFiles: []
+//                                 });
+
+
+//                                 nazwapliku = 'senator.wav';
+//                                 const senator = new ProjectFile({
+//                                     name: nazwapliku,
+//                                     fileKey: 'demo_files/' + nazwapliku,
+//                                     fileSize: fs.statSync(sciezkaDoDemo + '/'+nazwapliku).size,
+//                                     fileModified: +moment(fs.statSync(sciezkaDoDemo + '/'+nazwapliku).mtime),
+//                                     connectedWithFiles: []
+//                                 });
+
+//                                 //folder na wlasne pliki
+//                                 // nazwapliku = 'my_files';
+//                                 // const my_files_folder = new ProjectFile({
+//                                 //     name: nazwapliku,
+//                                 //     fileKey: nazwapliku + '/',
+//                                 //     fileSize: 0,
+//                                 //     fileModified: 0,
+//                                 //     connectedWithFiles: []
+//                                 // });
+
+//                                 //tworze powiazania między plikami w demo
+//                                 //test_txt.connectedWithFiles.push(test_wav._id);
+//                                 //test_wav.connectedWithFiles.push(test_txt._id);
+
+//                                 //dodaje pliki demo do projektu
+//                                 projectEntry.files.push(celnik);
+//                                 projectEntry.files.push(kleska);
+//                                 projectEntry.files.push(lektor);
+//                                 projectEntry.files.push(mowa);
+//                                 projectEntry.files.push(opowiesci);
+//                                 projectEntry.files.push(senator);
+
+                                
+//                                 //zapisuje pliki w kolekcji z plikami z odniesieniem do projektu
+//                                 projectEntry.save()
+//                                 .then(resultProjectentry => {
+
+//                                     // else print a success message.
+//                                     console.log("Successfully created project directory for this user");
+//                                     res.status(201).json({
+//                                         message: 'The project created successfully!',
+//                                         project: projectEntry,
+//                                         owner: {_id: owner._id, name: owner.name}
+//                                     });
+//                                 })
+//                             })
+//                             .catch(err => {
+//                                 console.log("cos poszlo nie tak z kopiowaniem plikow")
+//                                 console.error(err);
+//                                 return err;
+//                             })
+//                     } catch(e) {
+//                         console.log("BLAD W PRZENOSZENIU KATALOGU DEMO");
+//                         const error = new Error('No demo files in the server!');
+//                         error.statusCode = 501;
+//                         throw error;
+//                         /*
+//                         res.status(201).json({
+//                             message: 'The project created successfully!',
+//                             project: projectEntry,
+//                             owner: {_id: owner._id, name: owner.name}
+//                         });
+//                         */
+//                     }
+//                 }
+//             });
+//         })
+//         .catch(error => {
+//             if(!error.statusCode){
+//                 error.statusCode = 500;
+//             }
+//             next(error);
+//         })
+// }
 
 //usuwanie projektu
 exports.deleteProject = (req,res,next) => {

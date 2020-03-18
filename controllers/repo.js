@@ -11,12 +11,35 @@ const config = require('../config.js');
 const ProjectEntry = require('../models/projectEntry');
 const ProjectFile = require('../models/projectFile');
 const User = require('../models/user');
+const IncomingForm = require('formidable').IncomingForm;
 
+//#############################
+//####### upload wielu plików audio ##########
+//################################
 
+exports.uploadAudio = (req,res,next) => {
+
+  var form = new IncomingForm();
+
+  form.on('file', (field, file) => {
+    // Do something with the file
+    // e.g. save it to the database
+    // you can access it using file.path
+  })
+
+  form.on('end', () => {
+    res.json()
+  })
+
+  form.parse(req)
+
+  
+}
 
 //##########################################
 //#### upload Plików do repo ######
 //#######################################
+
 exports.uploadFiles = (req, res, next) => {
   console.log('Files upload')
 

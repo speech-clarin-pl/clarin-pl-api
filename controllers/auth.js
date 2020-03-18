@@ -102,7 +102,7 @@ exports.login = (req, res, next) => {
                 email: loadedUser.email, 
                 userId: loadedUser._id.toString()
             }, config.tokenKey,
-            {expiresIn: '10h'});
+            {expiresIn: '30h'});
 
             res.status(200).json({token: token, userId: loadedUser._id.toString(), userName:loadedUser.name });
         })

@@ -9,9 +9,21 @@ const appRoot = require('app-root-path'); //zwraca roota aplikacji
 const log = require('simple-node-logger').createSimpleLogger('projectLogs.log'); //logging
 var cors = require('cors');
 
+var corsOptions = {
+    origin: '*',
+    optionsSuccessStatus: 200,
+  }
+
 const config = require('./config.js');
-const dotenv = require('dotenv');
-dotenv.config();
+
+
+const dotenv = require('dotenv'); //for handling env files
+
+if (process.env.NODE_ENV !== 'production') {
+    dotenv.config();
+}
+  
+
 
 global.__basedir = __dirname;
 
@@ -34,13 +46,15 @@ const compression = require('compression');
 const projectsListRoutes = require('./routes/projectsList');
 const recognitionRoutes =  require('./routes/recognitionTool');
 const segmentationRoutes = require('./routes/segmentationTool');
-const repoRoutes = require('./routes/repo');
+const repoRoutes = require('./routes/repo'); 
 const authRoutes =  require('./routes/auth');
 
 //###############################################
 //###############################################
 
 const app = express();
+
+app.use(cors(corsOptions));
 
 app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -50,12 +64,7 @@ app.use((req, res, next) => {
 });
 
 
-// dla rzadan zakodowanych w application/json
-//app.use(bodyParser.urlencoded());
-app.use(bodyParser.json());
 
-//do kompresji...
-app.use(compression());
 
 //multer configuration for storing files. It accepts array of files...
 const fileStorage = multer.diskStorage({
@@ -77,14 +86,27 @@ const fileFilter = (req, file, cb) => {
     }
   }
 
+ // fileFilter: fileFilter
+// let upload = multer({
+//     storage: fileStorage,
+    
+// }).array('audioFiles');
+
 let upload = multer({
     storage: fileStorage,
-    fileFilter: fileFilter
-}).array('audioFiles');
+}).single('audioFile');
 
 app.use(upload,function (req, res, next) {
      next();
 });
+
+
+// dla rzadan zakodowanych w application/json
+//app.use(bodyParser.urlencoded());
+app.use(bodyParser.json());
+
+//do kompresji...
+app.use(compression());
 
 //static files in repo....
 app.use(express.static(path.join(__dirname, 'repo/')));
@@ -96,6 +118,7 @@ app.use('/recognition', recognitionRoutes);
 app.use('/segmentation', segmentationRoutes);
 app.use('/repoFiles', repoRoutes);
 app.use('/auth', authRoutes);
+
 
 
 //error handling...
