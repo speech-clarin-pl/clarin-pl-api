@@ -69,7 +69,13 @@ app.use((req, res, next) => {
 //multer configuration for storing files. It accepts array of files...
 const fileStorage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, './repo/uploaded_temp');
+
+        const userId = req.body.userId;
+        const projectId = req.body.projectId;
+        const sessionId = req.body.sessionId;
+
+
+        cb(null, './repo/'+userId+'/'+projectId+'/'+sessionId);
     },
     filename: (req, file, cb) => {
         cb(null, file.originalname + '-' + new Date().toISOString() );

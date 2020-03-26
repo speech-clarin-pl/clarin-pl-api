@@ -24,11 +24,19 @@ const projectEntrySchema = new Schema({
         type: Array,
         required: false,
     },
-    files: [
+    sessionIds: [
         {
-            type: Schema.Types.Mixed,
+        type: Schema.Types.ObjectId,
+        ref: 'Session',
+        required: false,
         }
     ]
 }, {timestamps: true});
 
 module.exports = mongoose.model('ProjectEntry', projectEntrySchema);
+
+// files: [
+//     {
+//         type: Schema.Types.Mixed,
+//     }
+// ]

@@ -6,11 +6,12 @@ const isAuth = require('../middleware/is-auth');
 //POST /repoFiles/uploadFile  - wysyłam pojedynczy plik
 router.post('/uploadFile', isAuth, repoController.uploadFile);
 
-//POST /repoFiles/uploadFile  - tworze nową sesję
-router.post('/createNewSession', isAuth, repoController.createNewSession);
+//PUT /repoFiles/createNewSession  - tworze nową sesję
+router.put('/createNewSession', isAuth, repoController.createNewSession);
 
-// GET /repoFiles/userId - do pobierania listy plikow
-router.get('/:projectId', isAuth, repoController.getRepoFiles);
+// GET /repoFiles/projectId/userId - do pobierania listy plikow
+router.get('/:projectId/:userId', isAuth, repoController.getRepoAssets);
+
 
 // //POST /repoFiles/uploadFiles  - tworzy folder OK
 // router.post('/uploadFiles', isAuth, repoController.uploadFiles);

@@ -7,8 +7,8 @@ const appRoot = require('app-root-path'); //zwraca roota aplikacji
 const moment = require('moment');
 const utils = require('../utils/utils');
 const config = require('../config.js');
-//importuje model wpisu projektu
 const ProjectEntry = require('../models/projectEntry');
+const Session = require('../models/Session');
 const ProjectFile = require('../models/projectFile');
 const User = require('../models/user');
 const IncomingForm = require('formidable').IncomingForm;
@@ -21,16 +21,20 @@ const IncomingForm = require('formidable').IncomingForm;
 exports.uploadFile = (req, res, next) => {
   console.log('FILE UPLOAD')
 
-  const fileToSave = req.file;
+  const savedFile = req.file.filename; // z unikatowym id
+  const oryginalFileName = req.file.originalname; //nazwa oryginalnego pliku
+
   const userId = req.body.userId;
   const projectId = req.body.projectId;
   const sessionId = req.body.sessionId;
 
+  // TO DO
   
-  console.log("file to save: " +fileToSave)
-  console.log("user id: " + userId)
-  console.log("project id: " + projectId)
-  console.log("project id: " + sessionId)
+ // console.log("savedFile: " +savedFile)
+ // console.log('oryginalFileName: ' +oryginalFileName)
+ // console.log("user id: " + userId)
+ // console.log("project id: " + projectId)
+ // console.log("session id: " + sessionId)
 
 }
 
@@ -39,56 +43,105 @@ exports.uploadFile = (req, res, next) => {
 //#######################################
 
 exports.createNewSession = (req, res, next) => {
-    console.log('CREATE NEW SESSION')
+
+    const sessionName = req.body.sessionName;
+    const projectId = req.body.projectId;
+    const userId = req.body.userId;
+
+    let session = new Session({
+      name: sessionName,
+      projectId: projectId,
+    });
+
+
+    //zapisuje sesje w DB
+    session.save()
+      .then(createdSession => {
+
+        //odnajduje projet w DB i dodaje id tej sesji do niego
+        ProjectEntry.findByIdAndUpdate(projectId,{$push: {sessionIds: createdSession._id}})
+          .then(updatedProject=> {
+
+            //tworze folder na dysku dla tej sesji
+            const repoPath = appRoot + "/repo/" + userId + "/" + projectId;
+    
+            fs.mkdirs(repoPath + '/' + createdSession._id, function (err) {
+        
+              if (err) {
+                res.status(500).json({ message: 'Problem with session creation!'});
+                return console.error(err);
+              }
+          
+              res.status(200).json({ message: 'New session has been created!', sessionName: createdSession.name, id: createdSession._id})
+              
+            });
+
+           
+          })
+          .catch(error => {
+            throw error;
+          })
+      })
+      .catch(error => {
+        throw error;
+      })
 }
 
-//##############################################
-// POBIERAM LISTE PLIKOW DANEGO UZYTKOWNIKA W JEGO FOLDERZE
-//###############################################
-exports.getRepoFiles = (req, res, next) => {
 
-  const userId = req.userId;
-  const projectId = req.query.projectId;
+//#######################################################
+//################ pobieram assety użytkownika ##########
+//#########################################################
 
-  //sciezka do plikow danego usera i danego projektu
-  const repoPath = appRoot + "/repo/" + userId + "/" + projectId;
-  const repoStatic = userId + "/" + projectId;
+exports.getRepoAssets = (req,res,next) => {
+
+  //wydobywam dane z urla
+  const userId = req.params.userId;
+  const projectId = req.params.projectId;
 
   //szukam plików w bazie danych dla danego usera
-  let znalezionyPE = null;
+  let znalezionyProjekt = null;
   ProjectEntry.findById(projectId)
     .then(foundPE => {
-      znalezionyPE = foundPE;
-
-      //sprawdzam czy wlacicielem jest zalogowany uzytkownik
+      znalezionyProjekt = foundPE;
       return User.findById(userId);
     })
     .then(user => {
 
       if (user._id == userId) {
 
-        // let listOfUserFiles = znalezionyPE.files.map(file => {
+        //wydobywam liste sesji
+        let sessionIds = znalezionyProjekt.sessionIds;
 
-        //   const urltopass = config.publicApiAddress + '/' + repoStatic + '/' + file.fileKey;
+        let sessionList = [];
+        let containerList = [];
 
-        //   let fileEntry = {
-        //     key: file.fileKey,
-        //     fileId: file._id,
-        //     modified: file.fileModified,
-        //     size: file.fileSize,
-        //     url: urltopass
-        //   }
+        Session.find({_id: sessionIds})
+          .then(listaSesji => {
+            sessionList = listaSesji;
 
-        //   return fileEntry;
-        // });
+            sessionList = listaSesji.map(sesja => {
+              return({
+                id: sesja._id,
+                sessionName: sesja.name,
+                ifSelected: false,
+                containers: sesja.containersIds,
+              });
+            })
+            return sessionList;
+          })
+          .then(listaSesji => {
 
-        let listOfSessions = [];
-        let listOfContainers = [];
+            //wydobywam liste contenerow dla wszystkich sesji
 
-       // res.status(200).json({ message: 'Files for this project and user featched!', files: listOfUserFiles })
-
-        res.status(200).json({ message: 'Files for this project and user featched!', sessions: listOfSessions, containers: listOfContainers })
-
+            return containerList;
+          })
+          .then(result => {
+              res.status(200).json({ message: 'Files for this project and user featched!', sessions: sessionList, containers: containerList })
+          })
+          .catch(error => {
+            console.log(error);
+            throw error;
+          })
 
       } else {
         let error = new Error('Not authorized access');
@@ -97,42 +150,9 @@ exports.getRepoFiles = (req, res, next) => {
       }
     })
     .catch(err => {
-      let error = new Error('Error with loading user files to repo');
+      let error = new Error('Error with loading project repo assets');
       error.statusCode = 500;
       throw error;
     })
-
-  // utilsForFiles.readDir(repoPath, function (filePaths) {
-  //   //sciezki zawieraja pewne sciezki wiec je przeksztalcam na relatywne
-  //   const userfiles = filePaths.map(path => {
-  //     const relativePath = path.replace(repoPath, '');
-
-  //     //const fileModified =  +moment().subtract(15, 'days');
-  //     const fileModified = +moment(fs.statSync(path).mtime);
-
-  //     //const fileSize = 4.2 * 1024 * 1024;
-  //     const fileSize = fs.statSync(path).size;
-
-  //     //const urltopass = config.publicApiAddress + path.replace(appRoot, '');
-
-  //     const urltopass = config.publicApiAddress + '/' + repoStatic + relativePath;
-
-  //     console.log(urltopass)
-  //     console.log(path)
-  //     console.log(relativePath)
-  //     console.log(appRoot)
-
-  //     //const urltopass = config.publicApiAddress + path.replace(appRoot, '');
-
-  //     let fileEntry = {
-  //       key: relativePath,
-  //       modified: fileModified,
-  //       size: fileSize,
-  //       url: urltopass
-  //     }
-  //     return fileEntry;
-  //   })
-  //   res.status(200).json({ message: 'Files for this project and user featched!', files: userfiles })
-  // });
 }
 
