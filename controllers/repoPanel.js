@@ -8,6 +8,7 @@ const moment = require('moment');
 const utils = require('../utils/utils');
 const config = require('../config.js');
 const ProjectEntry = require('../models/projectEntry');
+const Container = require('../models/Container')
 const Session = require('../models/Session');
 const ProjectFile = require('../models/projectFile');
 const User = require('../models/user');
@@ -19,7 +20,6 @@ const IncomingForm = require('formidable').IncomingForm;
 //#######################################
 
 exports.uploadFile = (req, res, next) => {
-  console.log('FILE UPLOAD')
 
   const savedFile = req.file.filename; // z unikatowym id
   const oryginalFileName = req.file.originalname; //nazwa oryginalnego pliku
@@ -28,13 +28,36 @@ exports.uploadFile = (req, res, next) => {
   const projectId = req.body.projectId;
   const sessionId = req.body.sessionId;
 
-  // TO DO
-  
- // console.log("savedFile: " +savedFile)
- // console.log('oryginalFileName: ' +oryginalFileName)
- // console.log("user id: " + userId)
- // console.log("project id: " + projectId)
- // console.log("session id: " + sessionId)
+  const finalFileDest = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/';
+  const fullFilePath = finalFileDest + savedFile;
+
+  let newContainer = new Container({
+    fileName: savedFile,
+    containerName: oryginalFileName,
+    size: fs.statSync(fullFilePath).size,
+    owner: userId,
+    project: projectId,
+    session: sessionId,
+    ifVAD: false,
+    ifDIA: false,
+    ifREC: false,
+    ifSEG: false,
+  });
+
+  newContainer.save()
+    .then(createdContainer => {
+
+      //updating the reference in given session
+      Session.findOneAndUpdate({_id: sessionId},{$push: {containersIds: createdContainer._id }})
+        .then(updatedSession => {
+          res.status(200).json({ message: 'New file has been uploaded!', sessionId: sessionId, oryginalName: oryginalFileName, containerId: createdContainer._id})
+        })
+
+     
+    })
+    .catch(error => {
+      throw error;
+    })
 
 }
 
@@ -131,12 +154,13 @@ exports.getRepoAssets = (req,res,next) => {
           })
           .then(listaSesji => {
 
-            //wydobywam liste contenerow dla wszystkich sesji
+            Container.find({owner: userId, project: projectId})
+              .then(containers=>{
 
-            return containerList;
-          })
-          .then(result => {
-              res.status(200).json({ message: 'Files for this project and user featched!', sessions: sessionList, containers: containerList })
+                containerList = containers;
+
+                res.status(200).json({ message: 'Files for this project and user featched!', sessions: sessionList, containers: containerList })
+              })
           })
           .catch(error => {
             console.log(error);

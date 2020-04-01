@@ -2,15 +2,27 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const ContainerSchema = new Schema({
-    name: {
+    fileName: {
         type: String,
         required: true
+    },
+    containerName: {
+        type: String,
+        required: true,
+    },
+    owner: {
+        type: Schema.Types.ObjectId,
+        required: true,
+    },
+    project: {
+        type: Schema.Types.ObjectId,
+        required: true,
     },
     size: {
         type: String,
         required: false
     },
-    sessionId: {
+    session: {
         type: Schema.Types.ObjectId,
         required: true,
     },
