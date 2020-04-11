@@ -16,6 +16,64 @@ const IncomingForm = require('formidable').IncomingForm;
 
 
 //##########################################
+//#### usuwanie pojedynczego kontenera z repo ######
+//#######################################
+
+exports.removeContainer = (req,res,next) => {
+
+  const userId = req.params.userId;
+  const projectId = req.params.projectId;
+  const sessionId = req.params.sessionId;
+  const containerId = req.params.containerId;
+
+  // tutaj usuwanie z repo, bazy danych, audio i txt
+
+
+  const repoPath = appRoot + "/repo/" + userId + "/" + projectId + "/" + sessionId;
+
+  Container.findById(containerId)
+    .then(foundContainer => {
+
+        //usuwam plik z dysku fizycznie
+        fs.unlink(repoPath + '/' + foundContainer.fileName, function (err) {
+          if (err) throw err;
+
+          //usuwam wpis w kolekcji Containers
+          Container.findByIdAndRemove(containerId)
+          .then(removedContainer => {
+            
+              //usuwam odniesienie w kolekcji Sessions
+              Session.findByIdAndUpdate(sessionId,{$pull: {containersIds: containerId}})
+              .then(updatedSession =>{
+                res.status(200).json({ message: 'The container has been removed!', sessionId: sessionId, containerId: containerId});
+              })
+              .catch(error => {
+                res.status(500).json({ message: 'Something went wrong with removing the container!', sessionId: sessionId, containerId: containerId});
+                console.log(error);
+                throw error;
+              })
+          })
+          .catch(error => {
+            res.status(500).json({ message: 'Something went wrong with removing the container!', sessionId: sessionId, containerId: containerId});
+            console.log(error);
+            throw error;
+          })
+        });
+    })
+  
+   
+ 
+
+
+    
+
+  
+
+
+}
+
+
+//##########################################
 //#### upload pojedynczego pliku do repo ######
 //#######################################
 

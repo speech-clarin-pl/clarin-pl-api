@@ -42,6 +42,26 @@ const ContainerSchema = new Schema({
         type: Schema.Types.Boolean,
         default: false,
     },
+    statusVAD: {
+        type: String,
+        required: false
+    },
+    statusDIA: {
+        type: String,
+        required: false
+    },
+    statusREC: {
+        type: String,
+        required: false
+    },
+    statusSEG: {
+        type: String,
+        required: false
+    },
+    txtFileId: {
+        type: Schema.Types.ObjectId,
+        required: false,
+    }
 }, {timestamps: true});
 
 module.exports = mongoose.model('Container', ContainerSchema);

@@ -12,6 +12,9 @@ router.put('/createNewSession', isAuth, repoController.createNewSession);
 // GET /repoFiles/projectId/userId - do pobierania listy plikow
 router.get('/:projectId/:userId', isAuth, repoController.getRepoAssets);
 
+ //DELETE /repoFiles/deleteFile/userId - usuwa folder
+router.delete('/:userId/:projectId/:sessionId/:containerId', isAuth, repoController.removeContainer);
+
 
 // //POST /repoFiles/uploadFiles  - tworzy folder OK
 // router.post('/uploadFiles', isAuth, repoController.uploadFiles);
