@@ -9,11 +9,14 @@ const {validationResult} = require('express-validator/check');
 //importuje model wpisu projektu
 const ProjectEntry = require('../models/projectEntry');
 const ProjectFile = require('../models/projectFile');
+const Container = require('../models/Container')
 const User = require('../models/user');
 
 var mkdirp = require("mkdirp"); //do tworzenia folderu
 var rimraf = require("rimraf"); 
 var appRoot = require('app-root-path'); //zwraca roota aplikacji
+
+const Session = require('../models/Session');
 
 //kontroler do wydobywania listy projektow
 exports.getProjectsList = (req, res, next) => {
@@ -102,18 +105,171 @@ exports.createProject = (req, res, next) => {
             const dirpath = appRoot + '/repo/'+owner._id+'/'+projectEntry._id;
 
             mkdirp(dirpath, function(err) {
+
                 if (err) {
                     console.log(err);
                     return err;
                 } else {
-                   // TO DO: stworzenie plikow demo
+                   
+                    // tworze plików demo
 
-
-                    res.status(201).json({
-                        message: 'The project created successfully!',
-                        project: projectEntry,
-                        owner: {_id: owner._id, name: owner.name}
+                    let demosession = new Session({
+                        name: "demo",
+                        projectId: projectEntry._id,
                     });
+                  
+                    //zapisuje sesje w DB
+                    demosession.save()
+                    .then(createdDemoSession => {
+                
+                        //odnajduje projet w DB i dodaje id tej sesji do niego
+                        ProjectEntry.findByIdAndUpdate(projectEntry._id,{$push: {sessionIds: createdDemoSession._id}})
+                        .then(updatedProject=> {
+                
+                            //tworze folder z demo na dysku dla tej sesji
+                            let pathToDemoSession = dirpath + '/' + createdDemoSession._id;
+                            fsextra.mkdirs(pathToDemoSession, function (err) {
+                        
+                                if (err) {
+                                    res.status(500).json({ message: 'Problem with demo folder creation!'});
+                                    return console.error(err);
+                                }
+
+                                //kopiuje pliki demo do tej lokalizacji
+
+                                fsextra.copy(appRoot + '/repo/demo_files', pathToDemoSession)
+                                     .then(() => {
+
+                                        //zapisuje nowe kontenery w bazie danych
+
+                                        let celnikDemo = new Container({
+                                            fileName: 'celnik.wav',
+                                            containerName: 'celnik.wav',
+                                            size: fs.statSync(pathToDemoSession+"/celnik.wav").size,
+                                            owner: owner,
+                                            project: projectEntry._id,
+                                            session: createdDemoSession._id,
+                                            ifVAD: false,
+                                            ifDIA: false,
+                                            ifREC: false,
+                                            ifSEG: false,
+                                        });
+
+                                        let kleskaDemo = new Container({
+                                            fileName: 'kleska.wav',
+                                            containerName: 'kleska.wav',
+                                            size: fs.statSync(pathToDemoSession+"/kleska.wav").size,
+                                            owner: owner,
+                                            project: projectEntry._id,
+                                            session: createdDemoSession._id,
+                                            ifVAD: false,
+                                            ifDIA: false,
+                                            ifREC: false,
+                                            ifSEG: false,
+                                        });
+
+                                        let lektorDemo = new Container({
+                                            fileName: 'lektor.wav',
+                                            containerName: 'lektor.wav',
+                                            size: fs.statSync(pathToDemoSession+"/lektor.wav").size,
+                                            owner: owner,
+                                            project: projectEntry._id,
+                                            session: createdDemoSession._id,
+                                            ifVAD: false,
+                                            ifDIA: false,
+                                            ifREC: false,
+                                            ifSEG: false,
+                                        });
+
+                                        let mowaDemo = new Container({
+                                            fileName: 'mowa.wav',
+                                            containerName: 'mowa.wav',
+                                            size: fs.statSync(pathToDemoSession+"/mowa.wav").size,
+                                            owner: owner,
+                                            project: projectEntry._id,
+                                            session: createdDemoSession._id,
+                                            ifVAD: false,
+                                            ifDIA: false,
+                                            ifREC: false,
+                                            ifSEG: false,
+                                        });
+
+                                        let opowiesciDemo = new Container({
+                                            fileName: 'opowiesci.wav',
+                                            containerName: 'opowiesci.wav',
+                                            size: fs.statSync(pathToDemoSession+"/opowiesci.wav").size,
+                                            owner: owner,
+                                            project: projectEntry._id,
+                                            session: createdDemoSession._id,
+                                            ifVAD: false,
+                                            ifDIA: false,
+                                            ifREC: false,
+                                            ifSEG: false,
+                                        });
+
+                                        let senatorDemo = new Container({
+                                            fileName: 'senator.wav',
+                                            containerName: 'senator.wav',
+                                            size: fs.statSync(pathToDemoSession+"/senator.wav").size,
+                                            owner: owner,
+                                            project: projectEntry._id,
+                                            session: createdDemoSession._id,
+                                            ifVAD: false,
+                                            ifDIA: false,
+                                            ifREC: false,
+                                            ifSEG: false,
+                                        });
+
+                                        const demoFiles = [celnikDemo, kleskaDemo, lektorDemo, mowaDemo, opowiesciDemo, senatorDemo];
+                                        
+                                        
+                                        Container.insertMany(demoFiles)
+                                        .then((insertedContainers)=>{
+                                            
+                                            //zbieram id kontekerow i wstawiam je do sesji
+
+                                            let demoFilesIds = [];
+
+                                            for(let i=0;i<insertedContainers.length;i++){
+                                                demoFilesIds.push(insertedContainers[i]._id);
+                                            }
+
+                                            Session.findOneAndUpdate({_id:createdDemoSession._id},{$set: {containersIds: demoFilesIds}})
+                                            .then(updatedSession=>{
+                                                res.status(201).json({
+                                                    message: 'The project created successfully!',
+                                                    project: projectEntry,
+                                                    owner: {_id: owner._id, name: owner.name}
+                                                });
+                                            })
+                                            .catch(error => {
+                                                throw error
+                                            })
+
+                                        })
+                                        .catch((error)=>{
+                                            throw error;
+                                        })
+                                            
+
+                                        
+                                     })
+                                     .catch(error => {
+                                        throw error;
+                                     })
+                            });
+                
+                        })
+                        .catch(error => {
+                            throw error;
+                        })
+                    })
+                    .catch(error => {
+                        throw error;
+                    })
+
+
+                    
                 }
             });
         })
@@ -385,7 +541,15 @@ exports.deleteProject = (req,res,next) => {
                 }
               });
 
-            res.status(200).json({message: 'Project removed!', projectId: projectId})
+               //usuwam z bazy sesje projektu oraz kontenery
+
+               Session.deleteMany({_id: projectToDelete.sessionIds})
+                .then(removedSessions => {
+                    Container.deleteMany({project: projectToDelete._id})
+                        .then(removedContainer => {
+                            res.status(200).json({message: 'Project removed!', projectId: projectId})
+                        })
+                })
         })
         .catch(error => {
             if(!error.statusCode){

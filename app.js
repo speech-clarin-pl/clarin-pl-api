@@ -29,18 +29,7 @@ global.__basedir = __dirname;
 
 const compression = require('compression');
 
-//konfiguracja jakich typow plikow oczekujemy
-// const fileFilter = (req, file, cb) => {
-//     if (file.mimetype === 'audio/mpeg' ||
-//         file.mimetype === 'audio/mp3' ||
-//         file.mimetype === 'audio/vnd.wav'
-//     ) {
-//         cb(null, true);
-//     } else {
-     
-//         cb(null, false);
-//     }
-// }
+
 
 //importuje routes
 const projectsListRoutes = require('./routes/projectsList');
@@ -82,8 +71,14 @@ const fileStorage = multer.diskStorage({
     }
 });
 
+
+
 const fileFilter = (req, file, cb) => {
     var type = file.mimetype;
+//    if (file.mimetype === 'audio/mpeg' ||
+//         file.mimetype === 'audio/mp3' ||
+//         file.mimetype === 'audio/vnd.wav'
+//     )
     var typeArray = type.split("/");
     if (typeArray[0] == "audio") {
       cb(null, true);
@@ -100,6 +95,7 @@ const fileFilter = (req, file, cb) => {
 
 let upload = multer({
     storage: fileStorage,
+    fileFilter: fileFilter,
 }).single('audioFile');
 
 app.use(upload,function (req, res, next) {

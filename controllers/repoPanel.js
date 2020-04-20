@@ -27,8 +27,6 @@ exports.removeContainer = (req,res,next) => {
   const containerId = req.params.containerId;
 
   // tutaj usuwanie z repo, bazy danych, audio i txt
-
-
   const repoPath = appRoot + "/repo/" + userId + "/" + projectId + "/" + sessionId;
 
   Container.findById(containerId)
@@ -60,16 +58,6 @@ exports.removeContainer = (req,res,next) => {
           })
         });
     })
-  
-   
- 
-
-
-    
-
-  
-
-
 }
 
 

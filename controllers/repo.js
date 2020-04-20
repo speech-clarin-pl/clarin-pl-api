@@ -15,8 +15,6 @@ const IncomingForm = require('formidable').IncomingForm;
 const Session = require('../models/Session');
 
 
-
-
 //#############################
 //####### upload wielu plików audio ##########
 //################################
@@ -385,7 +383,8 @@ exports.renameFile = (req, res, next) => {
 // POBIERAM LISTE PLIKOW DANEGO UZYTKOWNIKA W JEGO FOLDERZE
 //###############################################
 exports.getRepoFiles = (req, res, next) => {
-  console.log('GET REPO FILES');
+  
+  //console.log('GET REPO FILES');
 
   const userId = req.userId;
   const projectId = req.query.projectId;
