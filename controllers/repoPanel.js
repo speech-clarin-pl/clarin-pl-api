@@ -15,6 +15,53 @@ const User = require('../models/user');
 const IncomingForm = require('formidable').IncomingForm;
 
 
+
+//##########################################
+//#### robie update flagi containera ######
+//#######################################
+exports.runSpeechService = (req, res, next) => {
+  const containerId = req.body.containerId;
+  const toolType = req.body.toolType;
+
+  // tutaj odpalam odpowiednia usługę
+
+    let fieldToUpdate = ""; //pole w modelu kontenera do zamiany na true
+
+    switch(toolType){
+      case "DIA":
+         fieldToUpdate = {ifDIA: true};
+          console.log("Uruchamiam usługę DIA");
+          break;
+      case "VAD":
+        fieldToUpdate = {ifVAD: true};
+        console.log("Uruchamiam usługę VAD");
+          break;
+      case "RECO":
+        fieldToUpdate = {ifREC: true};
+        console.log("Uruchamiam usługę RECO");
+          break;
+      case "ALIGN":
+        fieldToUpdate = {ifSEG: true};
+        console.log("Uruchamiam usługę ALIGN");
+          break;
+      default:
+          console.log("Default"); //to do
+    }
+
+
+    // jeżeli usługa wykona się prawidłowo to robie update w bazie danych
+
+    Container.findOneAndUpdate({_id: containerId},fieldToUpdate)
+      .then(updatedContainer => {
+        res.status(200).json({ message: 'The service for this container has finished working with success!', containerId: updatedContainer._id, toolType: toolType});
+      })
+      .catch(error => {
+        console.log(error)
+      })
+
+}
+
+
 //##########################################
 //#### usuwanie pojedynczego kontenera z repo ######
 //#######################################

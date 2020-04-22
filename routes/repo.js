@@ -15,6 +15,9 @@ router.get('/:projectId/:userId', isAuth, repoController.getRepoAssets);
  //DELETE /repoFiles/deleteFile/userId - usuwa folder
 router.delete('/:userId/:projectId/:sessionId/:containerId', isAuth, repoController.removeContainer);
 
+ //PUT /repoFiles/runSpeechService/containerId - wykonuje daną usługę na określonym kontenerze
+ router.put('/runSpeechService/:containerId', isAuth, repoController.runSpeechService);
+
 
 // //POST /repoFiles/uploadFiles  - tworzy folder OK
 // router.post('/uploadFiles', isAuth, repoController.uploadFiles);
