@@ -1,7 +1,17 @@
 const express = require('express');
 const repoController = require('../controllers/repoPanel');  // poprzednia wersja to była repo
+const audioEditorController = require('../controllers/audioEditor');  
 const router = express.Router();
 const isAuth = require('../middleware/is-auth');
+
+ //GET /repoFiles/:userId/:projectId/:sessionId/:containerId/:fileType - pobieram plik z repozytorium użytkownika
+ router.get('/:userId/:projectId/:sessionId/:containerId/:fileType', isAuth, repoController.getFileFromContainer);
+ 
+ // GET /repoFiles/loadAudioFile/REC/:containerId - dostarcza plik audio
+ router.get('/loadAudioFile/:toolType/:containerId', audioEditorController.loadAudioFile);
+
+ // GET /repoFiles/loadContainerPreview/REC/:containerId - dostarcza metadane kontenera potrzebne do renderingu podglądu
+ router.get('/loadBinaryAudio/:toolType/:containerId', audioEditorController.loadBinaryAudio);
 
 //POST /repoFiles/uploadFile  - wysyłam pojedynczy plik
 router.post('/uploadFile', isAuth, repoController.uploadFile);
@@ -17,6 +27,9 @@ router.delete('/:userId/:projectId/:sessionId/:containerId', isAuth, repoControl
 
  //PUT /repoFiles/runSpeechService/containerId - wykonuje daną usługę na określonym kontenerze
  router.put('/runSpeechService/:containerId', isAuth, repoController.runSpeechService);
+
+
+
 
 
 // //POST /repoFiles/uploadFiles  - tworzy folder OK

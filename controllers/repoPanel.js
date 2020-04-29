@@ -15,6 +15,43 @@ const User = require('../models/user');
 const IncomingForm = require('formidable').IncomingForm;
 
 
+// ###################################################
+// ########### pobieram plik z repozytorium użytkownika
+// ######################################################
+
+//'/:userId/:projectId/:sessionId/:containerId/:fileType'
+exports.getFileFromContainer = (req,res,next) => {
+  const userId = req.params.userId;
+  const projectId = req.params.projectId;
+  const sessionId = req.params.sessionId;
+  const containerId = req.params.containerId;
+  const fileType = req.params.fileType;
+
+  //sprawdzam o jaki typ pliku mi chodzi: dat, json czy mp3
+
+
+  //pobieram kontener z bazy danych
+  Container.findById(containerId)
+    .then(container => {
+
+        //sciezka do pliku dat
+        const repoPath = appRoot + "/repo/" + userId + "/" + projectId + "/" + sessionId;
+
+        const fileToDeliver = utils.getFileNameWithNoExt(container.fileName) + ".wav";
+        const filePath = repoPath + "/" + fileToDeliver;
+
+        //res.status(200).({ message: 'The data for previewing has been sent!', containerData: filePath});
+        
+       // res.sendFile(filePath);
+
+        //res.set('Content-Type', 'application/json');
+       // res.status(200).json({toolType: toolType});
+       // res.append("toolType", toolType);
+       // fs.createReadStream(filePath).pipe(res);
+        res.sendFile(filePath);
+    })
+}
+
 
 //##########################################
 //#### robie update flagi containera ######
@@ -58,7 +95,6 @@ exports.runSpeechService = (req, res, next) => {
       .catch(error => {
         console.log(error)
       })
-
 }
 
 

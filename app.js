@@ -5,6 +5,9 @@ const bodyParser = require('body-parser'); //do validacji
 const mongoose = require('mongoose'); //do komunikacji z baza
 const multer = require('multer'); //for handlind multipart/form-data - upload files
 const appRoot = require('app-root-path'); //zwraca roota aplikacji
+var serveStatic = require('serve-static');
+const isAuth = require('./middleware/is-auth');
+
 
 const log = require('simple-node-logger').createSimpleLogger('projectLogs.log'); //logging
 var cors = require('cors');
@@ -51,8 +54,6 @@ app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Length, Content-Type, Accept, Authorization');
     next();
 });
-
-
 
 
 //multer configuration for storing files. It accepts array of files...
@@ -111,8 +112,9 @@ app.use(bodyParser.json());
 app.use(compression());
 
 //static files in repo....
-app.use(express.static(path.join(__dirname, 'repo/')));
+app.use('/repoFiles', isAuth, express.static(path.join(__dirname, '/repo')));
 
+//app.use(serveStatic(__dirname+'/repo', { }))
 
 //routes for different parts of requests in app
 app.use('/projectsList', projectsListRoutes);
