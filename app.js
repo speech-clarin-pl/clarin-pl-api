@@ -7,6 +7,8 @@ const multer = require('multer'); //for handlind multipart/form-data - upload fi
 const appRoot = require('app-root-path'); //zwraca roota aplikacji
 var serveStatic = require('serve-static');
 const isAuth = require('./middleware/is-auth');
+const utils = require('./utils/utils');
+const uniqueFilename = require('unique-filename');
 
 
 const log = require('simple-node-logger').createSimpleLogger('projectLogs.log'); //logging
@@ -58,18 +60,40 @@ app.use((req, res, next) => {
 
 //multer configuration for storing files. It accepts array of files...
 const fileStorage = multer.diskStorage({
+
+    filename: (req, file, cb) => {
+        const uniqueHash = req.body.uniqueHash;
+
+        const nowyHash = uniqueFilename("","",uniqueHash);
+
+       // const audioFileName = utils.getFileNameWithNoExt(file.originalname)+"-"+utils.getFileExtention(file.originalname)+"-"+nowyHash;
+       const audioFileName = utils.getFileNameWithNoExt(file.originalname)+"-"+nowyHash+"-"+utils.getFileExtention(file.originalname);
+        
+       cb(null, audioFileName);
+    },
+
     destination: (req, file, cb) => {
 
         const userId = req.body.userId;
         const projectId = req.body.projectId;
         const sessionId = req.body.sessionId;
+        const uniqueHash = req.body.uniqueHash;
 
+        const nowyHash = uniqueFilename("","",uniqueHash);
 
-        cb(null, './repo/'+userId+'/'+projectId+'/'+sessionId);
+        const oryginalFileName = file.originalname;
+
+        //tworze folder dla wgranego pliku audio
+        const conainerFolderName = utils.getFileNameWithNoExt(oryginalFileName)+"-"+nowyHash+"-"+utils.getFileExtention(oryginalFileName);
+        //const conainerFolderName = oryginalFileName+"-"+nowyHash;
+        const containerFolderPath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + conainerFolderName;
+
+        //tworze folder dla tego contenera
+        fs.mkdirsSync(containerFolderPath);
+
+        cb(null, './repo/'+userId+'/'+projectId+'/'+sessionId+'/' + conainerFolderName);
     },
-    filename: (req, file, cb) => {
-        cb(null, file.originalname + '-' + new Date().toISOString() );
-    }
+    
 });
 
 

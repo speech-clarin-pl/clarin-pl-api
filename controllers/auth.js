@@ -12,8 +12,30 @@ var mkdirp = require("mkdirp"); //do tworzenia folderu
 //var rimraf = require("rimraf"); 
 var appRoot = require('app-root-path'); //zwraca roota aplikacji
 
+//przypomnienie hasła
 
+exports.forgotPass = (req,res,next) => {
+    var emailAddress = req.body.email;
 
+    //znajduje login ktory zawiera dany email
+     User.findOne({email: emailAddress})
+     .then(user => {
+         //jezeli nie ma takiego uzera 
+         if(!user){
+            res.status(204).json({message: "This email has not been registered before!"});
+         }
+
+         res.status(200).json({message: "The email has been sent with further instruction"});
+     })
+     .catch(error => {
+        if(!error.statusCode){
+            error.statusCode = 500;
+        }
+        next(error);
+     })
+}
+
+// rejestracja
 exports.registration = (req, res, next) => {
     const errors = validationResult(req);
     if(!errors.isEmpty()){
@@ -39,7 +61,7 @@ exports.registration = (req, res, next) => {
     })
     .then(user => {
 
-        console.log(user)
+        //console.log(user)
 
         //tutaj tworzenie folderu z id uzytkownika w repo
         const dirpath = appRoot + '/repo/'+user._id;
@@ -67,8 +89,9 @@ exports.registration = (req, res, next) => {
 
 }
 
-
+// logowanie
 exports.login = (req, res, next) => {
+
     const email = req.body.email;
     const password = req.body.password;
 
@@ -102,7 +125,7 @@ exports.login = (req, res, next) => {
                 email: loadedUser.email, 
                 userId: loadedUser._id.toString()
             }, config.tokenKey,
-            {expiresIn: '30h'});
+            {expiresIn: '96h'});
 
             res.status(200).json({token: token, userId: loadedUser._id.toString(), userName:loadedUser.name });
         })
@@ -113,3 +136,4 @@ exports.login = (req, res, next) => {
             next(error);
         });
 }
+

@@ -52,6 +52,11 @@ exports.bytesToSize = (bytes) => {
     return nazwaplikubezext;
   }
 
+    //getExtentionOf the file
+    exports.getFileExtention = (path) =>{
+        return (path.match(/(?:.+..+[^\/]+$)/ig) != null) ? path.split('.').slice(-1): 'null';
+    }
+
   //add sufix to the name of given file
   exports.addSuffixToFileName = (fileName, suffix, ext=null) =>{
     let gdziedot = fileName.lastIndexOf('.');

@@ -20,6 +20,14 @@ router.put('/registration',[
     body('name').trim().not().isEmpty()
 ], authController.registration);
 
+
+
+
+//############## przypomnienie hasła ############
+
+router.post('/forgotPass',authController.forgotPass);
+
+
 //############## logowanie ############
 
 router.post('/login',authController.login);

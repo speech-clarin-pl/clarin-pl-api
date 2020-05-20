@@ -13,6 +13,7 @@ const Session = require('../models/Session');
 const ProjectFile = require('../models/projectFile');
 const User = require('../models/user');
 const IncomingForm = require('formidable').IncomingForm;
+const uniqueFilename = require('unique-filename');
 
 
 // ###################################################
@@ -25,10 +26,8 @@ exports.getFileFromContainer = (req,res,next) => {
   const projectId = req.params.projectId;
   const sessionId = req.params.sessionId;
   const containerId = req.params.containerId;
+  
   const fileType = req.params.fileType;
-
-  //sprawdzam o jaki typ pliku mi chodzi: dat, json czy mp3
-
 
   //pobieram kontener z bazy danych
   Container.findById(containerId)
@@ -37,8 +36,18 @@ exports.getFileFromContainer = (req,res,next) => {
         //sciezka do pliku dat
         const repoPath = appRoot + "/repo/" + userId + "/" + projectId + "/" + sessionId;
 
-        const fileToDeliver = utils.getFileNameWithNoExt(container.fileName) + ".wav";
-        const filePath = repoPath + "/" + fileToDeliver;
+        const containerFolderName = container.fileName;
+
+        //sprawdzam o jaki typ pliku mi chodzi: dat, json czy mp3: TO DO
+        let filePath = null;
+
+        if(fileType=='audio'){
+           filePath = repoPath + "/" + containerFolderName + "/" + containerFolderName;
+        } else if(fileType=='dat'){
+           filePath = repoPath + "/" + containerFolderName + "/" + utils.getFileNameWithNoExt(containerFolderName) + ".dat";
+        }
+
+       
 
         //res.status(200).({ message: 'The data for previewing has been sent!', containerData: filePath});
         
@@ -110,13 +119,16 @@ exports.removeContainer = (req,res,next) => {
   const containerId = req.params.containerId;
 
   // tutaj usuwanie z repo, bazy danych, audio i txt
-  const repoPath = appRoot + "/repo/" + userId + "/" + projectId + "/" + sessionId;
+
+  const conainerFolder = utils.getFileNameWithNoExt(container.fileName);
+
+  const containerPath = appRoot + "/repo/" + userId + "/" + projectId + "/" + sessionId + "/" + conainerFolder;
 
   Container.findById(containerId)
     .then(foundContainer => {
 
-        //usuwam plik z dysku fizycznie
-        fs.unlink(repoPath + '/' + foundContainer.fileName, function (err) {
+        //usuwam folder kontenera z dysku fizycznie
+        fs.rmdir(containerPath,{recursive: true}, function (err) {
           if (err) throw err;
 
           //usuwam wpis w kolekcji Containers
@@ -150,15 +162,22 @@ exports.removeContainer = (req,res,next) => {
 
 exports.uploadFile = (req, res, next) => {
 
-  const savedFile = req.file.filename; // z unikatowym id
+  const savedFile = req.file.filename; // już z unikatowym id
   const oryginalFileName = req.file.originalname; //nazwa oryginalnego pliku
 
   const userId = req.body.userId;
   const projectId = req.body.projectId;
   const sessionId = req.body.sessionId;
 
-  const finalFileDest = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/';
-  const fullFilePath = finalFileDest + savedFile;
+  const uniqueHash = req.body.uniqueHash;
+
+  const nowyHash = uniqueFilename("","",uniqueHash);
+
+  const conainerFolderName = savedFile;
+  //const conainerFolderName = savedFile+"-"+nowyHash;
+  const containerFolderPath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + conainerFolderName;
+
+  const fullFilePath = containerFolderPath + "/" + savedFile;
 
   let newContainer = new Container({
     fileName: savedFile,
@@ -226,9 +245,7 @@ exports.createNewSession = (req, res, next) => {
           
               res.status(200).json({ message: 'New session has been created!', sessionName: createdSession.name, id: createdSession._id})
               
-            });
-
-           
+            });           
           })
           .catch(error => {
             throw error;

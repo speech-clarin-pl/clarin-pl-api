@@ -111,7 +111,7 @@ exports.createProject = (req, res, next) => {
                     return err;
                 } else {
                    
-                    // tworze plików demo
+                    // tworze pliki demo
 
                     let demosession = new Session({
                         name: "demo",
@@ -145,7 +145,7 @@ exports.createProject = (req, res, next) => {
                                         let celnikDemo = new Container({
                                             fileName: 'celnik.wav',
                                             containerName: 'celnik.wav',
-                                            size: fs.statSync(pathToDemoSession+"/celnik.wav").size,
+                                            size: fs.statSync(pathToDemoSession+"/celnik.wav/celnik.wav").size,
                                             owner: owner,
                                             project: projectEntry._id,
                                             session: createdDemoSession._id,
@@ -158,7 +158,7 @@ exports.createProject = (req, res, next) => {
                                         let kleskaDemo = new Container({
                                             fileName: 'kleska.wav',
                                             containerName: 'kleska.wav',
-                                            size: fs.statSync(pathToDemoSession+"/kleska.wav").size,
+                                            size: fs.statSync(pathToDemoSession+"/kleska.wav/kleska.wav").size,
                                             owner: owner,
                                             project: projectEntry._id,
                                             session: createdDemoSession._id,
@@ -171,7 +171,7 @@ exports.createProject = (req, res, next) => {
                                         let lektorDemo = new Container({
                                             fileName: 'lektor.wav',
                                             containerName: 'lektor.wav',
-                                            size: fs.statSync(pathToDemoSession+"/lektor.wav").size,
+                                            size: fs.statSync(pathToDemoSession+"/lektor.wav/lektor.wav").size,
                                             owner: owner,
                                             project: projectEntry._id,
                                             session: createdDemoSession._id,
@@ -184,7 +184,7 @@ exports.createProject = (req, res, next) => {
                                         let mowaDemo = new Container({
                                             fileName: 'mowa.wav',
                                             containerName: 'mowa.wav',
-                                            size: fs.statSync(pathToDemoSession+"/mowa.wav").size,
+                                            size: fs.statSync(pathToDemoSession+"/mowa.wav/mowa.wav").size,
                                             owner: owner,
                                             project: projectEntry._id,
                                             session: createdDemoSession._id,
@@ -197,7 +197,7 @@ exports.createProject = (req, res, next) => {
                                         let opowiesciDemo = new Container({
                                             fileName: 'opowiesci.wav',
                                             containerName: 'opowiesci.wav',
-                                            size: fs.statSync(pathToDemoSession+"/opowiesci.wav").size,
+                                            size: fs.statSync(pathToDemoSession+"/opowiesci.wav/opowiesci.wav").size,
                                             owner: owner,
                                             project: projectEntry._id,
                                             session: createdDemoSession._id,
@@ -210,7 +210,7 @@ exports.createProject = (req, res, next) => {
                                         let senatorDemo = new Container({
                                             fileName: 'senator.wav',
                                             containerName: 'senator.wav',
-                                            size: fs.statSync(pathToDemoSession+"/senator.wav").size,
+                                            size: fs.statSync(pathToDemoSession+"/senator.wav/senator.wav").size,
                                             owner: owner,
                                             project: projectEntry._id,
                                             session: createdDemoSession._id,
@@ -494,8 +494,8 @@ exports.createProject = (req, res, next) => {
 exports.deleteProject = (req,res,next) => {
     const projectId = req.body.idprojektu;
 
-    console.log("DELETE PROJECT")
-    console.log(req.body.idprojektu);
+   // console.log("DELETE PROJECT")
+  //  console.log(req.body.idprojektu);
 
     let projectToDelete;
 
@@ -508,7 +508,7 @@ exports.deleteProject = (req,res,next) => {
                 throw error;
             }
 
-            //sprawdzam czy updatu dokonuje zalogowana osoba
+            //sprawdzam czy usuwania dokonuje zalogowana osoba
             if(projectEntry.owner.toString() !== req.userId){
                 const error = new Error('Not authorized!');
                 error.statusCode = 403;
@@ -521,35 +521,33 @@ exports.deleteProject = (req,res,next) => {
         .then(projectEntry => {
             
             projectToDelete = projectEntry;
-            return User.findById(req.userId);
+
+             //czyszcze relacje z kolekcja usera- tam tez trzeba wyrzucic referencje do projektu
+             return User.findByIdAndUpdate(req.userId, {$pull: {projects: projectId}})
         })
         .then(user => {
-            //czyszcze relacje z colekcja usera- tam tez trzeba wyrzucic referencje do projektu
-            user.projects.pull(projectId);
 
-            return user.save();
-        })
-        .then(result => {
-            //usuwam wszystkie pliki w projekcie danego uzytkownika
-            const dirpath = appRoot + '/repo/'+req.userId + '/'+projectId;
-            rimraf(dirpath, function(err) {
-                if (err) {
-                    console.log(err);
-                    return err;
-                } else {
-                    console.log("Successfully deleted a user directory");
-                }
-              });
 
-               //usuwam z bazy sesje projektu oraz kontenery
+             //usuwam z bazy sesje projektu oraz kontenery
+             //return Session.findByIdAndRemove({_id: projectToDelete.sessionIds});
 
-               Session.deleteMany({_id: projectToDelete.sessionIds})
-                .then(removedSessions => {
-                    Container.deleteMany({project: projectToDelete._id})
-                        .then(removedContainer => {
-                            res.status(200).json({message: 'Project removed!', projectId: projectId})
-                        })
-                })
+             Session.deleteMany({_id: projectToDelete.sessionIds})
+             .then(removedSessions => {
+                Container.deleteMany({project: projectToDelete._id})
+                .then(removedContainer => {
+                        //usuwam wszystkie pliki w projekcie danego uzytkownika
+                        const dirpath = appRoot + '/repo/'+req.userId + '/'+projectId;
+                        rimraf(dirpath, function(err) {
+                            if (err) {
+                                console.log(err);
+                                return err;
+                            } else {
+                                res.status(200).json({message: 'Project removed!', projectId: projectId})
+                                console.log("Successfully deleted a user directory");
+                            }
+                        });
+                    })
+             })
         })
         .catch(error => {
             if(!error.statusCode){
