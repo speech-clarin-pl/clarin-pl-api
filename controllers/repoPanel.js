@@ -14,6 +14,7 @@ const ProjectFile = require('../models/projectFile');
 const User = require('../models/user');
 const IncomingForm = require('formidable').IncomingForm;
 const uniqueFilename = require('unique-filename');
+const shell = require('shelljs');
 
 
 // ###################################################
@@ -44,7 +45,7 @@ exports.getFileFromContainer = (req,res,next) => {
         if(fileType=='audio'){
            filePath = repoPath + "/" + containerFolderName + "/" + containerFolderName;
         } else if(fileType=='dat'){
-           filePath = repoPath + "/" + containerFolderName + "/" + utils.getFileNameWithNoExt(containerFolderName) + ".dat";
+           filePath = repoPath + "/" + containerFolderName + "/" + containerFolderName + ".dat";
         }
 
        
@@ -192,7 +193,18 @@ exports.uploadFile = (req, res, next) => {
     ifSEG: false,
   });
 
-  newContainer.save()
+
+  let ext = utils.getFileExtention(oryginalFileName);
+  ext = (ext[0]+'').toLowerCase();
+
+  const shellcomm = 'audiowaveform -i '+fullFilePath+' -o '+fullFilePath+'.dat -z 64 -b 8 --input-format ' + ext;
+
+    //obliczam z pliku audio podgląd dat
+  if (shell.exec(shellcomm).code !== 0) {
+    shell.echo('Error: Problem with extracting dat for audio file');
+    shell.exit(1);
+  } else {
+    newContainer.save()
     .then(createdContainer => {
 
       //updating the reference in given session
@@ -201,11 +213,11 @@ exports.uploadFile = (req, res, next) => {
           res.status(200).json({ message: 'New file has been uploaded!', sessionId: sessionId, oryginalName: oryginalFileName, containerId: createdContainer._id})
         })
 
-     
     })
     .catch(error => {
       throw error;
     })
+  }
 
 }
 
