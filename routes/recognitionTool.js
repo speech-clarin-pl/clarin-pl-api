@@ -6,6 +6,12 @@ const router = express.Router();
 // POST /recognition/singleFile
 router.post('/singleFile', recognitionToolController.startFileRecognitionOK);
 
+// GET /recognition/loadTranscription/containerId
+router.get('/loadTranscription/:containerId', recognitionToolController.loadTranscription);
+
+// PUT /recognition/saveTranscription
+router.put('/saveTranscription', recognitionToolController.saveTranscription);
+
 // POST /recognition/multipleFiles
 router.post('/multipleFiles', recognitionToolController.startBatchRecognition);
 

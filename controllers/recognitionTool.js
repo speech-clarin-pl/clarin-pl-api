@@ -8,6 +8,7 @@ const ProjectFile = require('../models/projectFile');
 const User = require('../models/user');
 const utils = require('../utils/utils');
 const ffmpeg = require('ffmpeg');
+const Container = require('../models/Container')
 
 exports.startFileRecognitionOK = (req, res, next) => {
     const audioFrom = req.body.audioFrom;
@@ -256,4 +257,70 @@ exports.startBatchRecognition = (req, res, next) => {
     next();
 }
 
+exports.saveTranscription = (req, res, next) => {
+    const transcription =  req.body.transcription;
+    //const transcription = JSON.stringify(jsonObj);
 
+    const toolType = req.body.toolType;
+    const container = req.body.container;
+
+    const userId = container.owner;
+    const projectId = container.project;
+    const sessionId = container.session;
+
+    const containerName = container.fileName;
+
+    const transfFileName = containerName + '.json';
+
+    const transfPath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerName + '/' + transfFileName;
+  
+
+    fs.writeJson(transfPath, transcription)
+    .then(() => {
+        res.status(201).json({
+            message: 'transcription saved with success!',
+        });
+    })
+    .catch(err => {
+        console.error(err)
+    })
+
+    
+}
+
+exports.loadTranscription = (req, res, next) => {
+
+    const containerId = req.params.containerId;
+
+    // wydobywam informacje o kontenerze z bazy danych
+
+    Container.findById(containerId)
+        .then(container => {
+            const userId = container.owner;
+            const projectId = container.project;
+            const sessionId = container.session;
+
+            //wydobywam i czytam plik json
+
+            const containerName = container.fileName;
+            const transfFileName = containerName + '.json';
+            const jsonpath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerName + '/' + transfFileName;
+  
+            fs.readJson(jsonpath)
+                .then(packageObj => {
+                    res.status(201).json(packageObj);
+                })
+                .catch(err => {
+                     console.error(err)
+                })
+       
+
+        })
+        .catch(error => {
+            console.log(error)
+        })
+    
+
+   
+   
+}
