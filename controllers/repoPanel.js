@@ -72,6 +72,11 @@ exports.runSpeechService = (req, res, next) => {
 
   // tutaj odpalam odpowiednia usługę
 
+  Container.findById(containerId).then(container => {  
+    const userId = container.owner;
+    const projectId = container.project;
+    const sessionId = container.session;
+
     let fieldToUpdate = ""; //pole w modelu kontenera do zamiany na true
 
     switch(toolType){
@@ -96,15 +101,46 @@ exports.runSpeechService = (req, res, next) => {
     }
 
 
-    // jeżeli usługa wykona się prawidłowo to robie update w bazie danych
 
-    Container.findOneAndUpdate({_id: containerId},fieldToUpdate)
+    // TUTAJ URUCHOMIĆ USŁUGĘ RECO
+  
+    const containerName = container.fileName;
+    const transFileName = containerName + '.json';
+  
+    const transfPath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerName + '/' + transFileName;
+
+    //tymczasowo zapisuje pusty json.......
+    fs.writeJson(transfPath, {
+      "time" : 1590577980033,
+      "blocks" : [
+          {
+              "type" : "paragraph",
+              "data" : {
+                  "text" : "domyślna transkrypcja ponieważ nie ma jeszcze zintegrowanej automatycznej!"
+              }
+          },
+      ],
+      "version" : "2.17.0"
+  }).then(() => {
+      Container.findOneAndUpdate({_id: containerId},fieldToUpdate)
       .then(updatedContainer => {
         res.status(200).json({ message: 'The service for this container has finished working with success!', containerId: updatedContainer._id, toolType: toolType});
       })
       .catch(error => {
         console.log(error)
       })
+    })
+    .catch(err => {
+        console.error(err)
+    })
+
+  }).catch(error=>{
+    console.log('ERROR! - container has not been found!')
+  })
+
+
+
+    
 }
 
 
@@ -197,7 +233,7 @@ exports.uploadFile = (req, res, next) => {
   let ext = utils.getFileExtention(oryginalFileName);
   ext = (ext[0]+'').toLowerCase();
 
-  const shellcomm = 'audiowaveform -i '+fullFilePath+' -o '+fullFilePath+'.dat -z 64 -b 8 --input-format ' + ext;
+  const shellcomm = 'audiowaveform -i '+fullFilePath+' -o '+fullFilePath+'.dat -z 128 -b 8 --input-format ' + ext;
 
     //obliczam z pliku audio podgląd dat
   if (shell.exec(shellcomm).code !== 0) {

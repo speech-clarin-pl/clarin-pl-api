@@ -3,6 +3,7 @@ const path = require('path');
 const moment = require('moment');
 const fsextra = require('fs-extra');
 const utilsForFiles = require('../utils/utils');
+var copy = require('recursive-copy');
 
 const {validationResult} = require('express-validator/check');
 
@@ -56,6 +57,7 @@ exports.getProjectsList = (req, res, next) => {
 // #################################################################################
 
 exports.createProject = (req, res, next) => {
+
 
      //resultaty validacji
     const error = validationResult(req);
@@ -128,19 +130,28 @@ exports.createProject = (req, res, next) => {
                 
                             //tworze folder z demo na dysku dla tej sesji
                             let pathToDemoSession = dirpath + '/' + createdDemoSession._id;
-                            fsextra.mkdirs(pathToDemoSession, function (err) {
-                        
-                                if (err) {
-                                    res.status(500).json({ message: 'Problem with demo folder creation!'});
-                                    return console.error(err);
-                                }
 
-                                //kopiuje pliki demo do tej lokalizacji
+                            try {
+                                fsextra.mkdirsSync(pathToDemoSession);
+                            } catch (err) {
+                                res.status(500).json({ message: 'Problem with demo folder creation!'});
+                                return console.error(err);
+                            }
 
-                                fsextra.copy(appRoot + '/repo/demo_files', pathToDemoSession)
-                                     .then(() => {
+                            
 
-                                        //zapisuje nowe kontenery w bazie danych
+                            copy(appRoot + '/repo/demo_files', pathToDemoSession)
+                                .on(copy.events.COPY_FILE_START, function(copyOperation) {
+                                    console.info('Copying file ' + copyOperation.src + '...');
+                                })
+                                .on(copy.events.COPY_FILE_COMPLETE, function(copyOperation) {
+                                    console.info('Copied to ' + copyOperation.dest);
+                                })
+                                .on(copy.events.ERROR, function(error, copyOperation) {
+                                    console.error('Unable to copy ' + copyOperation.dest);
+                                })
+                                .then(function(results) {
+                                    console.info(results.length + ' file(s) copied');
 
                                         let celnikDemo = new Container({
                                             fileName: 'celnik-wav',
@@ -151,7 +162,7 @@ exports.createProject = (req, res, next) => {
                                             session: createdDemoSession._id,
                                             ifVAD: false,
                                             ifDIA: false,
-                                            ifREC: false,
+                                            ifREC: true,
                                             ifSEG: false,
                                         });
 
@@ -164,7 +175,7 @@ exports.createProject = (req, res, next) => {
                                             session: createdDemoSession._id,
                                             ifVAD: false,
                                             ifDIA: false,
-                                            ifREC: false,
+                                            ifREC: true,
                                             ifSEG: false,
                                         });
 
@@ -177,7 +188,7 @@ exports.createProject = (req, res, next) => {
                                             session: createdDemoSession._id,
                                             ifVAD: false,
                                             ifDIA: false,
-                                            ifREC: false,
+                                            ifREC: true,
                                             ifSEG: false,
                                         });
 
@@ -190,7 +201,7 @@ exports.createProject = (req, res, next) => {
                                             session: createdDemoSession._id,
                                             ifVAD: false,
                                             ifDIA: false,
-                                            ifREC: false,
+                                            ifREC: true,
                                             ifSEG: false,
                                         });
 
@@ -203,7 +214,7 @@ exports.createProject = (req, res, next) => {
                                             session: createdDemoSession._id,
                                             ifVAD: false,
                                             ifDIA: false,
-                                            ifREC: false,
+                                            ifREC: true,
                                             ifSEG: false,
                                         });
 
@@ -216,7 +227,7 @@ exports.createProject = (req, res, next) => {
                                             session: createdDemoSession._id,
                                             ifVAD: false,
                                             ifDIA: false,
-                                            ifREC: false,
+                                            ifREC: true,
                                             ifSEG: false,
                                         });
 
@@ -241,35 +252,34 @@ exports.createProject = (req, res, next) => {
                                                     project: projectEntry,
                                                     owner: {_id: owner._id, name: owner.name}
                                                 });
-                                            })
-                                            .catch(error => {
+                                            }).catch(error => {
+                                                console.log(error)
                                                 throw error
                                             })
 
-                                        })
-                                        .catch((error)=>{
+                                        }).catch((error)=>{
+                                            console.log(error)
                                             throw error;
                                         })
-                                            
 
-                                        
-                                     })
-                                     .catch(error => {
-                                        throw error;
-                                     })
-                            });
-                
-                        })
-                        .catch(error => {
+                                })
+                                .catch(function(error) {
+                                    return console.error('Copy failed: ' + error);
+                                });
+
+                            //-----------end copy file catch
+                          
+                        }).catch(error => {
+                            console.log(error)
                             throw error;
                         })
-                    })
-                    .catch(error => {
+
+
+                    }).catch(error => {
+                        console.log(error)
                         throw error;
                     })
 
-
-                    
                 }
             });
         })
