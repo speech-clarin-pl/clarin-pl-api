@@ -1,5 +1,5 @@
 //importuje model wpisu projektu
-const Task = require('../models/dockerTask');
+const Task = require('../models/DockerTask');
 const appRoot = require('app-root-path'); //zwraca roota aplikacji   
 const utils = require('../utils/utils');
 const moment = require('moment');

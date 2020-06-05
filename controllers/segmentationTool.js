@@ -1,5 +1,5 @@
-const dockerTaskController = require('./runTask');
-const dockerTaskControllerOK = require('./runTaskOK');
+//const dockerTaskController = require('./runTask');
+const dockerTaskControllerOK = require('./runTaskOK_');
 const appRoot = require('app-root-path'); //zwraca roota aplikacji  
 const ProjectEntry = require('../models/projectEntry');
 const ProjectFile = require('../models/projectFile');

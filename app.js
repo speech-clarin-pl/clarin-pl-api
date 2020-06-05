@@ -67,7 +67,7 @@ const fileStorage = multer.diskStorage({
         const nowyHash = uniqueFilename("","",uniqueHash);
 
        // const audioFileName = utils.getFileNameWithNoExt(file.originalname)+"-"+utils.getFileExtention(file.originalname)+"-"+nowyHash;
-       const audioFileName = utils.getFileNameWithNoExt(file.originalname)+"-"+nowyHash+"-"+utils.getFileExtention(file.originalname);
+       const audioFileName = utils.getFileNameWithNoExt(file.originalname)+"-"+nowyHash+"_temp."+utils.getFileExtention(file.originalname);
         
        cb(null, audioFileName);
     },
@@ -84,7 +84,7 @@ const fileStorage = multer.diskStorage({
         const oryginalFileName = file.originalname;
 
         //tworze folder dla wgranego pliku audio
-        const conainerFolderName = utils.getFileNameWithNoExt(oryginalFileName)+"-"+nowyHash+"-"+utils.getFileExtention(oryginalFileName);
+        const conainerFolderName = utils.getFileNameWithNoExt(oryginalFileName)+"-"+nowyHash;
         //const conainerFolderName = oryginalFileName+"-"+nowyHash;
         const containerFolderPath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + conainerFolderName;
 

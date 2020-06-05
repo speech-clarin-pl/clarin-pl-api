@@ -1,5 +1,6 @@
 const fs = require('fs-extra');
 const path = require('path');
+const ffmpeg = require('ffmpeg');
 
 const mkdirp = require("mkdirp"); //do tworzenia folderu
 const rimraf = require("rimraf");
@@ -15,6 +16,8 @@ const User = require('../models/user');
 const IncomingForm = require('formidable').IncomingForm;
 const uniqueFilename = require('unique-filename');
 const shell = require('shelljs');
+
+const runTask = require('./runTask');
 
 
 // ###################################################
@@ -37,15 +40,17 @@ exports.getFileFromContainer = (req,res,next) => {
         //sciezka do pliku dat
         const repoPath = appRoot + "/repo/" + userId + "/" + projectId + "/" + sessionId;
 
-        const containerFolderName = container.fileName;
+        const containerFolderName = utils.getFileNameWithNoExt(container.fileName);
+        const fileAudioName = container.fileName;
+        const fileDatName = utils.getFileNameWithNoExt(container.fileName)+".dat";
 
         //sprawdzam o jaki typ pliku mi chodzi: dat, json czy mp3: TO DO
         let filePath = null;
 
         if(fileType=='audio'){
-           filePath = repoPath + "/" + containerFolderName + "/" + containerFolderName;
+           filePath = repoPath + "/" + containerFolderName + "/" + fileAudioName;
         } else if(fileType=='dat'){
-           filePath = repoPath + "/" + containerFolderName + "/" + containerFolderName + ".dat";
+           filePath = repoPath + "/" + containerFolderName + "/" + fileDatName;
         }
 
        
@@ -67,15 +72,26 @@ exports.getFileFromContainer = (req,res,next) => {
 //#### robie update flagi containera ######
 //#######################################
 exports.runSpeechService = (req, res, next) => {
+
   const containerId = req.body.containerId;
   const toolType = req.body.toolType;
 
   // tutaj odpalam odpowiednia usługę
 
   Container.findById(containerId).then(container => {  
+
     const userId = container.owner;
     const projectId = container.project;
     const sessionId = container.session;
+
+    const containerName = container.containerName;  //np. lektor  - to co widzi użytkownik w repo
+    const audioFileName = container.fileName;       //np. lektor-fe2e3423.wav - na serwerze
+    const containerFolderName = utils.getFileNameWithNoExt(audioFileName);  //np.lektor-fe2e3423 - na serwerze folder
+
+    let inputAudioFilePath = '';
+    let inputTxtFilePath = '';
+
+    let outputFilePath = '';
 
     let fieldToUpdate = ""; //pole w modelu kontenera do zamiany na true
 
@@ -89,9 +105,51 @@ exports.runSpeechService = (req, res, next) => {
         console.log("Uruchamiam usługę VAD");
           break;
       case "RECO":
+
         fieldToUpdate = {ifREC: true};
-        console.log("Uruchamiam usługę RECO");
-          break;
+       
+        const outputFileName = containerFolderName + '.json';
+        outputFilePath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerFolderName + '/' + outputFileName;
+        inputAudioFilePath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerFolderName + '/' + audioFileName;
+    
+        runTask.runRECO(inputAudioFilePath, outputFilePath)
+          .then(savedTask => {
+            console.log('ZAPISANO TASK:')
+            console.log(savedTask)
+          }).catch(error => {
+            console.log('ERROR Z TASKIEM')
+            console.log(error)
+          })
+
+          // TUTAJ POWINNO BYĆ ODPYTYWANIE BAZY DANYCH DO SEKUNDE CZY SIE UKONCZYL TASK....
+
+            //tymczasowo zapisuje pusty json.......
+            fs.writeJson(outputFilePath, {
+              "time" : 1590577980033,
+              "blocks" : [
+                  {
+                      "type" : "paragraph",
+                      "data" : {
+                          "text" : "domyślna transkrypcja ponieważ nie ma jeszcze zintegrowanej automatycznej!"
+                      }
+                  },
+              ],
+              "version" : "2.17.0"
+              }).then(() => {
+                
+                  Container.findOneAndUpdate({_id: containerId},fieldToUpdate)
+                  .then(updatedContainer => {
+                    res.status(200).json({ message: 'The service for this container has finished working with success!', containerId: updatedContainer._id, toolType: toolType});
+                  })
+                  .catch(error => {
+                    console.log(error)
+                  })
+                })
+                .catch(err => {
+                    console.error(err)
+                })
+
+        break;
       case "ALIGN":
         fieldToUpdate = {ifSEG: true};
         console.log("Uruchamiam usługę ALIGN");
@@ -100,47 +158,10 @@ exports.runSpeechService = (req, res, next) => {
           console.log("Default"); //to do
     }
 
-
-
-    // TUTAJ URUCHOMIĆ USŁUGĘ RECO
-  
-    const containerName = container.fileName;
-    const transFileName = containerName + '.json';
-  
-    const transfPath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerName + '/' + transFileName;
-
-    //tymczasowo zapisuje pusty json.......
-    fs.writeJson(transfPath, {
-      "time" : 1590577980033,
-      "blocks" : [
-          {
-              "type" : "paragraph",
-              "data" : {
-                  "text" : "domyślna transkrypcja ponieważ nie ma jeszcze zintegrowanej automatycznej!"
-              }
-          },
-      ],
-      "version" : "2.17.0"
-  }).then(() => {
-      Container.findOneAndUpdate({_id: containerId},fieldToUpdate)
-      .then(updatedContainer => {
-        res.status(200).json({ message: 'The service for this container has finished working with success!', containerId: updatedContainer._id, toolType: toolType});
-      })
-      .catch(error => {
-        console.log(error)
-      })
-    })
-    .catch(err => {
-        console.error(err)
-    })
-
-  }).catch(error=>{
-    console.log('ERROR! - container has not been found!')
+  }).catch(err => {
+    console.log("Error: container not found")
   })
 
-
-
-    
 }
 
 
@@ -210,12 +231,122 @@ exports.uploadFile = (req, res, next) => {
 
   const nowyHash = uniqueFilename("","",uniqueHash);
 
-  const conainerFolderName = savedFile;
+  let fileWithNoExt = utils.getFileNameWithNoExt(savedFile);
+  let fileWithNoSufix = fileWithNoExt.substring(0, fileWithNoExt.length - 5);
+
+  const conainerFolderName = fileWithNoSufix;
   //const conainerFolderName = savedFile+"-"+nowyHash;
   const containerFolderPath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + conainerFolderName;
 
   const fullFilePath = containerFolderPath + "/" + savedFile;
 
+  // ROBIE KONWERSJE FFMPEG
+
+  try {
+
+      let process = new ffmpeg(fullFilePath);
+      process.then(audio => {
+        audio.setAudioFrequency(16000)
+              .setAudioChannels(1)
+              .setAudioBitRate(256);
+
+        audio.addCommand('-y', '');
+        audio.addCommand('-sample_fmt', 's16');
+
+        //teraz robie konwersje na WAV i usuwam sufix _temp w docelowym pliku
+        // musze tak robic bo zapisywanie w miejscu nie dziala przy dlugich plikach....
+
+        const finalAudioFileName = conainerFolderName + ".wav";
+        const fillCorrectAudioPath = containerFolderPath + "/" + finalAudioFileName;
+
+        //tworze odpowiednia nazwe kontenera - bez unikatowego ID oraz bez rozszerzenia
+        const finalContainerName = oryginalFileName
+
+        audio.save(fillCorrectAudioPath)
+              .then(convertedFile=>{
+                //console.log('SUCCESS: przekonwertowałem plik' + convertedFile)
+                //teraz moge usunąć oryginalny plik z dysku bo mam już przekonwertowany
+                fs.remove(fullFilePath)
+                .then(() => {
+                    //console.log('Oryginalny plik został usunięty - pozostawiony tylko poprawnie przekonwertowany')
+
+                    //zapisuje tą informaje do DB
+                    let newContainer = new Container({
+                      fileName: finalAudioFileName,
+                      containerName: utils.getFileNameWithNoExt(oryginalFileName),
+                      size: fs.statSync(fillCorrectAudioPath).size,
+                      owner: userId,
+                      project: projectId,
+                      session: sessionId,
+                      ifVAD: false,
+                      ifDIA: false,
+                      ifREC: false,
+                      ifSEG: false,
+                    });
+
+                    let ext = utils.getFileExtention(finalAudioFileName);
+                    ext = (ext[0]+'').toLowerCase();
+
+                    const finalDATFileName = conainerFolderName + ".dat";
+                    const fillCorrectDATPath = containerFolderPath + "/" + finalDATFileName;
+
+                    const shellcomm = 'audiowaveform -i '+fillCorrectAudioPath+' -o '+fillCorrectDATPath+' -z 128 -b 8 --input-format ' + ext;
+
+                      //obliczam z pliku audio podgląd dat
+                    if (shell.exec(shellcomm).code !== 0) {
+                      shell.echo('Error: Problem with extracting dat for audio file');
+                      shell.exit(1);
+                    } else {
+                      newContainer.save()
+                      .then(createdContainer => {
+
+                        //updating the reference in given session
+                        Session.findOneAndUpdate({_id: sessionId},{$push: {containersIds: createdContainer._id }})
+                          .then(updatedSession => {
+                            res.status(200).json({ message: 'New file has been uploaded!', sessionId: sessionId, oryginalName: oryginalFileName, containerId: createdContainer._id})
+                          })
+
+                      })
+                      .catch(error => {
+                        throw error;
+                      })
+                    }
+
+
+                })
+                .catch(err => {
+                  console.error('Problem z usunietceim pliku gdy istnieje już poprawnie przekonwertowany' + err)
+                })
+
+              }).catch(err =>{
+                console.log('ERROR SAVE FFMPEG: coś poszło nie tak')
+              })
+      }).catch(err=>{
+        console.log('Error FFMPEG: ' + err)
+      })
+
+    /*
+        const shellcomm = 'ffmpeg -i ' + fullFilePath + ' -ar 16000 -sample_fmt s16 -ac 1 -y ' + utils.getFileNameWithNoExt(fullFilePath) + '.wav';
+
+        //obliczam z pliku audio podgląd dat
+      if (shell.exec(shellcomm).code !== 0) {
+        shell.echo('Error: Problem with FFMPG');
+        shell.exit(1);
+      } else {
+
+      }
+
+      */
+
+        
+
+  } catch (e) {
+    console.log("ups!! jakis wyjatek...")
+    console.log(e.code);
+	  console.log(e.msg);
+  }
+  
+/*
   let newContainer = new Container({
     fileName: savedFile,
     containerName: oryginalFileName,
@@ -254,6 +385,8 @@ exports.uploadFile = (req, res, next) => {
       throw error;
     })
   }
+
+  */
 
 }
 

@@ -1,6 +1,6 @@
 
-const dockerTaskController = require('./runTask');
-const dockerTaskControllerOK = require('./runTaskOK');
+//const dockerTaskController = require('./runTask');
+const dockerTaskControllerOK = require('./runTaskOK_');
 const appRoot = require('app-root-path'); //zwraca roota aplikacji    
 const fs = require('fs-extra');
 const ProjectEntry = require('../models/projectEntry');
@@ -268,9 +268,8 @@ exports.saveTranscription = (req, res, next) => {
     const projectId = container.project;
     const sessionId = container.session;
 
-    const containerName = container.fileName;
-
-    const transfFileName = containerName + '.json';
+    const containerName = utils.getFileNameWithNoExt(container.fileName);
+    const transfFileName = utils.getFileNameWithNoExt(container.fileName) + '.json';
 
     const transfPath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerName + '/' + transfFileName;
   
@@ -302,8 +301,9 @@ exports.loadTranscription = (req, res, next) => {
 
             //wydobywam i czytam plik json
 
-            const containerName = container.fileName;
-            const transfFileName = containerName + '.json';
+            const containerName = utils.getFileNameWithNoExt(container.fileName);
+            const transfFileName = utils.getFileNameWithNoExt(container.fileName) + '.json';
+
             const jsonpath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerName + '/' + transfFileName;
   
             fs.readJson(jsonpath)
@@ -319,8 +319,4 @@ exports.loadTranscription = (req, res, next) => {
         .catch(error => {
             console.log(error)
         })
-    
-
-   
-   
 }

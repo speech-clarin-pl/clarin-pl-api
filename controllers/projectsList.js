@@ -154,9 +154,9 @@ exports.createProject = (req, res, next) => {
                                     console.info(results.length + ' file(s) copied');
 
                                         let celnikDemo = new Container({
-                                            fileName: 'celnik-wav',
-                                            containerName: 'celnik.wav',
-                                            size: fs.statSync(pathToDemoSession+"/celnik-wav/celnik-wav").size,
+                                            fileName: 'celnik.wav',
+                                            containerName: 'celnik',
+                                            size: fs.statSync(pathToDemoSession+"/celnik/celnik.wav").size,
                                             owner: owner,
                                             project: projectEntry._id,
                                             session: createdDemoSession._id,
@@ -167,9 +167,9 @@ exports.createProject = (req, res, next) => {
                                         });
 
                                         let kleskaDemo = new Container({
-                                            fileName: 'kleska-wav',
-                                            containerName: 'kleska.wav',
-                                            size: fs.statSync(pathToDemoSession+"/kleska-wav/kleska-wav").size,
+                                            fileName: 'kleska.wav',
+                                            containerName: 'kleska',
+                                            size: fs.statSync(pathToDemoSession+"/kleska/kleska.wav").size,
                                             owner: owner,
                                             project: projectEntry._id,
                                             session: createdDemoSession._id,
@@ -180,9 +180,9 @@ exports.createProject = (req, res, next) => {
                                         });
 
                                         let lektorDemo = new Container({
-                                            fileName: 'lektor-wav',
-                                            containerName: 'lektor.wav',
-                                            size: fs.statSync(pathToDemoSession+"/lektor-wav/lektor-wav").size,
+                                            fileName: 'lektor.wav',
+                                            containerName: 'lektor',
+                                            size: fs.statSync(pathToDemoSession+"/lektor/lektor.wav").size,
                                             owner: owner,
                                             project: projectEntry._id,
                                             session: createdDemoSession._id,
@@ -193,9 +193,9 @@ exports.createProject = (req, res, next) => {
                                         });
 
                                         let mowaDemo = new Container({
-                                            fileName: 'mowa-wav',
-                                            containerName: 'mowa.wav',
-                                            size: fs.statSync(pathToDemoSession+"/mowa-wav/mowa-wav").size,
+                                            fileName: 'mowa.wav',
+                                            containerName: 'mowa',
+                                            size: fs.statSync(pathToDemoSession+"/mowa/mowa.wav").size,
                                             owner: owner,
                                             project: projectEntry._id,
                                             session: createdDemoSession._id,
@@ -206,9 +206,9 @@ exports.createProject = (req, res, next) => {
                                         });
 
                                         let opowiesciDemo = new Container({
-                                            fileName: 'opowiesci-wav',
-                                            containerName: 'opowiesci.wav',
-                                            size: fs.statSync(pathToDemoSession+"/opowiesci-wav/opowiesci-wav").size,
+                                            fileName: 'opowiesci.wav',
+                                            containerName: 'opowiesci',
+                                            size: fs.statSync(pathToDemoSession+"/opowiesci/opowiesci.wav").size,
                                             owner: owner,
                                             project: projectEntry._id,
                                             session: createdDemoSession._id,
@@ -219,9 +219,9 @@ exports.createProject = (req, res, next) => {
                                         });
 
                                         let senatorDemo = new Container({
-                                            fileName: 'senator-wav',
-                                            containerName: 'senator.wav',
-                                            size: fs.statSync(pathToDemoSession+"/senator-wav/senator-wav").size,
+                                            fileName: 'senator.wav',
+                                            containerName: 'senator',
+                                            size: fs.statSync(pathToDemoSession+"/senator/senator.wav").size,
                                             owner: owner,
                                             project: projectEntry._id,
                                             session: createdDemoSession._id,
