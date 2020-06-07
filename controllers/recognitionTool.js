@@ -273,8 +273,22 @@ exports.saveTranscription = (req, res, next) => {
 
     const transfPath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerName + '/' + transfFileName;
   
+    //tymczasowo - w przyszłości do zmiany na coś lepszego
+    let toSaveTemplate = {
+        "blocks" : [
+            {
+                "starttime" : 123456,
+                "stoptime" : 124556,
+                "data" : {
+                    "text": transcription,
+                    "type": "speech"
+                }
+            }
+        ]
+    }
+    
 
-    fs.writeJson(transfPath, transcription)
+    fs.writeJson(transfPath, toSaveTemplate)
     .then(() => {
         res.status(201).json({
             message: 'transcription saved with success!',
@@ -313,8 +327,6 @@ exports.loadTranscription = (req, res, next) => {
                 .catch(err => {
                      console.error(err)
                 })
-       
-
         })
         .catch(error => {
             console.log(error)

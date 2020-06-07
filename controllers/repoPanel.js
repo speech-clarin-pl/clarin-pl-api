@@ -95,6 +95,8 @@ exports.runSpeechService = (req, res, next) => {
 
     let fieldToUpdate = ""; //pole w modelu kontenera do zamiany na true
 
+    let outputFileName = "";
+
     switch(toolType){
       case "DIA":
          fieldToUpdate = {ifDIA: true};
@@ -107,47 +109,33 @@ exports.runSpeechService = (req, res, next) => {
       case "RECO":
 
         fieldToUpdate = {ifREC: true};
-       
-        const outputFileName = containerFolderName + '.json';
-        outputFilePath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerFolderName + '/' + outputFileName;
-        inputAudioFilePath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerFolderName + '/' + audioFileName;
+      
     
-        runTask.runRECO(inputAudioFilePath, outputFilePath)
-          .then(savedTask => {
-            console.log('ZAPISANO TASK:')
-            console.log(savedTask)
+        const userId = container.owner;
+        const projectId = container.project;
+        const sessionId = container.session;
+    
+        const containerName = container.containerName;  //np. lektor  - to co widzi użytkownik w repo
+        const audioFileName = container.fileName;       //np. lektor-fe2e3423.wav - na serwerze
+        const containerFolderName = utils.getFileNameWithNoExt(audioFileName);  //np.lektor-fe2e3423 - na serwerze folder
+
+       let outFileName = containerFolderName + ".json";
+
+       outputFilePath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerFolderName + '/' + outFileName;
+       inputAudioFilePath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerFolderName + '/' + audioFileName;
+
+       //do dockera podaje ścieżke relatywną
+       inputAudioFilePath = path.relative(appRoot + '/repo/', inputAudioFilePath);
+
+        runTask.runRECO(inputAudioFilePath, outputFilePath, container._id)
+          .then(updatedContainer => {
+            //console.log(updatedContainer)
+            res.status(200).json({ message: 'The service for this container has finished working with success!!', containerId: updatedContainer._id, toolType: toolType});
           }).catch(error => {
             console.log('ERROR Z TASKIEM')
             console.log(error)
           })
 
-          // TUTAJ POWINNO BYĆ ODPYTYWANIE BAZY DANYCH DO SEKUNDE CZY SIE UKONCZYL TASK....
-
-            //tymczasowo zapisuje pusty json.......
-            fs.writeJson(outputFilePath, {
-              "time" : 1590577980033,
-              "blocks" : [
-                  {
-                      "type" : "paragraph",
-                      "data" : {
-                          "text" : "domyślna transkrypcja ponieważ nie ma jeszcze zintegrowanej automatycznej!"
-                      }
-                  },
-              ],
-              "version" : "2.17.0"
-              }).then(() => {
-                
-                  Container.findOneAndUpdate({_id: containerId},fieldToUpdate)
-                  .then(updatedContainer => {
-                    res.status(200).json({ message: 'The service for this container has finished working with success!', containerId: updatedContainer._id, toolType: toolType});
-                  })
-                  .catch(error => {
-                    console.log(error)
-                  })
-                })
-                .catch(err => {
-                    console.error(err)
-                })
 
         break;
       case "ALIGN":

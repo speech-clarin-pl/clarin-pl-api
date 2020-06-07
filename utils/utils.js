@@ -1,7 +1,37 @@
 const fs = require('fs-extra');
+const fsnormal = require('fs');
 const appRoot = require('app-root-path'); //zwraca roota aplikacji 
 const path = require('path');
 var emptyDir = require('empty-dir');
+
+//having txt file, the function makes appropriate JSCON from it
+
+exports.convertTxtFileIntoJSON = (txtFilePath) => {
+
+  
+    let transcription = fs.readFileSync(txtFilePath, 'utf8');
+
+    let toReturnTemplate = {
+        "blocks" : [
+            {
+                "starttime" : 123456,
+                "stoptime" : 124556,
+                "data" : {
+                    "text": transcription,
+                    "type": "speech"
+                }
+            }
+        ]
+    }
+
+    return toReturnTemplate;
+}
+
+//funtion returns only the file name from the path
+exports.getFileNameFromPath = (filePath) => {
+    let splitedPath = filePath.split("/");
+    return splitedPath[splitedPath.length];
+}
 
 exports.readDir = (dir, callback) => {
 
