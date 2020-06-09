@@ -60,7 +60,7 @@ exports.runRECO = (inputAudio, outputFile, containerId) => {
                                             fs.writeJson(JSONTransPath, JSONtranscription).then(() => {
                                                 console.log("ZAPISAŁEM TRANSKRYPCJE W JSONIE")
                                                 //aktualizuje flage w kontenrze
-                                                Container.findOneAndUpdate({_id: containerId},{ifREC: true})
+                                                Container.findOneAndUpdate({_id: containerId},{ifREC: true, statusREC: 'done'})
                                                     .then(updatedContainer => {
                                                         console.log("Zrobiłem update containera")
 
@@ -103,7 +103,14 @@ exports.runRECO = (inputAudio, outputFile, containerId) => {
                             reject(error)
                         })
                 },1000);
-                //resolve(savedTask)
+                
+                
+                //jak nie ma odpowiedzi w ciagu 30min to zatrzymuje
+                setTimeout(() => {
+                    clearInterval(checkerdb);
+                }, 1800000);
+                //docelowo na 30min czyli 1800000
+
             }).catch(error => {
                 reject(error)
             })

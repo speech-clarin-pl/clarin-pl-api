@@ -164,6 +164,11 @@ exports.createProject = (req, res, next) => {
                                             ifDIA: false,
                                             ifREC: true,
                                             ifSEG: false,
+                                            ifVAD: false,
+                                            statusVAD: 'ready',
+                                            statusDIA: 'ready',
+                                            statusREC: 'done',
+                                            statusSEG: 'ready',
                                         });
 
                                         let kleskaDemo = new Container({
@@ -177,6 +182,10 @@ exports.createProject = (req, res, next) => {
                                             ifDIA: false,
                                             ifREC: true,
                                             ifSEG: false,
+                                            statusVAD: 'ready',
+                                            statusDIA: 'ready',
+                                            statusREC: 'done',
+                                            statusSEG: 'ready',
                                         });
 
                                         let lektorDemo = new Container({
@@ -190,6 +199,10 @@ exports.createProject = (req, res, next) => {
                                             ifDIA: false,
                                             ifREC: true,
                                             ifSEG: false,
+                                            statusVAD: 'ready',
+                                            statusDIA: 'ready',
+                                            statusREC: 'done',
+                                            statusSEG: 'ready',
                                         });
 
                                         let mowaDemo = new Container({
@@ -203,6 +216,10 @@ exports.createProject = (req, res, next) => {
                                             ifDIA: false,
                                             ifREC: true,
                                             ifSEG: false,
+                                            statusVAD: 'ready',
+                                            statusDIA: 'ready',
+                                            statusREC: 'done',
+                                            statusSEG: 'ready',
                                         });
 
                                         let opowiesciDemo = new Container({
@@ -214,8 +231,12 @@ exports.createProject = (req, res, next) => {
                                             session: createdDemoSession._id,
                                             ifVAD: false,
                                             ifDIA: false,
-                                            ifREC: true,
+                                            ifREC: false,
                                             ifSEG: false,
+                                            statusVAD: 'ready',
+                                            statusDIA: 'ready',
+                                            statusREC: 'ready',
+                                            statusSEG: 'ready',
                                         });
 
                                         let senatorDemo = new Container({
@@ -227,8 +248,12 @@ exports.createProject = (req, res, next) => {
                                             session: createdDemoSession._id,
                                             ifVAD: false,
                                             ifDIA: false,
-                                            ifREC: true,
+                                            ifREC: false,
                                             ifSEG: false,
+                                            statusVAD: 'ready',
+                                            statusDIA: 'ready',
+                                            statusREC: 'ready',
+                                            statusSEG: 'ready',
                                         });
 
                                         const demoFiles = [celnikDemo, kleskaDemo, lektorDemo, mowaDemo, opowiesciDemo, senatorDemo];

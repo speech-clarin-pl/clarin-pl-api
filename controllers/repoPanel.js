@@ -110,7 +110,6 @@ exports.runSpeechService = (req, res, next) => {
 
         fieldToUpdate = {ifREC: true};
       
-    
         const userId = container.owner;
         const projectId = container.project;
         const sessionId = container.session;
@@ -270,6 +269,10 @@ exports.uploadFile = (req, res, next) => {
                       ifDIA: false,
                       ifREC: false,
                       ifSEG: false,
+                      statusVAD: 'ready',
+                      statusDIA: 'ready',
+                      statusREC: 'ready',
+                      statusSEG: 'ready',
                     });
 
                     let ext = utils.getFileExtention(finalAudioFileName);
