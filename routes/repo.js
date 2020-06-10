@@ -25,8 +25,11 @@ router.get('/:projectId/:userId', isAuth, repoController.getRepoAssets);
  //DELETE /repoFiles/deleteFile/userId - usuwa folder
 router.delete('/:userId/:projectId/:sessionId/:containerId', isAuth, repoController.removeContainer);
 
- //PUT /repoFiles/runSpeechService/containerId - wykonuje daną usługę na określonym kontenerze
- router.put('/runSpeechService/:containerId', isAuth, repoController.runSpeechService);
+ //PUT /repoFiles/runSpeechReco/containerId - wykonuje daną usługę na określonym kontenerze
+ router.put('/runSpeechRecognition/:containerId', isAuth, repoController.runSpeechRecognition);
+
+  //PUT /repoFiles/runSpeechReco/containerId - wykonuje daną usługę na określonym kontenerze
+  router.put('/runSpeechSegmentation/:containerId', isAuth, repoController.runSpeechSegmentation);
 
 
 

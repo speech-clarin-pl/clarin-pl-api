@@ -20,6 +20,56 @@ const shell = require('shelljs');
 const runTask = require('./runTask');
 
 
+//##########################################
+//#### wykonuje segmentacje ######
+//#######################################
+exports.runSpeechSegmentation = (req, res, next) => {
+
+  const containerId = req.body.containerId;
+  const toolType = req.body.toolType;
+
+  Container.findById(containerId).then(container => {  
+    runTask.runSEG(container)
+      .then(updatedContainer => {
+        res.status(200).json({ message: 'The service for this container has finished working with success!!', containerId: updatedContainer._id, toolType: toolType});
+      }).catch(error => {
+        console.log('ERROR Z TASKIEM')
+        console.log(error)
+      })
+  }).catch(err => {
+    console.log("Error: container not found")
+  })
+
+
+}
+
+
+
+//##########################################
+//#### wykonuje rozpoznawanie mowy ######
+//#######################################
+exports.runSpeechRecognition = (req, res, next) => {
+
+  const containerId = req.body.containerId;
+  const toolType = req.body.toolType;
+
+  // tutaj odpalam odpowiednia usługę
+
+  Container.findById(containerId).then(container => {  
+    runTask.runREC(container)
+      .then(updatedContainer => {
+        res.status(200).json({ message: 'The service for this container has finished working with success!!', containerId: updatedContainer._id, toolType: toolType});
+      }).catch(error => {
+        console.log('ERROR Z TASKIEM')
+        console.log(error)
+      })
+  }).catch(err => {
+    console.log("Error: container not found")
+  })
+}
+
+
+
 // ###################################################
 // ########### pobieram plik z repozytorium użytkownika
 // ######################################################
@@ -53,8 +103,6 @@ exports.getFileFromContainer = (req,res,next) => {
            filePath = repoPath + "/" + containerFolderName + "/" + fileDatName;
         }
 
-       
-
         //res.status(200).({ message: 'The data for previewing has been sent!', containerData: filePath});
         
        // res.sendFile(filePath);
@@ -67,89 +115,6 @@ exports.getFileFromContainer = (req,res,next) => {
     })
 }
 
-
-//##########################################
-//#### robie update flagi containera ######
-//#######################################
-exports.runSpeechService = (req, res, next) => {
-
-  const containerId = req.body.containerId;
-  const toolType = req.body.toolType;
-
-  // tutaj odpalam odpowiednia usługę
-
-  Container.findById(containerId).then(container => {  
-
-    const userId = container.owner;
-    const projectId = container.project;
-    const sessionId = container.session;
-
-    const containerName = container.containerName;  //np. lektor  - to co widzi użytkownik w repo
-    const audioFileName = container.fileName;       //np. lektor-fe2e3423.wav - na serwerze
-    const containerFolderName = utils.getFileNameWithNoExt(audioFileName);  //np.lektor-fe2e3423 - na serwerze folder
-
-    let inputAudioFilePath = '';
-    let inputTxtFilePath = '';
-
-    let outputFilePath = '';
-
-    let fieldToUpdate = ""; //pole w modelu kontenera do zamiany na true
-
-    let outputFileName = "";
-
-    switch(toolType){
-      case "DIA":
-         fieldToUpdate = {ifDIA: true};
-          console.log("Uruchamiam usługę DIA");
-          break;
-      case "VAD":
-        fieldToUpdate = {ifVAD: true};
-        console.log("Uruchamiam usługę VAD");
-          break;
-      case "RECO":
-
-        fieldToUpdate = {ifREC: true};
-      
-        const userId = container.owner;
-        const projectId = container.project;
-        const sessionId = container.session;
-    
-        const containerName = container.containerName;  //np. lektor  - to co widzi użytkownik w repo
-        const audioFileName = container.fileName;       //np. lektor-fe2e3423.wav - na serwerze
-        const containerFolderName = utils.getFileNameWithNoExt(audioFileName);  //np.lektor-fe2e3423 - na serwerze folder
-
-       let outFileName = containerFolderName + ".json";
-
-       outputFilePath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerFolderName + '/' + outFileName;
-       inputAudioFilePath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerFolderName + '/' + audioFileName;
-
-       //do dockera podaje ścieżke relatywną
-       inputAudioFilePath = path.relative(appRoot + '/repo/', inputAudioFilePath);
-
-        runTask.runRECO(inputAudioFilePath, outputFilePath, container._id)
-          .then(updatedContainer => {
-            //console.log(updatedContainer)
-            res.status(200).json({ message: 'The service for this container has finished working with success!!', containerId: updatedContainer._id, toolType: toolType});
-          }).catch(error => {
-            console.log('ERROR Z TASKIEM')
-            console.log(error)
-          })
-
-
-        break;
-      case "ALIGN":
-        fieldToUpdate = {ifSEG: true};
-        console.log("Uruchamiam usługę ALIGN");
-          break;
-      default:
-          console.log("Default"); //to do
-    }
-
-  }).catch(err => {
-    console.log("Error: container not found")
-  })
-
-}
 
 
 //##########################################

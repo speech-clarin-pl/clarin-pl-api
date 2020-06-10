@@ -4,11 +4,18 @@ const appRoot = require('app-root-path'); //zwraca roota aplikacji
 const path = require('path');
 var emptyDir = require('empty-dir');
 
-//having txt file, the function makes appropriate JSCON from it
+exports.convertJSONFileIntoTXT = (JSONFilePath) => {
+    let jsonFile = fs.readJsonSync(JSONFilePath);
 
+    // w przyszłości poprawić jak będzie więcej bloków
+    let txtContent = jsonFile.blocks[0].data.text;
+
+    return txtContent
+}
+
+//having txt file, the function makes appropriate JSCON from it
 exports.convertTxtFileIntoJSON = (txtFilePath) => {
 
-  
     let transcription = fs.readFileSync(txtFilePath, 'utf8');
 
     let toReturnTemplate = {
