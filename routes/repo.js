@@ -31,7 +31,13 @@ router.delete('/:userId/:projectId/:sessionId/:containerId', isAuth, repoControl
   //PUT /repoFiles/runSpeechReco/containerId - wykonuje daną usługę na określonym kontenerze
   router.put('/runSpeechSegmentation/:containerId', isAuth, repoController.runSpeechSegmentation);
 
+  //PUT /repoFiles/runSpeechDiarization/containerId - wykonuje daną usługę na określonym kontenerze
+  router.put('/runSpeechDiarization/:containerId', isAuth, repoController.runSpeechDiarization);
 
+  //PUT /repoFiles/runSpeechVAD/containerId - wykonuje daną usługę na określonym kontenerze
+  router.put('/runSpeechVAD/:containerId', isAuth, repoController.runSpeechVAD);
+
+  
 
 
 

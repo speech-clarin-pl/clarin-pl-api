@@ -21,6 +21,54 @@ const runTask = require('./runTask');
 
 
 //##########################################
+//#### wykonuje VAD ######
+//#######################################
+exports.runSpeechVAD = (req, res, next) => {
+
+  const containerId = req.body.containerId;
+  const toolType = req.body.toolType;
+
+  // tutaj odpalam odpowiednia usługę
+
+  Container.findById(containerId).then(container => {  
+    runTask.runVAD(container)
+      .then(updatedContainer => {
+        res.status(200).json({ message: 'The service for this container has finished working with success!!', containerId: updatedContainer._id, toolType: toolType});
+      }).catch(error => {
+        res.status(503).json({ message: 'Something wrong with the VAD on the server!!', containerId: updatedContainer._id, toolType: toolType});
+        console.log('ERROR Z TASKIEM')
+        console.log(error)
+      })
+  }).catch(err => {
+    console.log("Error: container not found")
+  })
+}
+
+//##########################################
+//#### wykonuje Diaryzacje ######
+//#######################################
+exports.runSpeechDiarization = (req, res, next) => {
+
+  const containerId = req.body.containerId;
+  const toolType = req.body.toolType;
+
+  Container.findById(containerId).then(container => {  
+    runTask.runDIA(container)
+      .then(updatedContainer => {
+        res.status(200).json({ message: 'The service for this container has finished working with success!!', containerId: updatedContainer._id, toolType: toolType});
+      }).catch(error => {
+        res.status(503).json({ message: 'Something wrong with the Diarization on the server!!', containerId: updatedContainer._id, toolType: toolType});
+        console.log('ERROR Z TASKIEM')
+        console.log(error)
+      })
+  }).catch(err => {
+    console.log("Error: container not found")
+  })
+
+
+}
+
+//##########################################
 //#### wykonuje segmentacje ######
 //#######################################
 exports.runSpeechSegmentation = (req, res, next) => {
@@ -33,6 +81,7 @@ exports.runSpeechSegmentation = (req, res, next) => {
       .then(updatedContainer => {
         res.status(200).json({ message: 'The service for this container has finished working with success!!', containerId: updatedContainer._id, toolType: toolType});
       }).catch(error => {
+        res.status(503).json({ message: 'Something wrong with the Segmentation on the server!!', containerId: containerId, toolType: toolType});
         console.log('ERROR Z TASKIEM')
         console.log(error)
       })
@@ -60,6 +109,7 @@ exports.runSpeechRecognition = (req, res, next) => {
       .then(updatedContainer => {
         res.status(200).json({ message: 'The service for this container has finished working with success!!', containerId: updatedContainer._id, toolType: toolType});
       }).catch(error => {
+        res.status(503).json({ message: 'Something wrong with the Recognition on the server!!', containerId: updatedContainer._id, toolType: toolType});
         console.log('ERROR Z TASKIEM')
         console.log(error)
       })
