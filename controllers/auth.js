@@ -6,13 +6,60 @@ const fs = require('fs');
 const path = require('path');
 const config = require('../config');
 const dotenv = require('dotenv');
+const nodemailer = require('nodemailer');
+const transporter = require('../transporter');
+var generator = require('generate-password');
+
 dotenv.config();
 
 var mkdirp = require("mkdirp"); //do tworzenia folderu
 //var rimraf = require("rimraf"); 
 var appRoot = require('app-root-path'); //zwraca roota aplikacji
 
-//przypomnienie hasła
+
+
+sendEmail = (sendTo, title, htmlContent) => {
+    return new Promise((resolve,reject) => {
+
+        let orderEmailOptions = {
+            from: "Fred Foo <foo@example.com>",
+            to: sendTo,
+            subject: title,
+            html: htmlContent,
+        };
+
+        transporter.sendMail(orderEmailOptions, (err, inf) => {
+            if(err){
+                console.log('Error in sending email', err);
+                return reject({ msg: 'Internal Server Error', error: err});
+            } else {
+                console.log("Message sent: %s", inf.messageId);
+                console.log("Preview URL: %s", nodemailer.getTestMessageUrl(inf));
+                return resolve({ msg: 'Email has been send successfully' });
+            }
+        })
+    });
+  }
+
+
+sendEmailToResetPass = (emailAddr, user) => {
+
+
+    User.findByIdAndUpdate(user._id,{password: newpassword })
+    .then(updatedUser => {
+        sendEmail('mklec@pjwstk.edu.pl','CLARIN-PL: reset hasła', '<b>Testowa wiadomość</b>')
+        .then(message => {
+            console.log('Email wysłany with success!!')
+        })
+        .catch(console.error);
+    })
+    .catch(err => {
+
+    })
+
+    
+}
+
 
 exports.forgotPass = (req,res,next) => {
     var emailAddress = req.body.email;
@@ -23,14 +70,41 @@ exports.forgotPass = (req,res,next) => {
          //jezeli nie ma takiego uzera 
          if(!user){
             res.status(204).json({message: "This email has not been registered before!"});
-         }
+         } else {
 
-         res.status(200).json({message: "The email has been sent with further instruction"});
+            //generuje nowe hasło
+            let newpassword = generator.generate({
+                length: 10,
+                numbers: true
+            });
+
+            bcrypt.hash(newpassword,12)
+            .then(hashedPass => {
+                user.updateOne({password: hashedPass})
+                .then(updatedUser => {
+
+                    let messageemail = `<b>Możesz zalogować się na teraz używając poniższych danych</b>`;
+                    messageemail = messageemail + `<p>login: </p> ${emailAddress}`;
+                    messageemail = messageemail + `<p>hasło: </p> ${newpassword}`;
+
+                    //wysyłka emaila z resetem hasła
+                    sendEmail(emailAddress,'CLARIN-PL: reset hasła', messageemail)
+                        .then(message => {
+                            res.status(200).json({message: "The email has been sent with further instruction"});
+                        })
+                        .catch(err => {
+                            console.log(err);
+                            res.status(500).json({message: "Something went wrong"});   
+                        });
+                })
+            })
+         }
      })
      .catch(error => {
         if(!error.statusCode){
             error.statusCode = 500;
         }
+        console.log(error)
         next(error);
      })
 }

@@ -32,9 +32,11 @@ if (process.env.NODE_ENV !== 'production') {
 
 global.__basedir = __dirname;
 
+
+
+
+
 const compression = require('compression');
-
-
 
 //importuje routes
 const projectsListRoutes = require('./routes/projectsList');
