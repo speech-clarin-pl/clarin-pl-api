@@ -56,13 +56,56 @@ sendEmailToResetPass = (emailAddr, user) => {
     .catch(err => {
 
     })
+}
 
-    
+
+
+exports.applyNewPass = (req,res,next) => {
+
+    const {userId} = req.params;
+    const {token} = req.params;
+    const newPassword = req.body.newPassword;
+
+
+     User.findOne({_id: userId})
+     .then(user => {
+         //jezeli nie ma takiego uzera 
+         if(!user){
+            res.status(204).json({message: "This email has not been registered before!"});
+         } else {
+
+            const secret = user.password + "-" + user.createdAt;
+            const payload = jwt.decode(token,secret);
+
+            if(payload.userId == user._id){
+                bcrypt.hash(newPassword,12)
+                .then(hashedPass => {
+                    User.findOneAndUpdate({_id: userId}, {password: hashedPass})
+                        .then(()=>{
+                            console.log("HASLO ZMIENIONE")
+                            res.status(202).json("Password changed")
+                        })
+                        .catch(err=>{
+                            console.log("PROBLEM ZE ZMIANA HASLA")
+                            res.status(500).json(err)
+                        })
+                })
+            }
+         }
+     })
+     .catch(error => {
+        if(!error.statusCode){
+            error.statusCode = 500;
+        }
+        console.log(error)
+        next(error);
+     })
+     
 }
 
 
 exports.forgotPass = (req,res,next) => {
-    var emailAddress = req.body.email;
+    const {emailAddress} = req.params;
 
     //znajduje login ktory zawiera dany email
      User.findOne({email: emailAddress})
@@ -72,32 +115,38 @@ exports.forgotPass = (req,res,next) => {
             res.status(204).json({message: "This email has not been registered before!"});
          } else {
 
-            //generuje nowe hasło
-            let newpassword = generator.generate({
-                length: 10,
-                numbers: true
-            });
+            const oldPassHash = user.password;
+            const userId = user._id;
+            const createdAt = user.createdAt;
 
-            bcrypt.hash(newpassword,12)
-            .then(hashedPass => {
-                user.updateOne({password: hashedPass})
-                .then(updatedUser => {
+            //tworze jednorazowy link...
+            const secret = oldPassHash + "-" + createdAt;
 
-                    let messageemail = `<b>Możesz zalogować się na teraz używając poniższych danych</b>`;
-                    messageemail = messageemail + `<p>login: </p> ${emailAddress}`;
-                    messageemail = messageemail + `<p>hasło: </p> ${newpassword}`;
+            // generuje tokena JWT dla tego emaila
+            const token = jwt.sign({
+                email: emailAddress, 
+                userId: user._id.toString()
+            }, secret,
+            {expiresIn: '1h'});
 
-                    //wysyłka emaila z resetem hasła
-                    sendEmail(emailAddress,'CLARIN-PL: reset hasła', messageemail)
-                        .then(message => {
-                            res.status(200).json({message: "The email has been sent with further instruction"});
-                        })
-                        .catch(err => {
-                            console.log(err);
-                            res.status(500).json({message: "Something went wrong"});   
-                        });
+
+             // generuje link zawierający wygenerowany token
+            const url = process.env.FRONT_END_ADDRESS + "/enterNewPass/"+userId+'/'+token;
+
+            let messageemail = `<b>Aby zresetować hasło kliknij w link poniżej</b>`;
+            messageemail = messageemail + `<p></b>Link do zresetowania hasła: </b></p>`;
+            messageemail = messageemail + `<p><a href=${url} target="_blank">${url}</a></p>`;
+
+
+            //wysyłka emaila z resetem hasła
+            sendEmail(emailAddress,'CLARIN-PL: Potwierdź zmianę hasła', messageemail)
+                .then(message => {
+                    res.status(200).json({message: "The email with further instructions has been sent"});
                 })
-            })
+                .catch(err => {
+                    console.log(err);
+                    res.status(500).json({message: "Something went wrong"});   
+                });
          }
      })
      .catch(error => {
@@ -189,9 +238,9 @@ exports.login = (req, res, next) => {
         .then(isEqual => {
             //wtedy uzytkownik wpisal zle haslo
             if(!isEqual){
-                const error = new Error('Wrong password');
+                const error = new Error('Wrong password or login');
                 error.statusCode = 401;
-                throw error;
+                throw error
             }
 
             //tutaj uzytkonik wpisal dore haslo i musimy wygenerowac token dla klienta

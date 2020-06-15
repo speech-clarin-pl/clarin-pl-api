@@ -28,6 +28,6 @@ const userSchema = new Schema({
             ref: 'ProjectEntry'
         }
     ]
-});
+}, {timestamps: true});
 
 module.exports = mongoose.model('User', userSchema);

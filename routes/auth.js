@@ -21,12 +21,15 @@ router.put('/registration',[
 ], authController.registration);
 
 
+//############## wyświetlenie strony do wpisania nowego hasła ############
 
+//router.get('/enterNewPass/:token',authController.enterNewPass);
 
-//############## przypomnienie hasła ############
+//############## przypomnienie hasła - wysłanie linka na email ############
+router.post('/forgotPass/:emailAddress',authController.forgotPass);
 
-router.post('/forgotPass',authController.forgotPass);
-
+//############## przypomnienie hasła - wpisanie nowego hasła przez uzytkownika ############
+router.post('/enterNewPass/:userId/:token',authController.applyNewPass);
 
 //############## logowanie ############
 
