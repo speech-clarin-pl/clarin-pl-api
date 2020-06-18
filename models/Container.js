@@ -61,7 +61,19 @@ const ContainerSchema = new Schema({
     txtFileId: {
         type: Schema.Types.ObjectId,
         required: false,
-    }
+    },
+    VADUserSegments: {
+        type: Schema.Types.Mixed,
+        required: false
+    },
+    DIAUserSegments: {
+        type: Schema.Types.Mixed,
+        required: false
+    },
+    RECUserSegments: {
+        type: Schema.Types.Mixed,
+        required: false
+    },
 }, {timestamps: true});
 
 module.exports = mongoose.model('Container', ContainerSchema);

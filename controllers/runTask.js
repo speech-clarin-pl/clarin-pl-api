@@ -66,9 +66,71 @@ exports.runVAD = (container) => {
                     
                                     //przenosze plik z wynikami do katalogu kontenera
                                     fs.moveSync(pathToResult, finalPathToResult);
+
+                                    //tutaj konwertuje plik ctm na format jsona aby dal sie czytac przez audio edytor
+                                    //z czegos takiego
+                                    //input 1 0.680 2.060 speech
+                                    //input 1 2.740 3.230 speech
+                                    //robimy
+                                    // segments: [{
+                                    //     startTime: 1,
+                                    //     endTime: 3,
+                                    //     editable: true,
+                                    //     color: "#ff0000",
+                                    //     labelText: "My label"
+                                    //   },
+                                    //   {
+                                    //     startTime: 5,
+                                    //     endTime: 6,
+                                    //     editable: true,
+                                    //     color: "#00ff00",
+                                    //     labelText: "My Second label"
+                                    //   }],
+
+                                    //każdy segment jest w osobnej linii
+
+                                    let segments = [];
+
+                                    var vadSegment = fs.readFileSync(finalPathToResult).toString().split("\n");
+
+                                    //iteruje po segmentach
+                                    for(i in vadSegment) {
+                                        const line = vadSegment[i];
+                                        //input 1 0.680 2.060 speech
+
+                                        //dziele wg spacji
+                                        const info = line.split(" ");
+                                        if(info.length > 4){
+
+                                            const co = info[0];
+                                            const kto = info[1];
+                                            const start = info[2];
+                                            const dlugosc = info[3];
+                                            const rodzaj = info[4];
+
+                                            const segment = {
+                                                startTime: Number(start),
+                                                endTime: Number(start) + Number(dlugosc),
+                                                editable: true,
+                                                color: '#394b55',
+                                                labelText: rodzaj,
+                                            }
+
+                                            segments.push(segment);
+
+                                        }
+                                    }
+
+
+                                    // zapisuje plik jako json
+                                    let gdziedot = finalPathToResult.lastIndexOf('.');
+                                    let finalPathToResultJSON = finalPathToResult.substring(0,gdziedot) + '.json';
+
+                                    //UWAGA!! nie używam go - te dane wpisuje w baze danych w konener!!
+                                    fs.writeJsonSync(finalPathToResultJSON, segments);
                                     
                                     //aktualizuje flage w kontenrze
-                                    Container.findOneAndUpdate({_id: container._id},{ifVAD: true, statusVAD: 'done'})
+                                    Container.findOneAndUpdate({_id: container._id},{ifVAD: true, VADUserSegments: segments, statusVAD: 'done'})
                                         .then(updatedContainer => {
                                             console.log("Zrobiłem update containera")
                                             console.log("Zabieram się za czyszczenie katalogu repo z pozostalosci")
@@ -80,7 +142,7 @@ exports.runVAD = (container) => {
                                             fs.removeSync(pathToResult);
 
                                             console.log("ZROBIONE :)")
-                                            resolve(updatedContainer)
+                                            resolve(segments)
                                             
                                         })
                                         .catch(error => {

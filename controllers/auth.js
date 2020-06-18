@@ -133,7 +133,7 @@ exports.forgotPass = (req,res,next) => {
              // generuje link zawierający wygenerowany token
             const url = process.env.FRONT_END_ADDRESS + "/enterNewPass/"+userId+'/'+token;
 
-            let messageemail = `<b>Aby zresetować hasło kliknij w link poniżej</b>`;
+            let messageemail = `<b>Aby zresetować hasło kliknij w link poniżej (działa tylko przez 1 godzinę)</b>`;
             messageemail = messageemail + `<p></b>Link do zresetowania hasła: </b></p>`;
             messageemail = messageemail + `<p><a href=${url} target="_blank">${url}</a></p>`;
 

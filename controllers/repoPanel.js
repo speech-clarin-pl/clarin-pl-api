@@ -32,10 +32,10 @@ exports.runSpeechVAD = (req, res, next) => {
 
   Container.findById(containerId).then(container => {  
     runTask.runVAD(container)
-      .then(updatedContainer => {
-        res.status(200).json({ message: 'The service for this container has finished working with success!!', containerId: updatedContainer._id, toolType: toolType});
+      .then(VADsegments => {
+        res.status(200).json({ message: 'The service for this container has finished working with success!!', containerId: containerId, toolType: toolType, VADSegments: VADsegments});
       }).catch(error => {
-        res.status(503).json({ message: 'Something wrong with the VAD on the server!!', containerId: updatedContainer._id, toolType: toolType});
+        res.status(503).json({ message: 'Something wrong with the VAD on the server!!', containerId: containerId, toolType: toolType});
         console.log('ERROR Z TASKIEM')
         console.log(error)
       })
@@ -151,7 +151,7 @@ exports.getFileFromContainer = (req,res,next) => {
            filePath = repoPath + "/" + containerFolderName + "/" + fileAudioName;
         } else if(fileType=='dat'){
            filePath = repoPath + "/" + containerFolderName + "/" + fileDatName;
-        }
+        } 
 
         //res.status(200).({ message: 'The data for previewing has been sent!', containerData: filePath});
         
