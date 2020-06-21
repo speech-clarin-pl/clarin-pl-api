@@ -296,7 +296,7 @@ exports.uploadFile = (req, res, next) => {
                     const finalDATFileName = conainerFolderName + ".dat";
                     const fillCorrectDATPath = containerFolderPath + "/" + finalDATFileName;
 
-                    const shellcomm = 'audiowaveform -i '+fillCorrectAudioPath+' -o '+fillCorrectDATPath+' -z 128 -b 8 --input-format ' + ext;
+                    const shellcomm = 'audiowaveform -i '+fillCorrectAudioPath+' -o '+fillCorrectDATPath+' -z 32 -b 8 --input-format ' + ext;
 
                       //obliczam z pliku audio podgląd dat
                     if (shell.exec(shellcomm).code !== 0) {

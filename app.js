@@ -41,6 +41,7 @@ const compression = require('compression');
 //importuje routes
 const projectsListRoutes = require('./routes/projectsList');
 const recognitionRoutes =  require('./routes/recognitionTool');
+const VADRoutes =  require('./routes/VADTool');
 const segmentationRoutes = require('./routes/segmentationTool');
 const repoRoutes = require('./routes/repo'); 
 const authRoutes =  require('./routes/auth');
@@ -147,7 +148,9 @@ app.use('/projectsList', projectsListRoutes);
 app.use('/recognition', recognitionRoutes);
 app.use('/segmentation', segmentationRoutes);
 app.use('/repoFiles', repoRoutes);
+app.use('/vad', VADRoutes);
 app.use('/auth', authRoutes);
+
 
 
 
