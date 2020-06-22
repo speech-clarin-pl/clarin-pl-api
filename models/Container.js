@@ -64,15 +64,23 @@ const ContainerSchema = new Schema({
     },
     VADUserSegments: {
         type: Schema.Types.Mixed,
-        required: false
+        required: false,
+        default: [],
     },
     DIAUserSegments: {
         type: Schema.Types.Mixed,
-        required: false
+        required: false,
+        default: [],
     },
     RECUserSegments: {
         type: Schema.Types.Mixed,
-        required: false
+        required: false,
+        default: [],
+    },
+    SEGUserSegments: {
+        type: Schema.Types.Mixed,
+        required: false,
+        default: [],
     },
 }, {timestamps: true});
 

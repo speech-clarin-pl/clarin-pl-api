@@ -109,8 +109,8 @@ exports.runVAD = (container) => {
                                             const rodzaj = info[4];
 
                                             const segment = {
-                                                startTime: Number(start),
-                                                endTime: Number(start) + Number(dlugosc),
+                                                startTime: Number(parseFloat(start).toFixed(2)),
+                                                endTime: Number((Number(parseFloat(start)) + Number(parseFloat(dlugosc))).toFixed(2)),
                                                 editable: true,
                                                 color: '#394b55',
                                                 labelText: rodzaj,

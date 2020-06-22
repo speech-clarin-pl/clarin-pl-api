@@ -11,6 +11,8 @@ const ffmpeg = require('ffmpeg');
 const Container = require('../models/Container')
 
 exports.saveSegments = (req, res, next) => {
+
+    console.log("Zapisuje VAD Segmenty")
     let segmentsTemp = req.body.segments;
     const toolType = req.body.toolType;
     const container = req.body.container;
@@ -63,6 +65,7 @@ exports.saveSegments = (req, res, next) => {
    
            res.status(201).json({
                message: 'segments saved with success!',
+               updatedSegments: segments,
            });
         })
 
