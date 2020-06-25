@@ -10,12 +10,20 @@ module.exports = {
     tokenKey: process.env.TOKEN_KEY, //need for authorization
     
     // do wysyłania maili
-    smtpHost: "smtp.ethereal.email",
-    smtpPort: 587,
+    smtpHost: process.env.SMTP_HOST,
+    smtpPort: process.env.SMTP_PORT,
     auth: {
-        user: 'louie.stokes@ethereal.email', // generated ethereal user
-        pass: 'tHEAnZNmq2xT1Aazk5', // generated ethereal password
+        user: process.env.SMTP_USERNAME, 
+        pass: process.env.SMTP_PASSWORD,
       },
+
+
+      // smtpHost: "smtp.ethereal.email",
+      // smtpPort: 587,
+      // auth: {
+      //     user: 'louie.stokes@ethereal.email', // generated ethereal user
+      //     pass: 'tHEAnZNmq2xT1Aazk5', // generated ethereal password
+      //   },
 
 };
 

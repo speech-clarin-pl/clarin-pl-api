@@ -33,15 +33,13 @@ if (process.env.NODE_ENV !== 'production') {
 global.__basedir = __dirname;
 
 
-
-
-
 const compression = require('compression');
 
 //importuje routes
 const projectsListRoutes = require('./routes/projectsList');
 const recognitionRoutes =  require('./routes/recognitionTool');
 const VADRoutes =  require('./routes/VADTool');
+const DIARoutes =  require('./routes/DIATool');
 const segmentationRoutes = require('./routes/segmentationTool');
 const repoRoutes = require('./routes/repo'); 
 const authRoutes =  require('./routes/auth');
@@ -149,6 +147,7 @@ app.use('/recognition', recognitionRoutes);
 app.use('/segmentation', segmentationRoutes);
 app.use('/repoFiles', repoRoutes);
 app.use('/vad', VADRoutes);
+app.use('/dia', DIARoutes);
 app.use('/auth', authRoutes);
 
 

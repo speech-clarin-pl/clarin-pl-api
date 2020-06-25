@@ -54,10 +54,10 @@ exports.runSpeechDiarization = (req, res, next) => {
 
   Container.findById(containerId).then(container => {  
     runTask.runDIA(container)
-      .then(updatedContainer => {
-        res.status(200).json({ message: 'The service for this container has finished working with success!!', containerId: updatedContainer._id, toolType: toolType});
+      .then(DIAsegments => {
+        res.status(200).json({ message: 'The service for this container has finished working with success!!', containerId: containerId, toolType: toolType,  DIAsegments: DIAsegments});
       }).catch(error => {
-        res.status(503).json({ message: 'Something wrong with the Diarization on the server!!', containerId: updatedContainer._id, toolType: toolType});
+        res.status(503).json({ message: 'Something wrong with the Diarization on the server!!', containerId: containerId, toolType: toolType});
         console.log('ERROR Z TASKIEM')
         console.log(error)
       })

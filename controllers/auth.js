@@ -22,7 +22,7 @@ sendEmail = (sendTo, title, htmlContent) => {
     return new Promise((resolve,reject) => {
 
         let orderEmailOptions = {
-            from: "Fred Foo <foo@example.com>",
+            from: "CLARIN-PL <speechtools@clarin-pl.eu>",
             to: sendTo,
             subject: title,
             html: htmlContent,
