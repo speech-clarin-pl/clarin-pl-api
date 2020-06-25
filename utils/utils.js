@@ -37,7 +37,7 @@ exports.convertTxtFileIntoJSON = (txtFilePath) => {
 //funtion returns only the file name from the path
 exports.getFileNameFromPath = (filePath) => {
     let splitedPath = filePath.split("/");
-    return splitedPath[splitedPath.length];
+    return splitedPath[splitedPath.length-1];
 }
 
 exports.readDir = (dir, callback) => {
@@ -79,6 +79,17 @@ exports.bytesToSize = (bytes) => {
     const i = parseInt(Math.floor(Math.log(Math.abs(bytes)) / Math.log(1024)), 10);
     if (i === 0) return `${bytes} ${sizes[i]})`;
     return `${(bytes / (1024 ** i)).toFixed(1)} ${sizes[i]}`;
+  }
+
+  
+  //jezeli mamy nazwapliku-23j2347_temp.wav to robie nazwapliku.wav
+  exports.bringOryginalFileName = (fileName) =>{
+    let ext = this.getFileExtention(fileName);
+    let gdziedash = fileName.lastIndexOf('-');
+    let nazwapliku = fileName.substring(0,gdziedash);
+    let ostatecznie = nazwapliku + '.'+ext[0];
+
+    return ostatecznie;
   }
 
 

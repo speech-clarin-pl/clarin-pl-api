@@ -1,0 +1,86 @@
+{
+  "name": "test",
+  "UUID": "ebc1e9ca-edb5-4a50-a2a7-7cc4e2590250",
+  "mediafileExtension": "wav",
+  "levelDefinitions": [
+    {
+      "name": "VAD",
+      "type": "SEGMENT",
+      "attributeDefinitions": [
+        {
+          "name": "VAD",
+          "type": "STRING"
+        }
+      ]
+    },
+    {
+      "name": "Speaker",
+      "type": "SEGMENT",
+      "attributeDefinitions": [
+        {
+          "name": "Speaker",
+          "type": "STRING"
+        }
+      ]
+    },
+    {
+      "name": "Word",
+      "type": "SEGMENT",
+      "attributeDefinitions": [
+        {
+          "name": "Word",
+          "type": "STRING"
+        }
+      ]
+    },
+    {
+      "name": "Phoneme",
+      "type": "SEGMENT",
+      "attributeDefinitions": [
+        {
+          "name": "Phoneme",
+          "type": "STRING"
+        }
+      ]
+    }
+  ],
+  "ssffTrackDefinitions": [
+  ],
+  "linkDefinitions": [
+  ],
+  "EMUwebAppConfig": {
+    "perspectives": [
+      {
+        "name": "default",
+        "signalCanvases": {
+          "order": [
+            "OSCI",
+            "SPEC"
+          ],
+          "assign": [],
+          "contourLims": []
+        },
+        "levelCanvases": {
+          "order": [
+            "VAD",
+            "Speaker",
+            "Word",
+            "Phoneme"
+          ]
+        },
+        "twoDimCanvases": {
+          "order": []
+        }
+      }
+    ],
+    "restrictions": {
+      "showPerspectivesSidebar": false,
+      "bundleComments": false,
+      "bundleFinishedEditing": false
+    },
+    "activeButtons": {
+      "saveBundle": false,
+      "showHierarchy": false
+    }
+  }
+}

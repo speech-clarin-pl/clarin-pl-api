@@ -267,15 +267,22 @@ exports.uploadFile = (req, res, next) => {
         audio.save(fillCorrectAudioPath)
               .then(convertedFile=>{
                 //console.log('SUCCESS: przekonwertowałem plik' + convertedFile)
-                //teraz moge usunąć oryginalny plik z dysku bo mam już przekonwertowany
-                fs.remove(fullFilePath)
-                .then(() => {
+                
+                //teraz zmieniam nazwe pliku na taki jaki był przesłany oryginalnie - usuwając unikatowe id i _temp.
+                //Czyli przywracam plikowi oryginalna nazwe
+
+                let tooryginal = utils.bringOryginalFileName(fullFilePath);
+                fs.renameSync(fullFilePath, tooryginal);
+                
+               // fs.remove(fullFilePath)
+               // .then(() => {
                     //console.log('Oryginalny plik został usunięty - pozostawiony tylko poprawnie przekonwertowany')
 
                     //zapisuje tą informaje do DB
                     let newContainer = new Container({
                       fileName: finalAudioFileName,
                       containerName: utils.getFileNameWithNoExt(oryginalFileName),
+                      oryginalFileName: utils.getFileNameFromPath(tooryginal),
                       size: fs.statSync(fillCorrectAudioPath).size,
                       owner: userId,
                       project: projectId,
@@ -319,10 +326,10 @@ exports.uploadFile = (req, res, next) => {
                     }
 
 
-                })
-                .catch(err => {
-                  console.error('Problem z usunietceim pliku gdy istnieje już poprawnie przekonwertowany' + err)
-                })
+               // })
+               // .catch(err => {
+                //  console.error('Problem z usunietceim pliku gdy istnieje już poprawnie przekonwertowany' + err)
+               // })
 
               }).catch(err =>{
                 console.log('ERROR SAVE FFMPEG: coś poszło nie tak')
