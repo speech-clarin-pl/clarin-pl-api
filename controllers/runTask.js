@@ -9,6 +9,7 @@ const ProjectFile = require('../models/projectFile');
 const User = require('../models/user');
 const Container = require('../models/Container');
 const path = require('path');
+const emu = require('./emu');
 
 
 
@@ -128,29 +129,37 @@ exports.runVAD = (container) => {
 
                                     //UWAGA!! nie używam go - te dane wpisuje w baze danych w konener!!
                                     fs.writeJsonSync(finalPathToResultJSON, segments);
-                                    
-                                    //aktualizuje flage w kontenrze
-                                    Container.findOneAndUpdate({_id: container._id},{ifVAD: true, VADUserSegments: segments, statusVAD: 'done'})
+
+                                    //convertuje na textGrid
+                                    emu.ctmVAD2tg(container)
+                                    .then(()=>{
+                                        //aktualizuje flage w kontenrze
+                                        Container.findOneAndUpdate({_id: container._id},{ifVAD: true, VADUserSegments: segments, statusVAD: 'done'})
                                         .then(updatedContainer => {
-                                            console.log("Zrobiłem update containera")
-                                            console.log("Zabieram się za czyszczenie katalogu repo z pozostalosci")
 
-                                            //teraz usuwam z dysku plik  log
-                                            fs.removeSync(pathToResult+'_log.txt');
+                                        
+                                                    console.log("Zrobiłem update containera")
+                                                    console.log("Zabieram się za czyszczenie katalogu repo z pozostalosci")
 
-                                            //i usuwam tymczasowy plik txt
-                                            fs.removeSync(pathToResult);
+                                                    //teraz usuwam z dysku plik  log
+                                                    fs.removeSync(pathToResult+'_log.txt');
 
-                                            console.log("ZROBIONE :)")
-                                            resolve(segments)
-                                            
+                                                    //i usuwam tymczasowy plik txt
+                                                    fs.removeSync(pathToResult);
+
+                                                    console.log("ZROBIONE :)")
+                                                    resolve(segments)
+                                                
                                         })
                                         .catch(error => {
                                             console.error(error)
                                             clearInterval(checkerdb);
                                             reject(error)
                                         })
-
+                                     })
+                                    .catch(()=>{
+                                        console.error("Coś poszło nie tak z konwersją VAD 2 TextGrid");
+                                    }) 
                                     
                                 } else {
                                     clearInterval(checkerdb);
@@ -301,31 +310,34 @@ exports.runDIA = (container) => {
                                     //UWAGA!! nie używam go - te dane wpisuje w baze danych w konener!!
                                     fs.writeJsonSync(finalPathToResultJSON, segments);
                                     
-                                    //aktualizuje flage w kontenrze
-                                    Container.findOneAndUpdate({_id: container._id},{ifDIA: true, DIAUserSegments: segments, statusDIA: 'done'})
-                                        .then(updatedContainer => {
-                                            console.log("Zrobiłem update containera")
-                                            console.log("Zabieram się za czyszczenie katalogu repo z pozostalosci")
+                                    //convertuje na textGrid
+                                    emu.ctmDIA2tg(container)
+                                    .then(()=>{
+                                            //aktualizuje flage w kontenrze
+                                            Container.findOneAndUpdate({_id: container._id},{ifDIA: true, DIAUserSegments: segments, statusDIA: 'done'})
+                                            .then(updatedContainer => {
+                                                console.log("Zrobiłem update containera")
+                                                console.log("Zabieram się za czyszczenie katalogu repo z pozostalosci")
 
-                                            //teraz usuwam z dysku plik  log
-                                            fs.removeSync(pathToResult+'_log.txt');
+                                                //teraz usuwam z dysku plik  log
+                                                fs.removeSync(pathToResult+'_log.txt');
 
-                                            //i usuwam tymczasowy plik txt
-                                            fs.removeSync(pathToResult);
+                                                //i usuwam tymczasowy plik txt
+                                                fs.removeSync(pathToResult);
 
-                                            console.log("ZROBIONE :)")
-                                            resolve(segments)
-                                            
-                                        })
-                                        .catch(error => {
-                                            console.error(error)
-                                            clearInterval(checkerdb);
-                                            reject(error)
-                                        })
-
-
-
-                                       
+                                                console.log("ZROBIONE :)")
+                                                resolve(segments)
+                                                
+                                            })
+                                            .catch(error => {
+                                                console.error(error)
+                                                clearInterval(checkerdb);
+                                                reject(error)
+                                            })
+                                    })
+                                    .catch(()=>{
+                                        console.error("coś poszło nie tak z konwersją DIA 2 TextGrid")
+                                    })
                                 } else {
                                     clearInterval(checkerdb);
                                     reject(task.error)
@@ -448,28 +460,35 @@ exports.runSEG = (container) => {
                                     fs.moveSync(pathToResult, finalPathToResult);
 
 
+                                    //convertuje na textGrid
+                                    emu.ctmSEG2tg(container)
+                                    .then(()=>{
+                                            //aktualizuje flage w kontenrze
+                                            Container.findOneAndUpdate({_id: container._id},{ifSEG: true, statusSEG: 'done'})
+                                            .then(updatedContainer => {
+                                                console.log("Zrobiłem update containera")
+                                                console.log("Zabieram się za czyszczenie katalogu repo z pozostalosci")
+
+                                                //teraz usuwam z dysku plik  log
+                                                fs.removeSync(pathToResult+'_log.txt');
+
+                                                //i usuwam tymczasowy plik txt
+                                                fs.removeSync(TXTFilePath);
+
+                                                console.log("ZROBIONE :)")
+                                                resolve(updatedContainer)
+                                                
+                                            })
+                                            .catch(error => {
+                                                console.error(error)
+                                                clearInterval(checkerdb);
+                                                reject(error)
+                                            })
+                                    })
+                                    .catch(()=>{
+                                        console.error("coś poszło nie tak z konwersją SEG to TextGrid")
+                                    })
                                     
-                                    //aktualizuje flage w kontenrze
-                                    Container.findOneAndUpdate({_id: container._id},{ifSEG: true, statusSEG: 'done'})
-                                        .then(updatedContainer => {
-                                            console.log("Zrobiłem update containera")
-                                            console.log("Zabieram się za czyszczenie katalogu repo z pozostalosci")
-
-                                            //teraz usuwam z dysku plik  log
-                                            fs.removeSync(pathToResult+'_log.txt');
-
-                                            //i usuwam tymczasowy plik txt
-                                            fs.removeSync(TXTFilePath);
-
-                                            console.log("ZROBIONE :)")
-                                            resolve(updatedContainer)
-                                            
-                                        })
-                                        .catch(error => {
-                                            console.error(error)
-                                            clearInterval(checkerdb);
-                                            reject(error)
-                                        })
                                        
                                 } else {
                                     clearInterval(checkerdb);
@@ -565,8 +584,12 @@ exports.runREC = (container) => {
 
                                                 console.log("Zabieram się za czyszczenie katalogu repo z pozostalosci")
 
-                                                //teraz usuwam z dysku plik wynikowy oraz log
-                                                fs.removeSync(pathToResult);
+                                                //teraz przenosze plik txt do katalogu usera i usuwam logi
+                                                //fs.removeSync(pathToResult);
+                                                const TXTTransPath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerFolderName + '/' + containerFolderName + '_TXT.txt';
+                    
+                                                fs.renameSync(pathToResult, TXTTransPath);
+
                                                 fs.removeSync(pathToResult+'_log.txt');
                                                 console.log("ZROBIONE :)")
                                                 resolve(updatedContainer)

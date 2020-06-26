@@ -37,6 +37,9 @@ router.delete('/:userId/:projectId/:sessionId/:containerId', isAuth, repoControl
   //PUT /repoFiles/runSpeechVAD/containerId - wykonuje daną usługę na określonym kontenerze
   router.put('/runSpeechVAD/:containerId', isAuth, repoController.runSpeechVAD);
 
+   //GET /repoFiles/exportToEmu/:userId/:projectId - exportuje do EMU
+   router.get('/exportToEmu/:userId/:projectId', isAuth, repoController.exportToEmu);
+
   
 
 

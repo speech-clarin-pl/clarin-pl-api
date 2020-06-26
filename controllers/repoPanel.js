@@ -16,8 +16,101 @@ const User = require('../models/user');
 const IncomingForm = require('formidable').IncomingForm;
 const uniqueFilename = require('unique-filename');
 const shell = require('shelljs');
+const {spawn} = require('child_process');
 
 const runTask = require('./runTask');
+
+
+//##########################################
+//#### wykonuje VAD ######
+//#######################################
+exports.exportToEmu = (req, res, next) => {
+
+  const containerId = req.params.containerId;
+  const userId = req.params.userId;
+
+  // tutaj robie export do EMU
+
+  //###########zamieniam ctm plik celnika z VAD na textGrid
+
+  const ctmVAD_2_tg = spawn('python3', ['./emu/convert_ctm_tg.py', './emu/celnik-de49e097/celnik-de49e097_VAD.ctm', './emu/celnik-de49e097/celnik-de49e097_VAD.textGrid']);
+
+  ctmVAD_2_tg.stdout.on('data', (data) => {
+    console.log('Pipe data from python script ...' + data.toString());
+  });
+
+  ctmVAD_2_tg.on('close', (code) => {
+    console.log("konversja ctm VAD 2 tg zakonczona")
+    console.log(`child process close all stdio with code ${code}`);
+    // 0 cussess, 2 error, 1 cos nie tak z argumentami
+
+  });
+
+
+    //###########zamieniam ctm plik celnika z DIA na textGrid
+
+    const ctmDIA_2_tg = spawn('python3', ['./emu/convert_ctm_tg.py', './emu/celnik-de49e097/celnik-de49e097_DIA.ctm', './emu/celnik-de49e097/celnik-de49e097_DIA.textGrid']);
+
+    ctmDIA_2_tg.stdout.on('data', (data) => {
+      console.log('Pipe data from python script ...' + data.toString());
+    });
+  
+    ctmDIA_2_tg.on('close', (code) => {
+      console.log("konversja ctm DIA 2 tg zakonczona")
+      console.log(`child process close all stdio with code ${code}`);
+      // 0 cussess, 2 error, 1 cos nie tak z argumentami
+    });
+
+
+    //###########zamieniam ctm plik celnika z SEG na textGrid
+
+    const ctmalign_2_tg = spawn('python3', ['./emu/convert_alictm_tg.py', './emu/celnik-de49e097/celnik-de49e097_SEG.ctm', './emu/celnik-de49e097/celnik-de49e097_SEG.textGrid']);
+
+    ctmalign_2_tg.stdout.on('data', (data) => {
+      console.log('Pipe data from python script ...' + data.toString());
+    });
+  
+    ctmalign_2_tg.on('close', (code) => {
+      console.log("konversja ctmAlign 2 tg zakonczona")
+      console.log(`child process close all stdio with code ${code}`);
+      // 0 cussess, 2 error, 1 cos nie tak z argumentami
+    });
+
+
+    //########### generuje plik JSCON dla EMU z plikow textgridowych
+
+    const ctms_2_emu = spawn('python3', ['./emu/convert_ctms_to_emu.py', 
+                                          './emu/celnik-de49e097/celnik-de49e097.wav', 
+                                          'celnik',
+                                          './emu/celnik-de49e097/celnik-de49e097_VAD.ctm',
+                                          './emu/celnik-de49e097/celnik-de49e097_DIA.ctm',
+                                          './emu/celnik-de49e097/celnik-de49e097_SEG.ctm',
+                                          './emu/celnik-de49e097/celnik-de49e097_EMU.json']);
+
+    // parser = argparse.ArgumentParser()
+    // parser.add_argument('wav', type=Path)
+    // parser.add_argument('name', type=str)
+    // parser.add_argument('vad_ctm', type=Path)
+    // parser.add_argument('dia_ctm', type=Path)
+    // parser.add_argument('ali_ctm', type=Path)
+    // parser.add_argument('out_json', type=Path)
+    // parser.add_argument('--samplerate', '-fs', type=float, default=16000.0)
+
+    ctms_2_emu.stdout.on('data', (data) => {
+      console.log('Pipe data from python script ...' + data.toString());
+    });
+  
+    ctms_2_emu.on('close', (code) => {
+      console.log("konversja ctms 2 EMU zakonczona")
+      console.log(`child process close all stdio with code ${code}`);
+      // 0 cussess, 2 error, 1 cos nie tak z argumentami
+    });
+
+
+
+  res.status(200).json({ message: 'Your corpus is ready do download in EMU format!'});
+ 
+}
 
 
 //##########################################
@@ -144,14 +237,72 @@ exports.getFileFromContainer = (req,res,next) => {
         const fileAudioName = container.fileName;
         const fileDatName = utils.getFileNameWithNoExt(container.fileName)+".dat";
 
-        //sprawdzam o jaki typ pliku mi chodzi: dat, json czy mp3: TO DO
-        let filePath = null;
+        //sprawdzam o jaki typ pliku mi chodzi
+        let filePath = '';
 
-        if(fileType=='audio'){
-           filePath = repoPath + "/" + containerFolderName + "/" + fileAudioName;
-        } else if(fileType=='dat'){
-           filePath = repoPath + "/" + containerFolderName + "/" + fileDatName;
-        } 
+        switch(fileType){
+          case "audio": //audio w 16000Hz 16bit...
+            filePath = repoPath + "/" + containerFolderName + "/" + fileAudioName;
+            break;
+          case "dat": //audiowaveform dat
+            filePath = repoPath + "/" + containerFolderName + "/" + fileDatName;
+            break;
+          case "oryginalAudio": //audio as it was uploaded
+            const oryginalAudioName = container.oryginalFileName;
+            filePath = repoPath + "/" + containerFolderName + "/" + oryginalAudioName;
+            break;
+          case "DIActm": 
+            const DIActmFile = utils.getFileNameWithNoExt(container.fileName)+"_DIA.ctm";
+            filePath = repoPath + "/" + containerFolderName + "/" + DIActmFile;
+            break;
+          case "DIAtextGrid": 
+            const DIAtextGrid = utils.getFileNameWithNoExt(container.fileName)+"_DIA.textGrid";
+            filePath = repoPath + "/" + containerFolderName + "/" + DIAtextGrid;
+            break;
+          case "DIAJSON": 
+            const DIAJSON = utils.getFileNameWithNoExt(container.fileName)+"_DIA.json";
+            filePath = repoPath + "/" + containerFolderName + "/" + DIAJSON;
+            break;
+          case "VADctm": 
+            const VADctmFile = utils.getFileNameWithNoExt(container.fileName)+"_VAD.ctm";
+            filePath = repoPath + "/" + containerFolderName + "/" + VADctmFile;
+            break;
+          case "VADtextGrid": 
+            const VADtextGrid = utils.getFileNameWithNoExt(container.fileName)+"_VAD.textGrid";
+            filePath = repoPath + "/" + containerFolderName + "/" + VADtextGrid;
+            break;
+          case "SEGctm": 
+            const SEGctmFile = utils.getFileNameWithNoExt(container.fileName)+"_SEG.ctm";
+            filePath = repoPath + "/" + containerFolderName + "/" + SEGctmFile;
+            break;
+          case "SEGtextGrid": 
+            const SEGtextGrid = utils.getFileNameWithNoExt(container.fileName)+"_SEG.textGrid";
+            filePath = repoPath + "/" + containerFolderName + "/" + SEGtextGrid;
+            break;
+          case "VADJSON": 
+            const VADJSON = utils.getFileNameWithNoExt(container.fileName)+"_VAD.json";
+            filePath = repoPath + "/" + containerFolderName + "/" + VADJSON;
+            break;
+          case "JSONTranscript": 
+            const JSONTranscript = utils.getFileNameWithNoExt(container.fileName)+".json";
+            filePath = repoPath + "/" + containerFolderName + "/" + JSONTranscript;
+            break;
+          case "TXTTranscript": 
+            const TXTTranscript = utils.getFileNameWithNoExt(container.fileName)+"_TXT.txt";
+            filePath = repoPath + "/" + containerFolderName + "/" + TXTTranscript;
+            break;
+          case "EMUJSON": 
+            const EMUJSON = utils.getFileNameWithNoExt(container.fileName)+"_EMU.json";
+            filePath = repoPath + "/" + containerFolderName + "/" + EMUJSON;
+            break;
+          default:
+            filePath = '';
+            console.log("wrong file type!!")
+
+        }
+
+
+ 
 
         //res.status(200).({ message: 'The data for previewing has been sent!', containerData: filePath});
         
