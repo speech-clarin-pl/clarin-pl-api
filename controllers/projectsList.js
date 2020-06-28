@@ -156,6 +156,7 @@ exports.createProject = (req, res, next) => {
                                         let celnikDemo = new Container({
                                             fileName: 'celnik.wav',
                                             containerName: 'celnik',
+                                            oryginalFileName: 'celnik.wav',
                                             size: fs.statSync(pathToDemoSession+"/celnik/celnik.wav").size,
                                             owner: owner,
                                             project: projectEntry._id,
@@ -174,6 +175,7 @@ exports.createProject = (req, res, next) => {
                                         let kleskaDemo = new Container({
                                             fileName: 'kleska.wav',
                                             containerName: 'kleska',
+                                            oryginalFileName: 'kleska.wav',
                                             size: fs.statSync(pathToDemoSession+"/kleska/kleska.wav").size,
                                             owner: owner,
                                             project: projectEntry._id,
@@ -191,13 +193,14 @@ exports.createProject = (req, res, next) => {
                                         let lektorDemo = new Container({
                                             fileName: 'lektor.wav',
                                             containerName: 'lektor',
+                                            oryginalFileName: 'lektor.wav',
                                             size: fs.statSync(pathToDemoSession+"/lektor/lektor.wav").size,
                                             owner: owner,
                                             project: projectEntry._id,
                                             session: createdDemoSession._id,
                                             ifVAD: false,
                                             ifDIA: false,
-                                            ifREC: true,
+                                            ifREC: false,
                                             ifSEG: false,
                                             statusVAD: 'ready',
                                             statusDIA: 'ready',
@@ -208,13 +211,14 @@ exports.createProject = (req, res, next) => {
                                         let mowaDemo = new Container({
                                             fileName: 'mowa.wav',
                                             containerName: 'mowa',
+                                            oryginalFileName: 'mowa.wav',
                                             size: fs.statSync(pathToDemoSession+"/mowa/mowa.wav").size,
                                             owner: owner,
                                             project: projectEntry._id,
                                             session: createdDemoSession._id,
                                             ifVAD: false,
                                             ifDIA: false,
-                                            ifREC: true,
+                                            ifREC: false,
                                             ifSEG: false,
                                             statusVAD: 'ready',
                                             statusDIA: 'ready',
@@ -225,6 +229,7 @@ exports.createProject = (req, res, next) => {
                                         let opowiesciDemo = new Container({
                                             fileName: 'opowiesci.wav',
                                             containerName: 'opowiesci',
+                                            oryginalFileName: 'opowiesci.wav',
                                             size: fs.statSync(pathToDemoSession+"/opowiesci/opowiesci.wav").size,
                                             owner: owner,
                                             project: projectEntry._id,
@@ -242,6 +247,7 @@ exports.createProject = (req, res, next) => {
                                         let senatorDemo = new Container({
                                             fileName: 'senator.wav',
                                             containerName: 'senator',
+                                            oryginalFileName: 'senator.wav',
                                             size: fs.statSync(pathToDemoSession+"/senator/senator.wav").size,
                                             owner: owner,
                                             project: projectEntry._id,

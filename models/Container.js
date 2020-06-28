@@ -12,7 +12,7 @@ const ContainerSchema = new Schema({
     },
     oryginalFileName: {
         type: String,
-        required: true,
+        required: false,
     },
     owner: {
         type: Schema.Types.ObjectId,

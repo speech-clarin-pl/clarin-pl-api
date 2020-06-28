@@ -143,7 +143,6 @@ exports.createKorpus = (projectId, userId) => {
 
 
 exports.exportToEmu = (req, res, next) => {
-
   const projectId = req.params.projectId;
   const userId = req.params.userId;
 
@@ -151,11 +150,12 @@ exports.exportToEmu = (req, res, next) => {
     .then((pathToZIP)=>{
       console.log("ZIP stworzony: " + pathToZIP)
      // res.sendFile(pathToZIP)
-      res.download(pathToZIP, 'readyZIP.zip');
+     // res.download(pathToZIP, 'readyZIP.zip');
+      res.status(200).json({ message: 'Korpus has been created! you can download it'});
       //res.status(200).json({ message: 'ZIP created successfuly!'});
     })
     .catch((error)=>{
-      res.status(500).json({ message: 'Something went wront with EMU JSON format!'});
+      res.status(204).json({ message: 'You have not created all annotation levels or something went wrong in the server!'});
     }) 
 }
 
@@ -263,13 +263,12 @@ exports.runSpeechRecognition = (req, res, next) => {
 // ########### pobieram gotowy korpus
 // ######################################################
 
-/*
+
 exports.getReadyKorpus = (req,res,next) => {
 
  const userId = req.params.userId;
  const projectId = req.params.projectId;
  
- let filePath = appRoot + "/repo/" + userId + "/" + projectId + "/" + ;
 
   const nazwaKorpusu = 'KORPUS_' + projectId;
   const pathToUserProject = appRoot + '/repo/' + userId + '/' + projectId;
@@ -279,7 +278,7 @@ exports.getReadyKorpus = (req,res,next) => {
   res.sendFile(pathToZIP);
 
 }
-*/
+
 
 
 
