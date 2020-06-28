@@ -17,99 +17,146 @@ const IncomingForm = require('formidable').IncomingForm;
 const uniqueFilename = require('unique-filename');
 const shell = require('shelljs');
 const {spawn} = require('child_process');
+const AdmZip = require('adm-zip');
+
+const emu = require('./emu');
 
 const runTask = require('./runTask');
 
 
 //##########################################
-//#### wykonuje VAD ######
+//#### Eksportuje do emu ######
 //#######################################
+
+
+exports.createKorpus = (projectId, userId) => {
+  return new Promise((resolve, reject) => {
+  
+
+    // creating archives
+    var zip = new AdmZip();
+  
+    // tutaj robie export do EMU tylko tych plików które mają wszystkie narzędzia wykonane
+  
+    //przeglądam kontenery tego użytkownika i wybieram tylko te które mogą być zapisane
+    Container.find({owner: userId, project: projectId, ifVAD: true, ifDIA: true, ifREC: true, ifSEG: true },{VADUserSegments:0, DIAUserSegments:0,RECUserSegments:0,SEGUserSegments:0})
+      .then(containers => {
+
+        const nazwaKorpusu = 'KORPUS_' + projectId;
+        const pathToUserProject = appRoot + '/repo/' + userId + '/' + projectId;
+        const pathToCorpus = pathToUserProject + '/' + nazwaKorpusu;
+        const pathToZIP = pathToCorpus+'.zip';
+  
+        emu.containers2EMU(containers)
+          .then(correctContainers=>{
+  
+            console.log("Folder do CORPUSU: " +  pathToCorpus);
+  
+            //teraz tworze folder w katalogu projektu danego usera z gotowym korpusem
+            if(!fs.existsSync(pathToCorpus)){
+              fs.mkdirSync(pathToCorpus, { recursive: true })
+            } 
+  
+  
+            let oryginalDBconfigPath = appRoot + '/emu/test_DBconfig.json';
+            let pathToDBconfig = pathToCorpus + '/' + nazwaKorpusu + '_DBconfig.json';
+            //teraz kopiuje do niego plik DBconfig.json
+            //zamieniam parametr name na nazwe korpusu
+  
+            const dbconfig = fs.readJsonSync(oryginalDBconfigPath);
+  
+            dbconfig.name = nazwaKorpusu;
+  
+            fs.writeJsonSync(pathToDBconfig, dbconfig,{spaces: '\t'});
+            //fs.copySync(oryginalDBconfigPath, pathToDBconfig);
+           
+            //teraz tworze w tym folderze katalogi z sesjami i kopiuje tam foldery z contenerami
+            for (let container of correctContainers){
+              const audioFileName = container.fileName;
+              const containerFolderName = utils.getFileNameWithNoExt(audioFileName);  //np.lektor-fe2e3423 - na serwerze folder
+              const projectId = container.project;
+              const sessionId = container.session;
+              const pathToContainer = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerFolderName;
+              
+              Session.findById(sessionId)
+                .then(session=>{
+  
+                  const sessionName = session.name;
+                  const sessionPath = pathToCorpus + '/' + sessionName + '_ses';
+  
+                  console.log("tworze sesje: " + sessionPath)
+                  //tworze katalog sesji jeżeli nie istnieje
+                  if(!fs.ensureDirSync(sessionPath)){
+                    console.log("stworzyłem sesje: " + sessionPath)
+                    fs.mkdirSync(sessionPath, { recursive: true })
+                  } 
+  
+  
+                  const containerPath = sessionPath + '/' + containerFolderName + '_bndl';
+                  //tworze katalog contenera jeżeli nie istnieje
+                  if(!fs.ensureDirSync(containerPath)){
+                    console.log("stworzyłem container folder: " + containerPath)
+                    fs.mkdirSync(containerPath, { recursive: true })
+                  } 
+  
+                  //kopiuje do niego pliki EMU json oraz wav
+  
+                  let srcpathToWAV = pathToContainer + '/' + audioFileName;
+                  let destpathToWAV = containerPath + '/' + audioFileName;
+  
+                  let srcpathToEMUjson = pathToContainer + '/' + containerFolderName + '_annot.json';
+                  let destpathToEMUjson = containerPath + '/' + containerFolderName + '_annot.json';
+  
+                  fs.copySync(srcpathToWAV, destpathToWAV);
+  
+                  fs.copySync(srcpathToEMUjson, destpathToEMUjson);
+  
+  
+                }).catch(error=>{
+                  console.error(error)
+                })
+  
+            }
+
+             // add local file
+            zip.addLocalFolder(pathToCorpus);
+            zip.writeZip(pathToZIP);
+
+            //po zzipowaniu tutaj można usunąć strukture katalogową
+            // TODO
+
+            fs.removeSync(pathToCorpus);
+
+            resolve(pathToZIP);
+
+          })
+          .catch(error=>{   
+            console.error(error)
+            
+            reject(error);
+          })     
+      })
+  
+  
+  })
+}
+
+
 exports.exportToEmu = (req, res, next) => {
 
-  const containerId = req.params.containerId;
+  const projectId = req.params.projectId;
   const userId = req.params.userId;
 
-  // tutaj robie export do EMU
-
-  //###########zamieniam ctm plik celnika z VAD na textGrid
-
-  const ctmVAD_2_tg = spawn('python3', ['./emu/convert_ctm_tg.py', './emu/celnik-de49e097/celnik-de49e097_VAD.ctm', './emu/celnik-de49e097/celnik-de49e097_VAD.textGrid']);
-
-  ctmVAD_2_tg.stdout.on('data', (data) => {
-    console.log('Pipe data from python script ...' + data.toString());
-  });
-
-  ctmVAD_2_tg.on('close', (code) => {
-    console.log("konversja ctm VAD 2 tg zakonczona")
-    console.log(`child process close all stdio with code ${code}`);
-    // 0 cussess, 2 error, 1 cos nie tak z argumentami
-
-  });
-
-
-    //###########zamieniam ctm plik celnika z DIA na textGrid
-
-    const ctmDIA_2_tg = spawn('python3', ['./emu/convert_ctm_tg.py', './emu/celnik-de49e097/celnik-de49e097_DIA.ctm', './emu/celnik-de49e097/celnik-de49e097_DIA.textGrid']);
-
-    ctmDIA_2_tg.stdout.on('data', (data) => {
-      console.log('Pipe data from python script ...' + data.toString());
-    });
-  
-    ctmDIA_2_tg.on('close', (code) => {
-      console.log("konversja ctm DIA 2 tg zakonczona")
-      console.log(`child process close all stdio with code ${code}`);
-      // 0 cussess, 2 error, 1 cos nie tak z argumentami
-    });
-
-
-    //###########zamieniam ctm plik celnika z SEG na textGrid
-
-    const ctmalign_2_tg = spawn('python3', ['./emu/convert_alictm_tg.py', './emu/celnik-de49e097/celnik-de49e097_SEG.ctm', './emu/celnik-de49e097/celnik-de49e097_SEG.textGrid']);
-
-    ctmalign_2_tg.stdout.on('data', (data) => {
-      console.log('Pipe data from python script ...' + data.toString());
-    });
-  
-    ctmalign_2_tg.on('close', (code) => {
-      console.log("konversja ctmAlign 2 tg zakonczona")
-      console.log(`child process close all stdio with code ${code}`);
-      // 0 cussess, 2 error, 1 cos nie tak z argumentami
-    });
-
-
-    //########### generuje plik JSCON dla EMU z plikow textgridowych
-
-    const ctms_2_emu = spawn('python3', ['./emu/convert_ctms_to_emu.py', 
-                                          './emu/celnik-de49e097/celnik-de49e097.wav', 
-                                          'celnik',
-                                          './emu/celnik-de49e097/celnik-de49e097_VAD.ctm',
-                                          './emu/celnik-de49e097/celnik-de49e097_DIA.ctm',
-                                          './emu/celnik-de49e097/celnik-de49e097_SEG.ctm',
-                                          './emu/celnik-de49e097/celnik-de49e097_EMU.json']);
-
-    // parser = argparse.ArgumentParser()
-    // parser.add_argument('wav', type=Path)
-    // parser.add_argument('name', type=str)
-    // parser.add_argument('vad_ctm', type=Path)
-    // parser.add_argument('dia_ctm', type=Path)
-    // parser.add_argument('ali_ctm', type=Path)
-    // parser.add_argument('out_json', type=Path)
-    // parser.add_argument('--samplerate', '-fs', type=float, default=16000.0)
-
-    ctms_2_emu.stdout.on('data', (data) => {
-      console.log('Pipe data from python script ...' + data.toString());
-    });
-  
-    ctms_2_emu.on('close', (code) => {
-      console.log("konversja ctms 2 EMU zakonczona")
-      console.log(`child process close all stdio with code ${code}`);
-      // 0 cussess, 2 error, 1 cos nie tak z argumentami
-    });
-
-
-
-  res.status(200).json({ message: 'Your corpus is ready do download in EMU format!'});
- 
+  this.createKorpus(projectId, userId)
+    .then((pathToZIP)=>{
+      console.log("ZIP stworzony: " + pathToZIP)
+     // res.sendFile(pathToZIP)
+      res.download(pathToZIP, 'readyZIP.zip');
+      //res.status(200).json({ message: 'ZIP created successfuly!'});
+    })
+    .catch((error)=>{
+      res.status(500).json({ message: 'Something went wront with EMU JSON format!'});
+    }) 
 }
 
 
@@ -212,6 +259,31 @@ exports.runSpeechRecognition = (req, res, next) => {
 }
 
 
+// ###################################################
+// ########### pobieram gotowy korpus
+// ######################################################
+
+/*
+exports.getReadyKorpus = (req,res,next) => {
+
+ const userId = req.params.userId;
+ const projectId = req.params.projectId;
+ 
+ let filePath = appRoot + "/repo/" + userId + "/" + projectId + "/" + ;
+
+  const nazwaKorpusu = 'KORPUS_' + projectId;
+  const pathToUserProject = appRoot + '/repo/' + userId + '/' + projectId;
+  const pathToCorpus = pathToUserProject + '/' + nazwaKorpusu;
+  const pathToZIP = pathToCorpus+'.zip';
+  
+  res.sendFile(pathToZIP);
+
+}
+*/
+
+
+
+
 
 // ###################################################
 // ########### pobieram plik z repozytorium użytkownika
@@ -292,7 +364,7 @@ exports.getFileFromContainer = (req,res,next) => {
             filePath = repoPath + "/" + containerFolderName + "/" + TXTTranscript;
             break;
           case "EMUJSON": 
-            const EMUJSON = utils.getFileNameWithNoExt(container.fileName)+"_EMU.json";
+            const EMUJSON = utils.getFileNameWithNoExt(container.fileName)+"_annot.json";
             filePath = repoPath + "/" + containerFolderName + "/" + EMUJSON;
             break;
           default:

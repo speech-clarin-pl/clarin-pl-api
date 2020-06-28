@@ -20,9 +20,6 @@ exports.ctmVAD2tg = (container) => {
         const vadCtmFileName = path2container + '/' + containerFolderName + '_VAD.ctm';
         const vadTextGridFileName = path2container + '/' + containerFolderName + '_VAD.textGrid';
 
-
-
-    
         const ctmVAD_2_tg = spawn('python3', [appRoot + '/emu/convert_ctm_tg.py', vadCtmFileName, vadTextGridFileName]);
     
        // ctmVAD_2_tg.stdout.on('data', (data) => {
@@ -121,7 +118,7 @@ exports.ctms2EMU = (container) => {
         const vadCtmFileName = path2container + '/' + containerFolderName + '_VAD.ctm';
         const diaCtmFileName = path2container + '/' + containerFolderName + '_DIA.ctm';
         const segCtmFileName = path2container + '/' + containerFolderName + '_SEG.ctm';
-        const JSONOutputFileName = path2container + '/' + containerFolderName + '_EMU.json';
+        const JSONOutputFileName = path2container + '/' + containerFolderName + '_annot.json';
   
         const ctms_2_emu = spawn('python3', [appRoot + '/emu/convert_ctms_to_emu.py', 
                                             wavFileName, 
@@ -135,13 +132,55 @@ exports.ctms2EMU = (container) => {
             console.log("konversja ctm CTMs 2 JSON zakonczona")
             console.log(`child process close all stdio with code ${code}`);
             // 0 cussess, 2 error, 1 cos nie tak z argumentami
-            if(code==0){
-                resolve();
+            if(code>0){
+                reject(code);
             } else {
-                reject();
+                resolve(code);
             }
+
         });
     })
 }
 
- 
+
+
+ exports.containers2EMU = (containers) => {
+
+    return new Promise((resolve, reject) => {
+
+        if(containers.length == 0){
+            reject("Lista contenerów dla EMU JSCON była pusta");
+        }
+
+        let promises = [];
+
+        let correctContainers = [];
+
+        for(let container of containers ){
+            let promis = new Promise((resolve, reject) => {
+                this.ctms2EMU(container)
+                    .then((code)=>{
+                        console.log(code)
+                        correctContainers.push(container);
+                        resolve(code);
+                    })
+                    .catch((code) => {
+                        reject(code)
+                    })
+            });
+    
+            promises.push(promis);
+        }
+    
+        Promise.all(promises)
+            .then(result => {
+                resolve(correctContainers)
+            })
+            .catch(err=>{
+                //zawsze robie resolve ponieważ chce sprawdzić które kontenery się nie wykonały
+                //wtedy correntContainers zawieraja tylko te którym udało się zrobić EMU JSON
+                resolve(correctContainers)
+            })
+    });
+}
+

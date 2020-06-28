@@ -74,9 +74,7 @@
       }
     ],
     "restrictions": {
-      "showPerspectivesSidebar": false,
-      "bundleComments": false,
-      "bundleFinishedEditing": false
+      "showPerspectivesSidebar": false
     },
     "activeButtons": {
       "saveBundle": false,
