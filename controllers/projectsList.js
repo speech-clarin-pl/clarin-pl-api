@@ -139,7 +139,6 @@ exports.createProject = (req, res, next) => {
                             }
 
                             
-
                             copy(appRoot + '/repo/demo_files', pathToDemoSession)
                                 .on(copy.events.COPY_FILE_START, function(copyOperation) {
                                     console.info('Copying file ' + copyOperation.src + '...');
@@ -153,43 +152,7 @@ exports.createProject = (req, res, next) => {
                                 .then(function(results) {
                                     console.info(results.length + ' file(s) copied');
 
-                                        let celnikDemo = new Container({
-                                            fileName: 'celnik.wav',
-                                            containerName: 'celnik',
-                                            oryginalFileName: 'celnik.wav',
-                                            size: fs.statSync(pathToDemoSession+"/celnik/celnik.wav").size,
-                                            owner: owner,
-                                            project: projectEntry._id,
-                                            session: createdDemoSession._id,
-                                            ifVAD: false,
-                                            ifDIA: false,
-                                            ifREC: true,
-                                            ifSEG: false,
-                                            ifVAD: false,
-                                            statusVAD: 'ready',
-                                            statusDIA: 'ready',
-                                            statusREC: 'done',
-                                            statusSEG: 'ready',
-                                        });
-
-                                        let kleskaDemo = new Container({
-                                            fileName: 'kleska.wav',
-                                            containerName: 'kleska',
-                                            oryginalFileName: 'kleska.wav',
-                                            size: fs.statSync(pathToDemoSession+"/kleska/kleska.wav").size,
-                                            owner: owner,
-                                            project: projectEntry._id,
-                                            session: createdDemoSession._id,
-                                            ifVAD: false,
-                                            ifDIA: false,
-                                            ifREC: true,
-                                            ifSEG: false,
-                                            statusVAD: 'ready',
-                                            statusDIA: 'ready',
-                                            statusREC: 'done',
-                                            statusSEG: 'ready',
-                                        });
-
+                                     /*
                                         let lektorDemo = new Container({
                                             fileName: 'lektor.wav',
                                             containerName: 'lektor',
@@ -207,62 +170,255 @@ exports.createProject = (req, res, next) => {
                                             statusREC: 'done',
                                             statusSEG: 'ready',
                                         });
+                                        */
 
-                                        let mowaDemo = new Container({
-                                            fileName: 'mowa.wav',
-                                            containerName: 'mowa',
-                                            oryginalFileName: 'mowa.wav',
-                                            size: fs.statSync(pathToDemoSession+"/mowa/mowa.wav").size,
+
+                                        let celnikDemo = new Container({
+                                            fileName: 'celnik-1189e21a.wav',
+                                            containerName: 'celnik',
+                                            oryginalFileName: 'celnik.wav',
+                                            size: fs.statSync(pathToDemoSession+"/celnik-1189e21a/celnik-1189e21a.wav").size,
                                             owner: owner,
                                             project: projectEntry._id,
                                             session: createdDemoSession._id,
-                                            ifVAD: false,
-                                            ifDIA: false,
+                                            ifVAD: true,
+                                            ifDIA: true,
+                                            ifREC: true,
+                                            ifSEG: true,
+                                            statusVAD: 'done',
+                                            statusDIA: 'done',
+                                            statusREC: 'done',
+                                            statusSEG: 'done',
+                                            VADUserSegments:  [{
+                                                "startTime": 0.68,
+                                                "endTime": 2.74,
+                                                "editable": true,
+                                                "color": "#394b55",
+                                                "labelText": "speech"
+                                            }, {
+                                                "startTime": 2.74,
+                                                "endTime": 5.97,
+                                                "editable": true,
+                                                "color": "#394b55",
+                                                "labelText": "speech"
+                                            }],
+                                            DIAUserSegments:  [{
+                                                "startTime": 0.68,
+                                                "endTime": 2.74,
+                                                "editable": true,
+                                                "color": "#394b55",
+                                                "labelText": "1"
+                                            }, {
+                                                "startTime": 2.74,
+                                                "endTime": 4.62,
+                                                "editable": true,
+                                                "color": "#394b55",
+                                                "labelText": "2"
+                                            }, {
+                                                "startTime": 4.62,
+                                                "endTime": 5.97,
+                                                "editable": true,
+                                                "color": "#394b55",
+                                                "labelText": "3"
+                                            }],
+                                            RECUserSegments: [],
+                                            SEGUserSegments: [],
+                                        });
+
+                                        
+
+                                        let kleskaDemo = new Container({
+                                            fileName: 'kleska-29d61ce0.wav',
+                                            containerName: 'kleska',
+                                            oryginalFileName: 'kleska.wav',
+                                            size: fs.statSync(pathToDemoSession+"/kleska-29d61ce0/kleska-29d61ce0.wav").size,
+                                            owner: owner,
+                                            project: projectEntry._id,
+                                            session: createdDemoSession._id,
+                                            ifVAD: true,
+                                            ifDIA: true,
                                             ifREC: false,
                                             ifSEG: false,
-                                            statusVAD: 'ready',
-                                            statusDIA: 'ready',
-                                            statusREC: 'done',
+                                            statusVAD: 'done',
+                                            statusDIA: 'done',
+                                            statusREC: 'ready',
                                             statusSEG: 'ready',
+                                            VADUserSegments: [{
+                                                "startTime": 1.31,
+                                                "endTime": 7.81,
+                                                "editable": true,
+                                                "color": "#394b55",
+                                                "labelText": "speech"
+                                            }],
+                                            DIAUserSegments:  [{
+                                                "startTime": 1.31,
+                                                "endTime": 4.69,
+                                                "editable": true,
+                                                "color": "#394b55",
+                                                "labelText": "3"
+                                            }, {
+                                                "startTime": 4.68,
+                                                "endTime": 6.18,
+                                                "editable": true,
+                                                "color": "#394b55",
+                                                "labelText": "1"
+                                            }, {
+                                                "startTime": 6.18,
+                                                "endTime": 7.81,
+                                                "editable": true,
+                                                "color": "#394b55",
+                                                "labelText": "2"
+                                            }],
+                                            RECUserSegments: [],
+                                            SEGUserSegments: [],
+                                        });
+
+                                       
+                                        let mowaDemo = new Container({
+                                            fileName: 'mowa-b8c9e2fb.wav',
+                                            containerName: 'mowa',
+                                            oryginalFileName: 'mowa.wav',
+                                            size: fs.statSync(pathToDemoSession+"/mowa-b8c9e2fb/mowa-b8c9e2fb.wav").size,
+                                            owner: owner,
+                                            project: projectEntry._id,
+                                            session: createdDemoSession._id,
+                                            ifVAD: true,
+                                            ifDIA: true,
+                                            ifREC: true,
+                                            ifSEG: true,
+                                            statusVAD: 'done',
+                                            statusDIA: 'done',
+                                            statusREC: 'done',
+                                            statusSEG: 'done',
+                                            VADUserSegments:  [{
+                                                "startTime": 0.54,
+                                                "endTime": 4.66,
+                                                "editable": true,
+                                                "color": "#394b55",
+                                                "labelText": "speech"
+                                            }, {
+                                                "startTime": 4.7,
+                                                "endTime": 10.16,
+                                                "editable": true,
+                                                "color": "#394b55",
+                                                "labelText": "speech"
+                                            }],
+                                            DIAUserSegments: [{
+                                                "startTime": 0.54,
+                                                "endTime": 2.42,
+                                                "editable": true,
+                                                "color": "#394b55",
+                                                "labelText": "3"
+                                            }, {
+                                                "startTime": 2.42,
+                                                "endTime": 4.66,
+                                                "editable": true,
+                                                "color": "#394b55",
+                                                "labelText": "2"
+                                            }, {
+                                                "startTime": 4.7,
+                                                "endTime": 5.83,
+                                                "editable": true,
+                                                "color": "#394b55",
+                                                "labelText": "2"
+                                            }, {
+                                                "startTime": 5.83,
+                                                "endTime": 8.82,
+                                                "editable": true,
+                                                "color": "#394b55",
+                                                "labelText": "3"
+                                            }, {
+                                                "startTime": 8.82,
+                                                "endTime": 10.16,
+                                                "editable": true,
+                                                "color": "#394b55",
+                                                "labelText": "1"
+                                            }],
+                                            RECUserSegments: [],
+                                            SEGUserSegments: [],
                                         });
 
                                         let opowiesciDemo = new Container({
-                                            fileName: 'opowiesci.wav',
+                                            fileName: 'opowiesci-811cddd0.wav',
                                             containerName: 'opowiesci',
                                             oryginalFileName: 'opowiesci.wav',
-                                            size: fs.statSync(pathToDemoSession+"/opowiesci/opowiesci.wav").size,
+                                            size: fs.statSync(pathToDemoSession+"/opowiesci-811cddd0/opowiesci-811cddd0.wav").size,
                                             owner: owner,
                                             project: projectEntry._id,
                                             session: createdDemoSession._id,
-                                            ifVAD: false,
+                                            ifVAD: true,
                                             ifDIA: false,
                                             ifREC: false,
                                             ifSEG: false,
-                                            statusVAD: 'ready',
+                                            statusVAD: 'done',
                                             statusDIA: 'ready',
                                             statusREC: 'ready',
                                             statusSEG: 'ready',
+                                            VADUserSegments: [{
+                                                "startTime": 0.87,
+                                                "endTime": 6.61,
+                                                "editable": true,
+                                                "color": "#394b55",
+                                                "labelText": "speech"
+                                            }],
+                                            DIAUserSegments: [],
+                                            RECUserSegments: [],
+                                            SEGUserSegments: [],
                                         });
 
                                         let senatorDemo = new Container({
-                                            fileName: 'senator.wav',
+                                            fileName: 'senator-137ebd23.wav',
                                             containerName: 'senator',
                                             oryginalFileName: 'senator.wav',
-                                            size: fs.statSync(pathToDemoSession+"/senator/senator.wav").size,
+                                            size: fs.statSync(pathToDemoSession+"/senator-137ebd23/senator-137ebd23.wav").size,
                                             owner: owner,
                                             project: projectEntry._id,
                                             session: createdDemoSession._id,
-                                            ifVAD: false,
-                                            ifDIA: false,
-                                            ifREC: false,
+                                            ifVAD: true,
+                                            ifDIA: true,
+                                            ifREC: true,
                                             ifSEG: false,
-                                            statusVAD: 'ready',
-                                            statusDIA: 'ready',
-                                            statusREC: 'ready',
+                                            statusVAD: 'done',
+                                            statusDIA: 'done',
+                                            statusREC: 'done',
                                             statusSEG: 'ready',
+                                            VADUserSegments:  [{
+                                                "startTime": 0.12,
+                                                "endTime": 7.73,
+                                                "editable": true,
+                                                "color": "#394b55",
+                                                "labelText": "speech"
+                                            }],
+                                            DIAUserSegments:  [{
+                                                "startTime": 0.12,
+                                                "endTime": 3.5,
+                                                "editable": true,
+                                                "color": "#394b55",
+                                                "labelText": "3"
+                                            }, {
+                                                "startTime": 3.5,
+                                                "endTime": 5.75,
+                                                "editable": true,
+                                                "color": "#394b55",
+                                                "labelText": "2"
+                                            }, {
+                                                "startTime": 5.75,
+                                                "endTime": 6.5,
+                                                "editable": true,
+                                                "color": "#394b55",
+                                                "labelText": "3"
+                                            }, {
+                                                "startTime": 6.5,
+                                                "endTime": 7.73,
+                                                "editable": true,
+                                                "color": "#394b55",
+                                                "labelText": "1"
+                                            }],
+                                            RECUserSegments: [],
+                                            SEGUserSegments: [],
                                         });
 
-                                        const demoFiles = [celnikDemo, kleskaDemo, lektorDemo, mowaDemo, opowiesciDemo, senatorDemo];
+                                        const demoFiles = [celnikDemo, kleskaDemo, mowaDemo, opowiesciDemo, senatorDemo];
                                         
                                         
                                         Container.insertMany(demoFiles)
