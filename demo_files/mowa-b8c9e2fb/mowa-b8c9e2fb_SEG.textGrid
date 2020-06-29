@@ -1,0 +1,106 @@
+File type = "ooTextFile"
+Object class = "TextGrid"
+
+xmin = 0.0
+xmax = 10.43
+tiers? <exists>
+size = 1
+item []:
+	item [1]:
+		class = "IntervalTier"
+		name = "mowa-b8c9e2fb_SEG"
+		xmin = 0.0
+		xmax = 10.43
+		intervals: size = 23
+			intervals [1]:
+				xmin = 0.0
+				xmax = 0.75
+				text = "sil"
+			intervals [2]:
+				xmin = 0.75
+				xmax = 1.04
+				text = "celem"
+			intervals [3]:
+				xmin = 1.04
+				xmax = 1.61
+				text = "niniejszego"
+			intervals [4]:
+				xmin = 1.61
+				xmax = 2.08
+				text = "ćwiczenia"
+			intervals [5]:
+				xmin = 2.08
+				xmax = 2.31
+				text = "jest"
+			intervals [6]:
+				xmin = 2.31
+				xmax = 2.81
+				text = "konwersja"
+			intervals [7]:
+				xmin = 2.81
+				xmax = 3.27
+				text = "formatu"
+			intervals [8]:
+				xmin = 3.27
+				xmax = 3.36
+				text = "sil"
+			intervals [9]:
+				xmin = 3.36
+				xmax = 3.66
+				text = "plików"
+			intervals [10]:
+				xmin = 3.66
+				xmax = 4.37
+				text = "dźwiękowe"
+			intervals [11]:
+				xmin = 4.37
+				xmax = 4.86
+				text = "sil"
+			intervals [12]:
+				xmin = 4.86
+				xmax = 4.96
+				text = "z"
+			intervals [13]:
+				xmin = 4.96
+				xmax = 5.6
+				text = "uwzględnieniem"
+			intervals [14]:
+				xmin = 5.6
+				xmax = 6.23
+				text = "konwersji"
+			intervals [15]:
+				xmin = 6.23
+				xmax = 7.01
+				text = "częstotliwości"
+			intervals [16]:
+				xmin = 7.01
+				xmax = 7.04
+				text = "sil"
+			intervals [17]:
+				xmin = 7.04
+				xmax = 7.85
+				text = "drukowania"
+			intervals [18]:
+				xmin = 7.85
+				xmax = 7.92
+				text = "sil"
+			intervals [19]:
+				xmin = 7.92
+				xmax = 8.24
+				text = "oraz"
+			intervals [20]:
+				xmin = 8.24
+				xmax = 8.9
+				text = "rozdzielczości"
+			intervals [21]:
+				xmin = 8.9
+				xmax = 9.34
+				text = "bitowej"
+			intervals [22]:
+				xmin = 9.34
+				xmax = 9.93
+				text = "zapisu"
+			intervals [23]:
+				xmin = 9.93
+				xmax = 10.43
+				text = "sil"

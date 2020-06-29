@@ -139,7 +139,7 @@ exports.createProject = (req, res, next) => {
                             }
 
                             
-                            copy(appRoot + '/repo/demo_files', pathToDemoSession)
+                            copy(appRoot + '/demo_files', pathToDemoSession)
                                 .on(copy.events.COPY_FILE_START, function(copyOperation) {
                                     console.info('Copying file ' + copyOperation.src + '...');
                                 })
