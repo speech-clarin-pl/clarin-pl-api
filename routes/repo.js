@@ -22,8 +22,13 @@ router.put('/createNewSession', isAuth, repoController.createNewSession);
 // GET /repoFiles/projectId/userId - do pobierania listy plikow
 router.get('/:projectId/:userId', isAuth, repoController.getRepoAssets);
 
- //DELETE /repoFiles/deleteFile/userId - usuwa folder
+
+
+ //DELETE /repoFiles/deleteFile/userId - usuwa container
 router.delete('/:userId/:projectId/:sessionId/:containerId', isAuth, repoController.removeContainer);
+
+ //DELETE /repoFiles/deleteFile/userId - usuwa sesje
+ router.delete('/:userId/:projectId/:sessionId/', isAuth, repoController.removeSession);
 
  //PUT /repoFiles/runSpeechReco/containerId - wykonuje daną usługę na określonym kontenerze
  router.put('/runSpeechRecognition/:containerId', isAuth, repoController.runSpeechRecognition);

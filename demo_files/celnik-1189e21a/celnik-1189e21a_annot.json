@@ -1,0 +1,1088 @@
+{
+    "sampleRate": 16000.0,
+    "annotates": "celnik-1189e21a.wav",
+    "name": "celnik",
+    "levels": [
+        {
+            "name": "VAD",
+            "type": "SEGMENT",
+            "items": [
+                {
+                    "id": 0,
+                    "sampleStart": 10880.0,
+                    "sampleDur": 32960.0,
+                    "labels": [
+                        {
+                            "name": "VAD",
+                            "value": "speech"
+                        }
+                    ]
+                },
+                {
+                    "id": 1,
+                    "sampleStart": 43840.0,
+                    "sampleDur": 51680.0,
+                    "labels": [
+                        {
+                            "name": "VAD",
+                            "value": "speech"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Speaker",
+            "type": "SEGMENT",
+            "items": [
+                {
+                    "id": 2,
+                    "sampleStart": 10880.0,
+                    "sampleDur": 32960.0,
+                    "labels": [
+                        {
+                            "name": "Speaker",
+                            "value": "1"
+                        }
+                    ]
+                },
+                {
+                    "id": 3,
+                    "sampleStart": 43840.0,
+                    "sampleDur": 30000.0,
+                    "labels": [
+                        {
+                            "name": "Speaker",
+                            "value": "2"
+                        }
+                    ]
+                },
+                {
+                    "id": 4,
+                    "sampleStart": 73840.0,
+                    "sampleDur": 21680.0,
+                    "labels": [
+                        {
+                            "name": "Speaker",
+                            "value": "3"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Word",
+            "type": "SEGMENT",
+            "items": [
+                {
+                    "id": 5,
+                    "sampleStart": 13920.0,
+                    "sampleDur": 4320.0,
+                    "labels": [
+                        {
+                            "name": "Word",
+                            "value": "jak"
+                        }
+                    ]
+                },
+                {
+                    "id": 6,
+                    "sampleStart": 18240.0,
+                    "sampleDur": 2880.0,
+                    "labels": [
+                        {
+                            "name": "Word",
+                            "value": "pan"
+                        }
+                    ]
+                },
+                {
+                    "id": 7,
+                    "sampleStart": 21120.0,
+                    "sampleDur": 2560.0,
+                    "labels": [
+                        {
+                            "name": "Word",
+                            "value": "j\u0105"
+                        }
+                    ]
+                },
+                {
+                    "id": 8,
+                    "sampleStart": 23680.0,
+                    "sampleDur": 5920.0,
+                    "labels": [
+                        {
+                            "name": "Word",
+                            "value": "ocenia"
+                        }
+                    ]
+                },
+                {
+                    "id": 9,
+                    "sampleStart": 29600.0,
+                    "sampleDur": 3840.0,
+                    "labels": [
+                        {
+                            "name": "Word",
+                            "value": "jako"
+                        }
+                    ]
+                },
+                {
+                    "id": 10,
+                    "sampleStart": 33440.0,
+                    "sampleDur": 7360.0,
+                    "labels": [
+                        {
+                            "name": "Word",
+                            "value": "celnik"
+                        }
+                    ]
+                },
+                {
+                    "id": 11,
+                    "sampleStart": 44480.0,
+                    "sampleDur": 4160.0,
+                    "labels": [
+                        {
+                            "name": "Word",
+                            "value": "jako"
+                        }
+                    ]
+                },
+                {
+                    "id": 12,
+                    "sampleStart": 48640.0,
+                    "sampleDur": 5440.0,
+                    "labels": [
+                        {
+                            "name": "Word",
+                            "value": "osoba"
+                        }
+                    ]
+                },
+                {
+                    "id": 13,
+                    "sampleStart": 54080.0,
+                    "sampleDur": 3680.0,
+                    "labels": [
+                        {
+                            "name": "Word",
+                            "value": "kt\u00f3ra"
+                        }
+                    ]
+                },
+                {
+                    "id": 14,
+                    "sampleStart": 57760.0,
+                    "sampleDur": 6240.0,
+                    "labels": [
+                        {
+                            "name": "Word",
+                            "value": "nadzoru"
+                        }
+                    ]
+                },
+                {
+                    "id": 15,
+                    "sampleStart": 64000.0,
+                    "sampleDur": 1120.0,
+                    "labels": [
+                        {
+                            "name": "Word",
+                            "value": "i"
+                        }
+                    ]
+                },
+                {
+                    "id": 16,
+                    "sampleStart": 65120.00000000001,
+                    "sampleDur": 5600.0,
+                    "labels": [
+                        {
+                            "name": "Word",
+                            "value": "sprawy"
+                        }
+                    ]
+                },
+                {
+                    "id": 17,
+                    "sampleStart": 70720.0,
+                    "sampleDur": 6560.0,
+                    "labels": [
+                        {
+                            "name": "Word",
+                            "value": "celne"
+                        }
+                    ]
+                },
+                {
+                    "id": 18,
+                    "sampleStart": 77280.0,
+                    "sampleDur": 960.0,
+                    "labels": [
+                        {
+                            "name": "Word",
+                            "value": "i"
+                        }
+                    ]
+                },
+                {
+                    "id": 19,
+                    "sampleStart": 78240.0,
+                    "sampleDur": 5120.0,
+                    "labels": [
+                        {
+                            "name": "Word",
+                            "value": "sprawy"
+                        }
+                    ]
+                },
+                {
+                    "id": 20,
+                    "sampleStart": 83360.0,
+                    "sampleDur": 10560.0,
+                    "labels": [
+                        {
+                            "name": "Word",
+                            "value": "graniczne"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Phoneme",
+            "type": "SEGMENT",
+            "items": [
+                {
+                    "id": 21,
+                    "sampleStart": 0.0,
+                    "sampleDur": 13920.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "sil"
+                        }
+                    ]
+                },
+                {
+                    "id": 22,
+                    "sampleStart": 13920.0,
+                    "sampleDur": 2400.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "j"
+                        }
+                    ]
+                },
+                {
+                    "id": 23,
+                    "sampleStart": 16320.0,
+                    "sampleDur": 800.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "a"
+                        }
+                    ]
+                },
+                {
+                    "id": 24,
+                    "sampleStart": 17120.0,
+                    "sampleDur": 1120.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "k"
+                        }
+                    ]
+                },
+                {
+                    "id": 25,
+                    "sampleStart": 18240.0,
+                    "sampleDur": 960.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "p"
+                        }
+                    ]
+                },
+                {
+                    "id": 26,
+                    "sampleStart": 19200.0,
+                    "sampleDur": 640.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "a"
+                        }
+                    ]
+                },
+                {
+                    "id": 27,
+                    "sampleStart": 19840.0,
+                    "sampleDur": 1280.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "n"
+                        }
+                    ]
+                },
+                {
+                    "id": 28,
+                    "sampleStart": 21120.0,
+                    "sampleDur": 1120.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "j"
+                        }
+                    ]
+                },
+                {
+                    "id": 29,
+                    "sampleStart": 22240.0,
+                    "sampleDur": 1440.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "on"
+                        }
+                    ]
+                },
+                {
+                    "id": 30,
+                    "sampleStart": 23680.0,
+                    "sampleDur": 1440.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "o"
+                        }
+                    ]
+                },
+                {
+                    "id": 31,
+                    "sampleStart": 25120.0,
+                    "sampleDur": 1760.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "ts"
+                        }
+                    ]
+                },
+                {
+                    "id": 32,
+                    "sampleStart": 26880.0,
+                    "sampleDur": 800.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "e"
+                        }
+                    ]
+                },
+                {
+                    "id": 33,
+                    "sampleStart": 27680.0,
+                    "sampleDur": 640.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "ni"
+                        }
+                    ]
+                },
+                {
+                    "id": 34,
+                    "sampleStart": 28320.0,
+                    "sampleDur": 640.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "j"
+                        }
+                    ]
+                },
+                {
+                    "id": 35,
+                    "sampleStart": 28960.0,
+                    "sampleDur": 640.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "a"
+                        }
+                    ]
+                },
+                {
+                    "id": 36,
+                    "sampleStart": 29600.0,
+                    "sampleDur": 960.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "j"
+                        }
+                    ]
+                },
+                {
+                    "id": 37,
+                    "sampleStart": 30560.0,
+                    "sampleDur": 800.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "a"
+                        }
+                    ]
+                },
+                {
+                    "id": 38,
+                    "sampleStart": 31360.0,
+                    "sampleDur": 800.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "k"
+                        }
+                    ]
+                },
+                {
+                    "id": 39,
+                    "sampleStart": 32159.999999999996,
+                    "sampleDur": 1280.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "o"
+                        }
+                    ]
+                },
+                {
+                    "id": 40,
+                    "sampleStart": 33440.0,
+                    "sampleDur": 1600.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "ts"
+                        }
+                    ]
+                },
+                {
+                    "id": 41,
+                    "sampleStart": 35040.0,
+                    "sampleDur": 1120.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "e"
+                        }
+                    ]
+                },
+                {
+                    "id": 42,
+                    "sampleStart": 36160.0,
+                    "sampleDur": 1120.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "l"
+                        }
+                    ]
+                },
+                {
+                    "id": 43,
+                    "sampleStart": 37280.0,
+                    "sampleDur": 960.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "ni"
+                        }
+                    ]
+                },
+                {
+                    "id": 44,
+                    "sampleStart": 38240.0,
+                    "sampleDur": 1120.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "i"
+                        }
+                    ]
+                },
+                {
+                    "id": 45,
+                    "sampleStart": 39360.0,
+                    "sampleDur": 1440.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "k"
+                        }
+                    ]
+                },
+                {
+                    "id": 46,
+                    "sampleStart": 40800.0,
+                    "sampleDur": 3680.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "sil"
+                        }
+                    ]
+                },
+                {
+                    "id": 47,
+                    "sampleStart": 44480.0,
+                    "sampleDur": 1600.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "j"
+                        }
+                    ]
+                },
+                {
+                    "id": 48,
+                    "sampleStart": 46080.0,
+                    "sampleDur": 800.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "a"
+                        }
+                    ]
+                },
+                {
+                    "id": 49,
+                    "sampleStart": 46880.0,
+                    "sampleDur": 960.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "k"
+                        }
+                    ]
+                },
+                {
+                    "id": 50,
+                    "sampleStart": 47840.0,
+                    "sampleDur": 800.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "o"
+                        }
+                    ]
+                },
+                {
+                    "id": 51,
+                    "sampleStart": 48640.0,
+                    "sampleDur": 1120.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "o"
+                        }
+                    ]
+                },
+                {
+                    "id": 52,
+                    "sampleStart": 49760.0,
+                    "sampleDur": 1600.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "s"
+                        }
+                    ]
+                },
+                {
+                    "id": 53,
+                    "sampleStart": 51360.0,
+                    "sampleDur": 800.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "o"
+                        }
+                    ]
+                },
+                {
+                    "id": 54,
+                    "sampleStart": 52160.0,
+                    "sampleDur": 960.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "b"
+                        }
+                    ]
+                },
+                {
+                    "id": 55,
+                    "sampleStart": 53120.0,
+                    "sampleDur": 960.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "a"
+                        }
+                    ]
+                },
+                {
+                    "id": 56,
+                    "sampleStart": 54080.0,
+                    "sampleDur": 960.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "k"
+                        }
+                    ]
+                },
+                {
+                    "id": 57,
+                    "sampleStart": 55040.0,
+                    "sampleDur": 960.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "t"
+                        }
+                    ]
+                },
+                {
+                    "id": 58,
+                    "sampleStart": 56000.0,
+                    "sampleDur": 480.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "u"
+                        }
+                    ]
+                },
+                {
+                    "id": 59,
+                    "sampleStart": 56480.0,
+                    "sampleDur": 640.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "r"
+                        }
+                    ]
+                },
+                {
+                    "id": 60,
+                    "sampleStart": 57120.0,
+                    "sampleDur": 640.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "a"
+                        }
+                    ]
+                },
+                {
+                    "id": 61,
+                    "sampleStart": 57760.0,
+                    "sampleDur": 1120.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "n"
+                        }
+                    ]
+                },
+                {
+                    "id": 62,
+                    "sampleStart": 58880.0,
+                    "sampleDur": 960.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "a"
+                        }
+                    ]
+                },
+                {
+                    "id": 63,
+                    "sampleStart": 59840.0,
+                    "sampleDur": 800.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "d"
+                        }
+                    ]
+                },
+                {
+                    "id": 64,
+                    "sampleStart": 60640.0,
+                    "sampleDur": 1120.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "z"
+                        }
+                    ]
+                },
+                {
+                    "id": 65,
+                    "sampleStart": 61760.0,
+                    "sampleDur": 480.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "o"
+                        }
+                    ]
+                },
+                {
+                    "id": 66,
+                    "sampleStart": 62240.0,
+                    "sampleDur": 800.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "r"
+                        }
+                    ]
+                },
+                {
+                    "id": 67,
+                    "sampleStart": 63040.0,
+                    "sampleDur": 960.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "u"
+                        }
+                    ]
+                },
+                {
+                    "id": 68,
+                    "sampleStart": 64000.0,
+                    "sampleDur": 1120.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "i"
+                        }
+                    ]
+                },
+                {
+                    "id": 69,
+                    "sampleStart": 65120.00000000001,
+                    "sampleDur": 1600.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "s"
+                        }
+                    ]
+                },
+                {
+                    "id": 70,
+                    "sampleStart": 66720.0,
+                    "sampleDur": 800.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "p"
+                        }
+                    ]
+                },
+                {
+                    "id": 71,
+                    "sampleStart": 67520.0,
+                    "sampleDur": 960.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "r"
+                        }
+                    ]
+                },
+                {
+                    "id": 72,
+                    "sampleStart": 68480.0,
+                    "sampleDur": 480.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "a"
+                        }
+                    ]
+                },
+                {
+                    "id": 73,
+                    "sampleStart": 68960.0,
+                    "sampleDur": 960.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "v"
+                        }
+                    ]
+                },
+                {
+                    "id": 74,
+                    "sampleStart": 69920.0,
+                    "sampleDur": 800.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "I"
+                        }
+                    ]
+                },
+                {
+                    "id": 75,
+                    "sampleStart": 70720.0,
+                    "sampleDur": 1600.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "ts"
+                        }
+                    ]
+                },
+                {
+                    "id": 76,
+                    "sampleStart": 72320.0,
+                    "sampleDur": 1120.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "e"
+                        }
+                    ]
+                },
+                {
+                    "id": 77,
+                    "sampleStart": 73440.0,
+                    "sampleDur": 960.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "l"
+                        }
+                    ]
+                },
+                {
+                    "id": 78,
+                    "sampleStart": 74400.0,
+                    "sampleDur": 1440.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "n"
+                        }
+                    ]
+                },
+                {
+                    "id": 79,
+                    "sampleStart": 75840.0,
+                    "sampleDur": 1440.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "e"
+                        }
+                    ]
+                },
+                {
+                    "id": 80,
+                    "sampleStart": 77280.0,
+                    "sampleDur": 960.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "i"
+                        }
+                    ]
+                },
+                {
+                    "id": 81,
+                    "sampleStart": 78240.0,
+                    "sampleDur": 1440.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "s"
+                        }
+                    ]
+                },
+                {
+                    "id": 82,
+                    "sampleStart": 79680.0,
+                    "sampleDur": 800.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "p"
+                        }
+                    ]
+                },
+                {
+                    "id": 83,
+                    "sampleStart": 80480.0,
+                    "sampleDur": 800.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "r"
+                        }
+                    ]
+                },
+                {
+                    "id": 84,
+                    "sampleStart": 81280.0,
+                    "sampleDur": 640.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "a"
+                        }
+                    ]
+                },
+                {
+                    "id": 85,
+                    "sampleStart": 81920.0,
+                    "sampleDur": 960.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "v"
+                        }
+                    ]
+                },
+                {
+                    "id": 86,
+                    "sampleStart": 82880.0,
+                    "sampleDur": 480.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "I"
+                        }
+                    ]
+                },
+                {
+                    "id": 87,
+                    "sampleStart": 83360.0,
+                    "sampleDur": 960.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "g"
+                        }
+                    ]
+                },
+                {
+                    "id": 88,
+                    "sampleStart": 84320.0,
+                    "sampleDur": 800.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "r"
+                        }
+                    ]
+                },
+                {
+                    "id": 89,
+                    "sampleStart": 85120.0,
+                    "sampleDur": 640.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "a"
+                        }
+                    ]
+                },
+                {
+                    "id": 90,
+                    "sampleStart": 85760.0,
+                    "sampleDur": 1600.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "ni"
+                        }
+                    ]
+                },
+                {
+                    "id": 91,
+                    "sampleStart": 87360.0,
+                    "sampleDur": 1120.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "i"
+                        }
+                    ]
+                },
+                {
+                    "id": 92,
+                    "sampleStart": 88480.0,
+                    "sampleDur": 1920.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "tS"
+                        }
+                    ]
+                },
+                {
+                    "id": 93,
+                    "sampleStart": 90400.0,
+                    "sampleDur": 640.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "n"
+                        }
+                    ]
+                },
+                {
+                    "id": 94,
+                    "sampleStart": 91040.0,
+                    "sampleDur": 2880.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "e"
+                        }
+                    ]
+                },
+                {
+                    "id": 95,
+                    "sampleStart": 93920.0,
+                    "sampleDur": 12800.0,
+                    "labels": [
+                        {
+                            "name": "Phoneme",
+                            "value": "sil"
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "links": []
+}

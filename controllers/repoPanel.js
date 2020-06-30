@@ -17,16 +17,34 @@ const IncomingForm = require('formidable').IncomingForm;
 const uniqueFilename = require('unique-filename');
 const shell = require('shelljs');
 const {spawn} = require('child_process');
-const AdmZip = require('adm-zip');
+//const AdmZip = require('adm-zip');
 
 const emu = require('./emu');
 
 const runTask = require('./runTask');
 
+const archiver = require('archiver');
+
 
 //##########################################
 //#### Eksportuje do emu ######
 //#######################################
+
+exports.zipDirectory = (source, out) => {
+  const archive = archiver('zip', { zlib: { level: 9 }});
+  const stream = fs.createWriteStream(out);
+
+  return new Promise((resolve, reject) => {
+    archive
+      .directory(source, false)
+      .on('error', err => reject(err))
+      .pipe(stream)
+    ;
+
+    stream.on('close', () => resolve());
+    archive.finalize();
+  });
+}
 
 
 exports.createKorpus = (projectId, userId) => {
@@ -34,7 +52,7 @@ exports.createKorpus = (projectId, userId) => {
   
 
     // creating archives
-    var zip = new AdmZip();
+   // var zip = new AdmZip();
   
     // tutaj robie export do EMU tylko tych plików które mają wszystkie narzędzia wykonane
   
@@ -42,7 +60,7 @@ exports.createKorpus = (projectId, userId) => {
     Container.find({owner: userId, project: projectId, ifVAD: true, ifDIA: true, ifREC: true, ifSEG: true },{VADUserSegments:0, DIAUserSegments:0,RECUserSegments:0,SEGUserSegments:0})
       .then(containers => {
 
-        const nazwaKorpusu = 'KORPUS_' + projectId;
+        const nazwaKorpusu = 'KORPUS';
         const pathToUserProject = appRoot + '/repo/' + userId + '/' + projectId;
         const pathToCorpus = pathToUserProject + '/' + nazwaKorpusu;
         const pathToZIP = pathToCorpus+'.zip';
@@ -118,17 +136,27 @@ exports.createKorpus = (projectId, userId) => {
   
             }
 
+
+            this.zipDirectory(pathToCorpus,pathToZIP)
+              .then(()=>{
+                fs.removeSync(pathToCorpus);
+                resolve(pathToZIP);
+              })
+              .catch((error)=>{
+                reject(error);
+              })
+
              // add local file
-            zip.addLocalFolder(pathToCorpus);
-            zip.writeZip(pathToZIP);
+            //zip.addLocalFolder(pathToCorpus);
 
-            //po zzipowaniu tutaj można usunąć strukture katalogową
-            // TODO
-
-            fs.removeSync(pathToCorpus);
-
-            resolve(pathToZIP);
-
+           // zip.writeZip(pathToZIP)
+            //  .then(result=>{
+            //    fs.removeSync(pathToCorpus);
+            //    resolve(pathToZIP);
+            //  })
+            //  .catch(error=>{
+            //    reject(error);
+            //  })
           })
           .catch(error=>{   
             console.error(error)
@@ -270,12 +298,12 @@ exports.getReadyKorpus = (req,res,next) => {
  const projectId = req.params.projectId;
  
 
-  const nazwaKorpusu = 'KORPUS_' + projectId;
+  const nazwaKorpusu = 'KORPUS';
   const pathToUserProject = appRoot + '/repo/' + userId + '/' + projectId;
   const pathToCorpus = pathToUserProject + '/' + nazwaKorpusu;
   const pathToZIP = pathToCorpus+'.zip';
   
-  res.sendFile(pathToZIP);
+  res.download(pathToZIP,(nazwaKorpusu+'.zip'));
 
 }
 
@@ -308,66 +336,83 @@ exports.getFileFromContainer = (req,res,next) => {
         const fileAudioName = container.fileName;
         const fileDatName = utils.getFileNameWithNoExt(container.fileName)+".dat";
 
+        let filename = '';
+
         //sprawdzam o jaki typ pliku mi chodzi
         let filePath = '';
 
         switch(fileType){
           case "audio": //audio w 16000Hz 16bit...
             filePath = repoPath + "/" + containerFolderName + "/" + fileAudioName;
+            filename = fileAudioName;
             break;
           case "dat": //audiowaveform dat
             filePath = repoPath + "/" + containerFolderName + "/" + fileDatName;
+            filename = fileDatName;
             break;
           case "oryginalAudio": //audio as it was uploaded
             const oryginalAudioName = container.oryginalFileName;
             filePath = repoPath + "/" + containerFolderName + "/" + oryginalAudioName;
+            filename = oryginalAudioName;
             break;
           case "DIActm": 
             const DIActmFile = utils.getFileNameWithNoExt(container.fileName)+"_DIA.ctm";
             filePath = repoPath + "/" + containerFolderName + "/" + DIActmFile;
+            filename = DIActmFile;
             break;
           case "DIAtextGrid": 
             const DIAtextGrid = utils.getFileNameWithNoExt(container.fileName)+"_DIA.textGrid";
             filePath = repoPath + "/" + containerFolderName + "/" + DIAtextGrid;
+            filename = DIAtextGrid;
             break;
           case "DIAJSON": 
             const DIAJSON = utils.getFileNameWithNoExt(container.fileName)+"_DIA.json";
             filePath = repoPath + "/" + containerFolderName + "/" + DIAJSON;
+            filename = DIAJSON;
             break;
           case "VADctm": 
             const VADctmFile = utils.getFileNameWithNoExt(container.fileName)+"_VAD.ctm";
             filePath = repoPath + "/" + containerFolderName + "/" + VADctmFile;
+            filename = VADctmFile;
             break;
           case "VADtextGrid": 
             const VADtextGrid = utils.getFileNameWithNoExt(container.fileName)+"_VAD.textGrid";
             filePath = repoPath + "/" + containerFolderName + "/" + VADtextGrid;
+            filename = VADtextGrid;
             break;
           case "SEGctm": 
             const SEGctmFile = utils.getFileNameWithNoExt(container.fileName)+"_SEG.ctm";
             filePath = repoPath + "/" + containerFolderName + "/" + SEGctmFile;
+            filename = SEGctmFile;
             break;
           case "SEGtextGrid": 
             const SEGtextGrid = utils.getFileNameWithNoExt(container.fileName)+"_SEG.textGrid";
             filePath = repoPath + "/" + containerFolderName + "/" + SEGtextGrid;
+            filename = SEGtextGrid;
             break;
           case "VADJSON": 
             const VADJSON = utils.getFileNameWithNoExt(container.fileName)+"_VAD.json";
             filePath = repoPath + "/" + containerFolderName + "/" + VADJSON;
+            filename = VADJSON;
             break;
           case "JSONTranscript": 
             const JSONTranscript = utils.getFileNameWithNoExt(container.fileName)+".json";
             filePath = repoPath + "/" + containerFolderName + "/" + JSONTranscript;
+            filename = JSONTranscript;
             break;
           case "TXTTranscript": 
             const TXTTranscript = utils.getFileNameWithNoExt(container.fileName)+"_TXT.txt";
             filePath = repoPath + "/" + containerFolderName + "/" + TXTTranscript;
+            filename = TXTTranscript;
             break;
           case "EMUJSON": 
             const EMUJSON = utils.getFileNameWithNoExt(container.fileName)+"_annot.json";
             filePath = repoPath + "/" + containerFolderName + "/" + EMUJSON;
+            filename = EMUJSON;
             break;
           default:
             filePath = '';
+            filename = 'default';
             console.log("wrong file type!!")
 
         }
@@ -383,10 +428,49 @@ exports.getFileFromContainer = (req,res,next) => {
        // res.status(200).json({toolType: toolType});
        // res.append("toolType", toolType);
        // fs.createReadStream(filePath).pipe(res);
-        res.sendFile(filePath);
+        res.download(filePath,filename);
+
     })
 }
 
+//##########################################
+//#### usuwanie sesji
+//#######################################
+
+exports.removeSession = (req,res,next) => {
+
+  const userId = req.params.userId;
+  const projectId = req.params.projectId;
+  const sessionId = req.params.sessionId;
+
+  let containersInThisSession = [];
+
+  Session.findByIdAndRemove({_id:sessionId})
+    .then(foundSession => {
+
+        containersInThisSession = foundSession.containersIds;
+
+        const sessionPath = appRoot + "/repo/" + userId + "/" + projectId + "/" + sessionId;
+
+        //usuwam folder sesji z dysku fizycznie
+        fs.rmdir(sessionPath,{recursive: true}, function (err) {
+          if (err) throw err;
+
+          //usuwam wpis w kolekcji Containers
+          Container.deleteMany({_id: containersInThisSession})
+          .then(removedContainers => {
+            
+                res.status(200).json({ message: 'The session has been removed!', sessionId: sessionId});
+         
+          })
+          .catch(error => {
+            res.status(500).json({ message: 'Something went wrong with removing the session!', sessionId: sessionId});
+            console.log(error);
+            throw error;
+          })
+        });
+    })
+}
 
 
 //##########################################
@@ -400,14 +484,16 @@ exports.removeContainer = (req,res,next) => {
   const sessionId = req.params.sessionId;
   const containerId = req.params.containerId;
 
-  // tutaj usuwanie z repo, bazy danych, audio i txt
-
-  const conainerFolder = utils.getFileNameWithNoExt(container.fileName);
-
-  const containerPath = appRoot + "/repo/" + userId + "/" + projectId + "/" + sessionId + "/" + conainerFolder;
-
-  Container.findById(containerId)
+  //console.log("USUWAM CONTAONER: " + containerId)
+  Container.findById({_id:containerId})
     .then(foundContainer => {
+
+      //console.log("USUWAM CONTAONER: " + foundContainer)
+        // tutaj usuwanie z repo, bazy danych, audio i txt
+
+        const conainerFolder = utils.getFileNameWithNoExt(foundContainer.fileName);
+
+        const containerPath = appRoot + "/repo/" + userId + "/" + projectId + "/" + sessionId + "/" + conainerFolder;
 
         //usuwam folder kontenera z dysku fizycznie
         fs.rmdir(containerPath,{recursive: true}, function (err) {
