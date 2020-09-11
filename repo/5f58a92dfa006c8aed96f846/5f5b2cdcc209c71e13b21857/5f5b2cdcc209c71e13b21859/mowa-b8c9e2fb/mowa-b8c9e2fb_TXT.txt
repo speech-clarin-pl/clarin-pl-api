@@ -1,0 +1,1 @@
+celem niniejszego ćwiczenia jest konwersja formatu plików dźwiękowe z uwzględnieniem konwersji częstotliwości drukowania oraz rozdzielczości bitowej zapisu 

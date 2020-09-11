@@ -27,7 +27,6 @@ const dotenv = require('dotenv'); //for handling env files
 if (process.env.NODE_ENV !== 'production') {
     dotenv.config();
 }
-  
 
 
 global.__basedir = __dirname;
@@ -151,8 +150,6 @@ app.use('/vad', VADRoutes);
 app.use('/dia', DIARoutes);
 app.use('/seg', SEGRoutes);
 app.use('/auth', authRoutes);
-
-
 
 
 //error handling...

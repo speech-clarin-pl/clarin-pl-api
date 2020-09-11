@@ -110,9 +110,9 @@ exports.forgotPass = (req,res,next) => {
     //znajduje login ktory zawiera dany email
      User.findOne({email: emailAddress})
      .then(user => {
-         //jezeli nie ma takiego uzera 
+         //jezeli nie ma takiego usera 
          if(!user){
-            res.status(204).json({message: "This email has not been registered before!"});
+            res.status(401).json({message: "This email has not been registered before!"});
          } else {
 
             const oldPassHash = user.password;

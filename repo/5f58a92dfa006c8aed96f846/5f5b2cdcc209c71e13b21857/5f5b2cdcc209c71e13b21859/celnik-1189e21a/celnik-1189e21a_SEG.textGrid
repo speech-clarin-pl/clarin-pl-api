@@ -1,0 +1,90 @@
+File type = "ooTextFile"
+Object class = "TextGrid"
+
+xmin = 0.0
+xmax = 6.67
+tiers? <exists>
+size = 1
+item []:
+	item [1]:
+		class = "IntervalTier"
+		name = "celnik-1189e21a_SEG"
+		xmin = 0.0
+		xmax = 6.67
+		intervals: size = 19
+			intervals [1]:
+				xmin = 0.0
+				xmax = 0.87
+				text = "sil"
+			intervals [2]:
+				xmin = 0.87
+				xmax = 1.14
+				text = "jak"
+			intervals [3]:
+				xmin = 1.14
+				xmax = 1.32
+				text = "pan"
+			intervals [4]:
+				xmin = 1.32
+				xmax = 1.48
+				text = "ją"
+			intervals [5]:
+				xmin = 1.48
+				xmax = 1.85
+				text = "ocenia"
+			intervals [6]:
+				xmin = 1.85
+				xmax = 2.09
+				text = "jako"
+			intervals [7]:
+				xmin = 2.09
+				xmax = 2.55
+				text = "celnik"
+			intervals [8]:
+				xmin = 2.55
+				xmax = 2.78
+				text = "sil"
+			intervals [9]:
+				xmin = 2.78
+				xmax = 3.04
+				text = "jako"
+			intervals [10]:
+				xmin = 3.04
+				xmax = 3.38
+				text = "osoba"
+			intervals [11]:
+				xmin = 3.38
+				xmax = 3.61
+				text = "która"
+			intervals [12]:
+				xmin = 3.61
+				xmax = 4.0
+				text = "nadzoru"
+			intervals [13]:
+				xmin = 4.0
+				xmax = 4.07
+				text = "i"
+			intervals [14]:
+				xmin = 4.07
+				xmax = 4.42
+				text = "sprawy"
+			intervals [15]:
+				xmin = 4.42
+				xmax = 4.83
+				text = "celne"
+			intervals [16]:
+				xmin = 4.83
+				xmax = 4.89
+				text = "i"
+			intervals [17]:
+				xmin = 4.89
+				xmax = 5.21
+				text = "sprawy"
+			intervals [18]:
+				xmin = 5.21
+				xmax = 5.87
+				text = "graniczne"
+			intervals [19]:
+				xmin = 5.87
+				xmax = 6.67
+				text = "sil"
