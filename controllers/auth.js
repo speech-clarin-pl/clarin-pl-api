@@ -167,13 +167,13 @@ exports.registration = (req, res, next) => {
         error.data = errors.array();
         throw error;
     }
+
     const email = req.body.email+'';
     const name = req.body.name+'';
     const password = req.body.password+'';
 
     bcrypt.hash(password,12)
     .then(hashedPass => {
-
         const user = new User({
             email: email,
             password: hashedPass,
@@ -183,8 +183,6 @@ exports.registration = (req, res, next) => {
         return user.save();
     })
     .then(user => {
-
-        //console.log(user)
 
         //tutaj tworzenie folderu z id uzytkownika w repo
         const dirpath = appRoot + '/repo/'+user._id;
@@ -196,11 +194,9 @@ exports.registration = (req, res, next) => {
             } else {
                 // else print a success message.
                 console.log("Successfully created user directory");
-                res.status(201).json({message: 'User created', userId: user._id})
+                res.status(201).json({message: 'The user has been created', userId: user._id})
             }
           });
-
-         
     })
     .catch(error => {
         console.log(error)

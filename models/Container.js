@@ -86,6 +86,10 @@ const ContainerSchema = new Schema({
         required: false,
         default: [],
     },
+    errorMessage: {
+        type: String,
+        required: false,
+    }
 }, {timestamps: true});
 
 module.exports = mongoose.model('Container', ContainerSchema);

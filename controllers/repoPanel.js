@@ -17,6 +17,8 @@ const IncomingForm = require('formidable').IncomingForm;
 const uniqueFilename = require('unique-filename');
 const shell = require('shelljs');
 const {spawn} = require('child_process');
+const chalk = require('chalk');
+
 //const AdmZip = require('adm-zip');
 
 const emu = require('./emu');
@@ -197,18 +199,23 @@ exports.runSpeechVAD = (req, res, next) => {
   const toolType = req.body.toolType;
 
   // tutaj odpalam odpowiednia usługę
+  //asdlfkajds
 
   Container.findById(containerId).then(container => {  
     runTask.runVAD(container)
       .then(VADsegments => {
         res.status(200).json({ message: 'The service for this container has finished working with success!!', containerId: containerId, toolType: toolType, VADSegments: VADsegments});
       }).catch(error => {
-        res.status(503).json({ message: 'Something wrong with the VAD on the server!!', containerId: containerId, toolType: toolType});
-        console.log('ERROR Z TASKIEM')
-        console.log(error)
+
+        //jeżeli coś poszło nie tak to aktualizuje to w bazie
+        
+        // wystapil blad wiec wpisuje ta wiadomosc
+        res.status(503).json({ message: 'Something wrong with the VAD on the server!', containerId: containerId, toolType: toolType});
+        console.log(chalk.red('ERROR Z TASKIEM'))
+        console.log(chalk.red(error))
       })
   }).catch(err => {
-    console.log("Error: container not found")
+    console.log(chalk.red("Error: container not found"))
   })
 }
 
@@ -226,11 +233,11 @@ exports.runSpeechDiarization = (req, res, next) => {
         res.status(200).json({ message: 'The service for this container has finished working with success!!', containerId: containerId, toolType: toolType,  DIAsegments: DIAsegments});
       }).catch(error => {
         res.status(503).json({ message: 'Something wrong with the Diarization on the server!!', containerId: containerId, toolType: toolType});
-        console.log('ERROR Z TASKIEM')
+        console.log(chalk.red('ERROR Z TASKIEM'))
         console.log(error)
       })
   }).catch(err => {
-    console.log("Error: container not found")
+    console.log(chalk.red("Error: container not found"))
   })
 
 

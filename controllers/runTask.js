@@ -10,6 +10,7 @@ const User = require('../models/user');
 const Container = require('../models/Container');
 const path = require('path');
 const emu = require('./emu');
+const chalk = require('chalk');
 
 
 
@@ -66,7 +67,12 @@ exports.runVAD = (container) => {
                                     const finalPathToResult = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerFolderName + '/' + containerFolderName + '_VAD.ctm';
                     
                                     //przenosze plik z wynikami do katalogu kontenera
-                                    fs.moveSync(pathToResult, finalPathToResult);
+                                    try{
+                                        fs.moveSync(pathToResult, finalPathToResult,{overwrite: true});
+                                    } catch {
+                                        console.log(chalk.red("cos nie tak z przenoszeniem plikow"))
+                                    }
+                                    
 
                                     //tutaj konwertuje plik ctm na format jsona aby dal sie czytac przez audio edytor
                                     //z czegos takiego
@@ -133,32 +139,43 @@ exports.runVAD = (container) => {
                                     //convertuje na textGrid
                                     emu.ctmVAD2tg(container)
                                     .then(()=>{
-                                        //aktualizuje flage w kontenrze
-                                        Container.findOneAndUpdate({_id: container._id},{ifVAD: true, VADUserSegments: segments, statusVAD: 'done'})
+                                        //jeżeli wszystko przebiegło pomyślnie
+                                        Container.findOneAndUpdate({_id: container._id},{ifVAD: true, VADUserSegments: segments, statusVAD: 'done',errorMessage:''})
                                         .then(updatedContainer => {
-
-                                        
-                                                    console.log("Zrobiłem update containera")
-                                                    console.log("Zabieram się za czyszczenie katalogu repo z pozostalosci")
-
                                                     //teraz usuwam z dysku plik  log
                                                     fs.removeSync(pathToResult+'_log.txt');
-
                                                     //i usuwam tymczasowy plik txt
                                                     fs.removeSync(pathToResult);
 
-                                                    console.log("ZROBIONE :)")
                                                     resolve(segments)
-                                                
                                         })
                                         .catch(error => {
-                                            console.error(error)
+                                            console.error(chalk.red(error))
                                             clearInterval(checkerdb);
                                             reject(error)
                                         })
                                      })
                                     .catch(()=>{
-                                        console.error("Coś poszło nie tak z konwersją VAD 2 TextGrid");
+
+                                        //jeżeli był jakiś problem to
+                                        Container.findOneAndUpdate({_id: container._id},{ifVAD: false, VADUserSegments: segments, statusVAD: 'error',errorMessage:'something went wrong with the conversion of ctm into textGrid'})
+                                        .then(updatedContainer => {
+                                                    //teraz usuwam z dysku plik  log
+                                                    fs.removeSync(pathToResult+'_log.txt');
+                                                    //i usuwam tymczasowy plik txt
+                                                    fs.removeSync(pathToResult);
+
+                                                    clearInterval(checkerdb);
+                                                    reject()
+                                        })
+                                        .catch(error => {
+                                            console.error(chalk.red(error))
+                                            clearInterval(checkerdb);
+                                            reject(error)
+                                        })
+                                        
+                                        console.error(chalk.red("Coś poszło nie tak z konwersją VAD 2 TextGrid"));
+                                        reject("Something wrong with ctm VAD 2 TexGrid")
                                     }) 
                                     
                                 } else {
@@ -170,7 +187,7 @@ exports.runVAD = (container) => {
                             }
                         })
                         .catch(error=>{
-                            console.log("ERROR: nie mogłem znaleźć tasku: " + error)
+                            console.log(chalk.red("ERROR: nie mogłem znaleźć tasku: " + error))
                             clearInterval(checkerdb);
                             reject(error)
                         })
@@ -227,7 +244,7 @@ exports.runDIA = (container) => {
                 checkerdb = setInterval(function () {
                     Task.findById(savedTask._id)
                         .then(task=>{
-                            console.log("Znalazłem task DIA i czekam aż się ukończy....")
+                            console.log(chalk.cyan("Znalazłem task DIA i czekam aż się ukończy...."))
                             //jeżeli zmienił się jego status na ukończony
                             if (task.done) {
                                 console.log("TASK DONE")
@@ -243,7 +260,7 @@ exports.runDIA = (container) => {
                                     const finalPathToResult = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerFolderName + '/' + containerFolderName + '_DIA.ctm';
                     
                                     //przenosze plik z wynikami do katalogu kontenera
-                                    fs.moveSync(pathToResult, finalPathToResult);
+                                    fs.moveSync(pathToResult, finalPathToResult,{overwrite: true});
 
                                      //tutaj konwertuje plik ctm na format jsona aby dal sie czytac przez audio edytor
                                     //z czegos takiego
@@ -314,7 +331,7 @@ exports.runDIA = (container) => {
                                     emu.ctmDIA2tg(container)
                                     .then(()=>{
                                             //aktualizuje flage w kontenrze
-                                            Container.findOneAndUpdate({_id: container._id},{ifDIA: true, DIAUserSegments: segments, statusDIA: 'done'})
+                                            Container.findOneAndUpdate({_id: container._id},{ifDIA: true, DIAUserSegments: segments, statusDIA: 'done',errorMessage:''})
                                             .then(updatedContainer => {
                                                 console.log("Zrobiłem update containera")
                                                 console.log("Zabieram się za czyszczenie katalogu repo z pozostalosci")
@@ -326,6 +343,7 @@ exports.runDIA = (container) => {
                                                 fs.removeSync(pathToResult);
 
                                                 console.log("ZROBIONE :)")
+                                              
                                                 resolve(segments)
                                                 
                                             })
@@ -336,7 +354,32 @@ exports.runDIA = (container) => {
                                             })
                                     })
                                     .catch(()=>{
-                                        console.error("coś poszło nie tak z konwersją DIA 2 TextGrid")
+
+                                        //aktualizuje flage w kontenrze
+                                        Container.findOneAndUpdate({_id: container._id},{ifDIA: true, DIAUserSegments: segments, statusDIA: 'error',errorMessage:'something went wrong with the conversion of ctm to textGrid'})
+                                        .then(updatedContainer => {
+                                           
+                                            //teraz usuwam z dysku plik  log
+                                            fs.removeSync(pathToResult+'_log.txt');
+
+                                            //i usuwam tymczasowy plik txt
+                                            fs.removeSync(pathToResult);
+                                          
+                                            clearInterval(checkerdb);
+                                            reject(error)
+                                        })
+                                        .catch(error => {
+                                            console.log(chalk.red("coś poszło nie tak z updatem kontenera gdy byl error ctm2tg"));
+                                            clearInterval(checkerdb);
+                                            reject(error)
+                                        })
+
+                                        
+                                        console.log(chalk.red("coś poszło nie tak z konwersją DIA 2 TextGrid"));
+                                        clearInterval(checkerdb);
+                                        reject("coś poszło nie tak z konwersją DIA 2 TextGrid")
+
+                                        
                                     })
                                 } else {
                                     clearInterval(checkerdb);
@@ -354,11 +397,11 @@ exports.runDIA = (container) => {
                 },1000);
                 
                 
-                //jak nie ma odpowiedzi w ciagu 30min to zatrzymuje
+                //jak nie ma odpowiedzi w ciagu 20min to zatrzymuje
                 setTimeout(() => {
                     clearInterval(checkerdb);
-                }, 1800000);
-                //docelowo na 30min czyli 1800000
+                }, 1200000);
+              
 
             }).catch(error => {
                 reject(error)
@@ -457,14 +500,14 @@ exports.runSEG = (container) => {
                                     const finalPathToResult = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerFolderName + '/' + containerFolderName + '_SEG.ctm';
                     
                                     //przenosze plik z wynikami do katalogu kontenera
-                                    fs.moveSync(pathToResult, finalPathToResult);
+                                    fs.moveSync(pathToResult, finalPathToResult,{overwrite: true});
 
 
                                     //convertuje na textGrid
                                     emu.ctmSEG2tg(container)
                                     .then(()=>{
                                             //aktualizuje flage w kontenrze
-                                            Container.findOneAndUpdate({_id: container._id},{ifSEG: true, statusSEG: 'done'})
+                                            Container.findOneAndUpdate({_id: container._id},{ifSEG: true, statusSEG: 'done',errorMessage:''})
                                             .then(updatedContainer => {
                                                 console.log("Zrobiłem update containera")
                                                 console.log("Zabieram się za czyszczenie katalogu repo z pozostalosci")
@@ -486,7 +529,27 @@ exports.runSEG = (container) => {
                                             })
                                     })
                                     .catch(()=>{
-                                        console.error("coś poszło nie tak z konwersją SEG to TextGrid")
+
+                                        //aktualizuje flage w kontenrze
+                                        Container.findOneAndUpdate({_id: container._id},{ifSEG: true, statusSEG: 'error',errorMessage:'something went wrong with the conversion of ctm to textGrid'})
+                                        .then(updatedContainer => {
+                                            //teraz usuwam z dysku plik  log
+                                            fs.removeSync(pathToResult+'_log.txt');
+                                            //i usuwam tymczasowy plik txt
+                                            fs.removeSync(TXTFilePath);
+                                            clearInterval(checkerdb);
+                                            reject(updatedContainer)
+                                            
+                                        })
+                                        .catch(error => {
+                                            console.error(error)
+                                            clearInterval(checkerdb);
+                                            reject(error)
+                                        })
+
+                                        console.error("coś poszło nie tak z konwersją SEG to TextGrid");
+                                        clearInterval(checkerdb);
+                                        reject(error)
                                     })
                                     
                                        
@@ -578,7 +641,7 @@ exports.runREC = (container) => {
                                     fs.writeJson(JSONTransPath, JSONtranscription).then(() => {
                                         console.log("ZAPISAŁEM TRANSKRYPCJE W JSONIE")
                                         //aktualizuje flage w kontenrze
-                                        Container.findOneAndUpdate({_id: container._id},{ifREC: true, statusREC: 'done'})
+                                        Container.findOneAndUpdate({_id: container._id},{ifREC: true, statusREC: 'done',errorMessage:''})
                                             .then(updatedContainer => {
                                                 console.log("Zrobiłem update containera")
 

@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import argparse
 from pathlib import Path
 
@@ -8,7 +9,7 @@ def convert_ctm_to_textgrid(ctms, textgrid):
     for ctm in ctms:
         tiername = ctm.stem
         ret = []
-        with open(ctm,encoding='utf-8') as f:
+        with open(str(ctm), encoding='utf-8') as f:
             for l in f:
                 tok = l.strip().split()
                 word = tok[4]
@@ -23,7 +24,7 @@ def convert_ctm_to_textgrid(ctms, textgrid):
                 print("Error in seg: " + seg[0])
         tg = TextGrid()
         tg.append(t)
-        tg.write(textgrid)
+        tg.write(str(textgrid))
 
 
 if __name__ == '__main__':

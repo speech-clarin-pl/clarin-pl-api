@@ -154,7 +154,8 @@ app.use('/auth', authRoutes);
 
 //error handling...
 app.use((error, req, res, next) => {
-    console.log(error);
+    console.log("GLOBAL ERROR HANDLER:")
+    //console.log(error);
     const status = error.statusCode || 500;
     const message = error.message;  //wiadomosc przekazana w konstruktorze Error
     const data = error.data;
