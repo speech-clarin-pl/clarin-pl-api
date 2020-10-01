@@ -189,6 +189,28 @@ exports.exportToEmu = (req, res, next) => {
     }) 
 }
 
+//##########################################
+//#### zmieniam nazwe contenera ######
+//#######################################
+
+exports.changeContainerName = (req, res, next) => {
+  const projectId = req.params.projectId;
+  const containerId = req.params.containerId;
+  const newName = req.body.newName;
+
+  //console.log("ZMIENIAM NAZWE NA " + newName);
+
+  Container.findByIdAndUpdate(containerId,{containerName: newName}).then(container => {
+    res.status(200).json({containerId: container._id})
+  }).catch(error =>{
+    console.log(chalk.red("Something went wrong with the update of the container name"))
+    res.status(500).json({message: 'Something went wrong with the update of the container name'})
+  })
+
+  
+
+}
+
 
 //##########################################
 //#### wykonuje VAD ######

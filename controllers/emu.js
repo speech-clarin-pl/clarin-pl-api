@@ -22,9 +22,11 @@ exports.ctmVAD2tg = (container) => {
 
         const ctmVAD_2_tg = spawn('python3', [appRoot + '/emu/convert_ctm_tg.py', vadCtmFileName, vadTextGridFileName]);
     
-       // ctmVAD_2_tg.stdout.on('data', (data) => {
-       //     console.log('Pipe data from python script ...' + data.toString());
-       // });
+
+        
+        ctmVAD_2_tg.stdout.on('data', (data) => {
+            console.log('Pipe data from python script ...' + data.toString());
+        });
     
         ctmVAD_2_tg.on('close', (code) => {
             console.log("konversja ctm VAD 2 tg zakonczona")

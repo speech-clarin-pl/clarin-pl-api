@@ -19,6 +19,9 @@ router.post('/uploadFile', isAuth, repoController.uploadFile);
 //PUT /repoFiles/createNewSession  - tworze nową sesję
 router.put('/createNewSession', isAuth, repoController.createNewSession);
 
+//PUT /repoFiles/changeContainerName/:projectId/:containerId
+router.put('/changeContainerName/:projectId/:containerId', isAuth, repoController.changeContainerName);
+
 // GET /repoFiles/projectId/userId - do pobierania listy plikow
 router.get('/:projectId/:userId', isAuth, repoController.getRepoAssets);
 
