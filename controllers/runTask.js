@@ -23,17 +23,14 @@ exports.runVAD = (container) => {
     
         const audioFileName = container.fileName;       //np. lektor-fe2e3423.wav - na serwerze
         const containerFolderName = utils.getFileNameWithNoExt(audioFileName);  //np.lektor-fe2e3423 - na serwerze folder
-    
-        //let outputFileName = containerFolderName + ".json";
-        //let outputFilePath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerFolderName + '/' + outputFileName;
-
-        let inputAudioFilePath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerFolderName + '/' + audioFileName;
-    
-        //do dockera podaje ścieżke relatywną
-        inputAudioFilePath = path.relative(appRoot + '/repo/', inputAudioFilePath);
 
         let checkerdb = null; //checker do odpytywania db
+    
+        //sciezka do pliku relatywna dla dockera
+        let inputAudioFilePath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerFolderName + '/' + audioFileName;
+        inputAudioFilePath = path.relative(appRoot + '/repo/', inputAudioFilePath);
 
+        //tworze task
         const dockerTask = new Task({
             task: "vad",
             in_progress: false,
@@ -47,11 +44,17 @@ exports.runVAD = (container) => {
             .then(savedTask => {
 
                 //uruchamiam odpytywanie bazy co sekunde 
-                console.log("waiting VAD task to finish....")
+                console.log(chalk.green("waiting VAD task to finish...."))
+
+                let block = true;
+
                 checkerdb = setInterval(function () {
                     Task.findById(savedTask._id)
                         .then(task=>{
-                            console.log("Znalazłem VAD task i czekam aż się ukończy....")
+
+                            if(block) console.log(chalk.green("Znalazłem VAD task i czekam aż się ukończy...."))
+                           
+                            block = false;
                             //jeżeli zmienił się jego status na ukończony
                             if (task.done) {
                                 console.log("TASK DONE")
@@ -180,10 +183,12 @@ exports.runVAD = (container) => {
                                     
                                 } else {
                                     clearInterval(checkerdb);
+                                 
                                     reject(task.error)
                                 }
 
                                 clearInterval(checkerdb);
+                               
                             }
                         })
                         .catch(error=>{
@@ -240,11 +245,17 @@ exports.runDIA = (container) => {
             .then(savedTask => {
 
                 //uruchamiam odpytywanie bazy co sekunde 
-                console.log("waiting DIA task to finish....")
+                console.log(chalk.green("waiting DIA task to finish...."))
+
+                let block = true;
+
                 checkerdb = setInterval(function () {
                     Task.findById(savedTask._id)
                         .then(task=>{
-                            console.log(chalk.cyan("Znalazłem task DIA i czekam aż się ukończy...."))
+                            
+                            if(block) console.log(chalk.green("Znalazłem task DIA i czekam aż się ukończy...."))
+                            block = false;
+                            
                             //jeżeli zmienił się jego status na ukończony
                             if (task.done) {
                                 console.log("TASK DONE")
@@ -342,7 +353,7 @@ exports.runDIA = (container) => {
                                                 //i usuwam tymczasowy plik txt
                                                 fs.removeSync(pathToResult);
 
-                                                console.log("ZROBIONE :)")
+                                                console.log(chalk.green("ZROBIONE :)"))
                                               
                                                 resolve(segments)
                                                 
@@ -390,7 +401,7 @@ exports.runDIA = (container) => {
                             }
                         })
                         .catch(error=>{
-                            console.log("ERROR: nie mogłem znaleźć tasku: " + error)
+                            console.log(chalk.red("ERROR: nie mogłem znaleźć tasku: " + error))
                             clearInterval(checkerdb);
                             reject(error)
                         })
@@ -480,11 +491,18 @@ exports.runSEG = (container) => {
             .then(savedTask => {
 
                 //uruchamiam odpytywanie bazy co sekunde 
-                console.log("waiting for SEGMENTATION to finish....")
+                console.log(chalk.green("waiting for SEGMENTATION to finish...."))
+                
+                let block = true;
+                
                 checkerdb = setInterval(function () {
                     Task.findById(savedTask._id)
                         .then(task=>{
-                            console.log("Znalazłem task i czekam aż się ukończy....")
+
+                            if(block) console.log(chalk.green("Znalazłem SEG task i czekam aż się ukończy...."))
+                            block = false;
+                            
+                            
                             //jeżeli zmienił się jego status na ukończony
                             if (task.done) {
                                 console.log("TASK DONE")
@@ -518,7 +536,7 @@ exports.runSEG = (container) => {
                                                 //i usuwam tymczasowy plik txt
                                                 fs.removeSync(TXTFilePath);
 
-                                                console.log("ZROBIONE :)")
+                                                console.log(chalk.green("ZROBIONE :)"))
                                                 resolve(updatedContainer)
                                                 
                                             })
@@ -547,7 +565,7 @@ exports.runSEG = (container) => {
                                             reject(error)
                                         })
 
-                                        console.error("coś poszło nie tak z konwersją SEG to TextGrid");
+                                        console.error(chalk.red("coś poszło nie tak z konwersją SEG to TextGrid"));
                                         clearInterval(checkerdb);
                                         reject(error)
                                     })
@@ -562,7 +580,7 @@ exports.runSEG = (container) => {
                             }
                         })
                         .catch(error=>{
-                            console.log("ERROR: nie mogłem znaleźć tasku: " + error)
+                            console.log(chalk.red("ERROR: nie mogłem znaleźć tasku: " + error))
                             clearInterval(checkerdb);
                             reject(error)
                         })
@@ -586,6 +604,8 @@ exports.runSEG = (container) => {
 
 exports.runREC = (container) => {
     return new Promise((resolve, reject) => {
+
+        console.log(chalk.cyan("Uruchamiam runREC"))
         
         
         const userId = container.owner;
@@ -618,11 +638,16 @@ exports.runREC = (container) => {
             .then(savedTask => {
 
                 //uruchamiam odpytywanie bazy co sekunde 
-                console.log("waiting RECO task to finish....")
+                console.log(chalk.green("waiting RECO task to finish...."))
+                
+                let block = true;
+                
                 checkerdb = setInterval(function () {
                     Task.findById(savedTask._id)
                         .then(task=>{
-                            console.log("Znalazłem task i czekam aż się ukończy....")
+                            if(block) console.log(chalk.green("Znalazłem task i czekam aż się ukończy...."))
+                            block = false;
+                            
                             //jeżeli zmienił się jego status na ukończony
                             if (task.done) {
                                 console.log("TASK DONE")
@@ -654,7 +679,7 @@ exports.runREC = (container) => {
                                                 fs.renameSync(pathToResult, TXTTransPath);
 
                                                 fs.removeSync(pathToResult+'_log.txt');
-                                                console.log("ZROBIONE :)")
+                                                console.log(chalk.green("ZROBIONE :)"))
                                                 resolve(updatedContainer)
                                                 
                                             })
@@ -679,7 +704,7 @@ exports.runREC = (container) => {
                             }
                         })
                         .catch(error=>{
-                            console.log("ERROR: nie mogłem znaleźć tasku: " + error)
+                            console.log(chalk.red("ERROR: nie mogłem znaleźć tasku: " + error))
                             clearInterval(checkerdb);
                             reject(error)
                         })

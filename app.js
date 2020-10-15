@@ -167,7 +167,8 @@ mongoose
     .connect(config.dbPath)
     .then(result => {
 
-        app.listen(config.port);
+        let listen = app.listen(config.port);
+        listen.setTimeout(360000000); //100min
         console.log('CONNECTED AND LISTENING TO THE PORT: ' + config.port);
     })
     .catch(error => {

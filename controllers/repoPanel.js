@@ -299,9 +299,12 @@ exports.runSpeechRecognition = (req, res, next) => {
   const containerId = req.body.containerId;
   const toolType = req.body.toolType;
 
+  console.log(chalk.cyan("uruchamiam runSpeechRecognition"))
+
   // tutaj odpalam odpowiednia usługę
 
   Container.findById(containerId).then(container => {  
+    console.log(chalk.cyan("znalazłem container"))
     runTask.runREC(container)
       .then(updatedContainer => {
         res.status(200).json({ message: 'The service for this container has finished working with success!!', containerId: updatedContainer._id, toolType: toolType});
