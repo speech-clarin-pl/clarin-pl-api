@@ -277,10 +277,12 @@ exports.runSpeechSegmentation = (req, res, next) => {
     runTask.runSEG(container)
       .then(updatedContainer => {
         res.status(200).json({ message: 'The service for this container has finished working with success!!', containerId: updatedContainer._id, toolType: toolType});
-      }).catch(error => {
-        res.status(503).json({ message: 'Something wrong with the Segmentation on the server!!', containerId: containerId, toolType: toolType});
+      }).catch(errorMessage => {
+        console.log("EEEEEEEEE")
+        console.log(errorMessage)
+        res.status(503).json({ message: errorMessage, containerId: containerId, toolType: toolType});
         console.log('ERROR Z TASKIEM')
-        console.log(error)
+        console.log(errorMessage)
       })
   }).catch(err => {
     console.log("Error: container not found")

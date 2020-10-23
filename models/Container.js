@@ -89,6 +89,7 @@ const ContainerSchema = new Schema({
     errorMessage: {
         type: String,
         required: false,
+        default: '',
     }
 }, {timestamps: true});
 

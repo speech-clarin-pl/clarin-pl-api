@@ -427,7 +427,19 @@ exports.runSEG = (container) => {
 
         //container musi mieć najpierw wgraną transkrypcje
         if(container.ifREC == false){
-            reject("Transcription was not run on this container!!");
+
+            //aktualizuje flage w kontenrze
+            Container.findOneAndUpdate({_id: container._id},{ifSEG: true, statusSEG: 'error',errorMessage:'You have to have the transcription first before aligment. '})
+            .then(updatedContainer => {
+                console.log("You have to have the transcription first before aligment.");
+            })
+            .catch(error => {
+                console.error(error);
+                
+            })
+
+            reject("You have to have the transcription first before aligment.");
+           
         }
         
         const userId = container.owner;
