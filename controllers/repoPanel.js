@@ -89,6 +89,8 @@ exports.createKorpus = (projectId, userId) => {
   
             fs.writeJsonSync(pathToDBconfig, dbconfig,{spaces: '\t'});
             //fs.copySync(oryginalDBconfigPath, pathToDBconfig);
+
+            let promises = [];
            
             //teraz tworze w tym folderze katalogi z sesjami i kopiuje tam foldery z contenerami
             for (let container of correctContainers){
@@ -98,7 +100,8 @@ exports.createKorpus = (projectId, userId) => {
               const sessionId = container.session;
               const pathToContainer = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerFolderName;
               
-              Session.findById(sessionId)
+              let promis = new Promise((resolve, reject) => {
+                Session.findById(sessionId)
                 .then(session=>{
   
                   const sessionName = session.name;
@@ -127,26 +130,43 @@ exports.createKorpus = (projectId, userId) => {
                   let srcpathToEMUjson = pathToContainer + '/' + containerFolderName + '_annot.json';
                   let destpathToEMUjson = containerPath + '/' + containerFolderName + '_annot.json';
   
-                  fs.copySync(srcpathToWAV, destpathToWAV);
-  
-                  fs.copySync(srcpathToEMUjson, destpathToEMUjson);
-  
+                  try{
+                    fs.copySync(srcpathToWAV, destpathToWAV);
+                    fs.copySync(srcpathToEMUjson, destpathToEMUjson);
+                    resolve();
+                  } catch(error) {
+                    reject();
+                  }
+
   
                 }).catch(error=>{
                   console.error(error)
                 })
+              });
+
+
+              promises.push(promis);
+              
   
             }
 
 
-            this.zipDirectory(pathToCorpus,pathToZIP)
-              .then(()=>{
-                fs.removeSync(pathToCorpus);
-                resolve(pathToZIP);
-              })
-              .catch((error)=>{
-                reject(error);
-              })
+            Promise.all(promises)
+            .then(result => {
+                  this.zipDirectory(pathToCorpus,pathToZIP)
+                  .then(()=>{
+                    fs.removeSync(pathToCorpus);
+                    resolve(pathToZIP);
+                  })
+                  .catch((error)=>{
+                    reject(error);
+                  })
+            })
+            .catch(err=>{
+              resolve(pathToZIP);
+            })
+
+          
 
              // add local file
             //zip.addLocalFolder(pathToCorpus);
@@ -278,7 +298,7 @@ exports.runSpeechSegmentation = (req, res, next) => {
       .then(updatedContainer => {
         res.status(200).json({ message: 'The service for this container has finished working with success!!', containerId: updatedContainer._id, toolType: toolType});
       }).catch(errorMessage => {
-        console.log("EEEEEEEEE")
+        //console.log("EEEEEEEEE")
         console.log(errorMessage)
         res.status(503).json({ message: errorMessage, containerId: containerId, toolType: toolType});
         console.log('ERROR Z TASKIEM')
