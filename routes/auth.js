@@ -6,6 +6,8 @@ const User = require('../models/user');
 const authController = require('../controllers/auth');
 
 //################ rejestracja ##############
+
+
 router.put('/registration',[
     body('email').isEmail().withMessage('Please write a valid email')
         .custom((value, {req}) => {

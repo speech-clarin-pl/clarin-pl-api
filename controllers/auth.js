@@ -15,6 +15,7 @@ dotenv.config();
 var mkdirp = require("mkdirp"); //do tworzenia folderu
 //var rimraf = require("rimraf"); 
 var appRoot = require('app-root-path'); //zwraca roota aplikacji
+const chalk = require('chalk');
 
 
 
@@ -158,7 +159,38 @@ exports.forgotPass = (req,res,next) => {
      })
 }
 
-// rejestracja
+
+/**
+ * @api {put} /registration Register new User
+ * @apiName GetUser
+ * @apiGroup User
+ *
+ * @apiParam {String} email User email
+ * @apiParam {String} name User name
+ * @apiParam {String} password User password (min. 6 characters)
+ *
+ * @apiSuccess {String} message that the user has been created
+ * @apiSuccess {String} userId  the user id created
+ *
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 201 CREATED
+ *     {
+ *       "message": 'The user has been created',
+ *       "userId": "5f58a92dfa006c8aed96f846"
+ *     }
+ *
+ * @apiError (422) ValidationFailed When profided wrong data.
+ * @apiError (500) SerwerError When can not save the user to database.
+ * 
+ * @apiErrorExample Error-Response:
+ *     HTTP/1.1 500 Internal Server Error
+ *     {
+ *       "message": ""Something went wrong with saving the user to database",
+ *       "data": undefined
+ *     }
+ * 
+ * @apiDescription Allows to register new user. Its necessary to run speech services using user interface and to process files in batch.
+ */
 exports.registration = (req, res, next) => {
     const errors = validationResult(req);
     if(!errors.isEmpty()){
@@ -193,18 +225,23 @@ exports.registration = (req, res, next) => {
                 return err;
             } else {
                 // else print a success message.
-                console.log("Successfully created user directory");
+                console.log(chalk.green("Successfully created user directory"));
+                
                 res.status(201).json({message: 'The user has been created', userId: user._id})
             }
           });
     })
-    .catch(error => {
-        console.log(error)
-        if(!error.statusCode){
-            error.statusCode = 500;
-        }
+    .catch(() => {
+
+        console.log(chalk.red("Something went wrong with saving the user to DB"))
+
+        const error = new Error("Something went wrong with saving the user to database");
+        error.statusCode = 500;
+        error.data = [];
+
         next(error);
     });
+
 
 }
 
@@ -240,6 +277,8 @@ exports.login = (req, res, next) => {
             }
 
             //tutaj uzytkonik wpisal dore haslo i musimy wygenerowac token dla klienta
+          
+
             const token = jwt.sign({
                 email: loadedUser.email, 
                 userId: loadedUser._id.toString()
@@ -255,4 +294,3 @@ exports.login = (req, res, next) => {
             next(error);
         });
 }
-
