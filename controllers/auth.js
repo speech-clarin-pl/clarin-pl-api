@@ -104,7 +104,33 @@ exports.applyNewPass = (req,res,next) => {
      
 }
 
-
+/**
+ * @api {post} /forgotPass/:emailAddress Password recovery
+ * @apiDescription Allows the user to generate new password for his account. This only sends email to the user with the link which the user has to click to access the page where he will be able to enter new password
+ * @apiName ForgotPassword
+ * @apiGroup User
+ *
+ * @apiParam {String} email User email
+ *
+ * @apiSuccess {String} message that the user has been created
+ * @apiSuccess {String} userId  the user id created
+ *
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "message": "The email with further instructions has been sent",
+ *     }
+ *
+ * @apiError (401) Unathorized The email has not been registered
+ * @apiError (500) ServerError Something went wrong in the server.
+ * 
+ * @apiErrorExample Error-Response:
+ *     HTTP/1.1 500 Internal Server Error
+ *     {
+ *       "message": "Something went wrong with sending the email"
+ *     }
+ * 
+ */
 exports.forgotPass = (req,res,next) => {
     const {emailAddress} = req.params;
 
@@ -146,23 +172,26 @@ exports.forgotPass = (req,res,next) => {
                 })
                 .catch(err => {
                     console.log(err);
-                    res.status(500).json({message: "Something went wrong"});   
+                    res.status(500).json({message: "Something went wrong with sending the email"});   
                 });
          }
      })
-     .catch(error => {
-        if(!error.statusCode){
-            error.statusCode = 500;
-        }
-        console.log(error)
-        next(error);
+     .catch(() => {
+        console.log(chalk.red("Something went wrong with FORGOT PASSWORD"))
+
+        const error = new Error("Something went wrong with FORGOT PASSWORD");
+        error.statusCode = 500;
+        error.data = [];
+
+        next(error);;
      })
 }
 
 
 /**
  * @api {put} /registration Register new User
- * @apiName GetUser
+ * @apiDescription Allows to register new user. Its necessary to run speech services using user interface and to process files in batch.
+ * @apiName RegisterUser
  * @apiGroup User
  *
  * @apiParam {String} email User email
@@ -180,7 +209,7 @@ exports.forgotPass = (req,res,next) => {
  *     }
  *
  * @apiError (422) ValidationFailed When profided wrong data.
- * @apiError (500) SerwerError When can not save the user to database.
+ * @apiError (500) ServerError When can not save the user to database.
  * 
  * @apiErrorExample Error-Response:
  *     HTTP/1.1 500 Internal Server Error
@@ -189,7 +218,6 @@ exports.forgotPass = (req,res,next) => {
  *       "data": undefined
  *     }
  * 
- * @apiDescription Allows to register new user. Its necessary to run speech services using user interface and to process files in batch.
  */
 exports.registration = (req, res, next) => {
     const errors = validationResult(req);
@@ -241,11 +269,38 @@ exports.registration = (req, res, next) => {
 
         next(error);
     });
-
-
 }
 
-// logowanie
+/**
+ * @api {post} /login Log in
+ * @apiDescription Allows to log in of registered user and get the token
+ * @apiName LoginUser
+ * @apiGroup User
+ *
+ * @apiParam {String} email User email
+ * @apiParam {String} password User password 
+ *
+ * @apiSuccess {String} message that the user has been created
+ * @apiSuccess {String} userId  the user id created
+ *
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "token": eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1rbGVjQHBqd3N0ay5lZHUucGwiLCJ1c2VySWQiOiI1ZjU4YTkyZGZhMDA2YzhhZWQ5NmY4NDYiLCJpYXQiOjE2MDYzMDc1NzEsImV9cXI6MPYwNjY1MzEeMX0.-ABd2a0F3lcuI0yDV7eymq4ey5_J__xGdyYAk56icO4,
+ *       "userId": "5f58a92dfa006c8aed96f846"
+ *     }
+ *
+ * @apiError (401) Unathorized can not find given email or is wrong password
+ * @apiError (500) ServerError internal server error
+ * 
+ * @apiErrorExample Error-Response:
+ *     HTTP/1.1 500 Internal Server Error
+ *     {
+ *       "message": "Something went wrong with loggin in the user",
+ *       "data": undefined
+ *     }
+ * 
+ */
 exports.login = (req, res, next) => {
 
     const email = req.body.email;
@@ -277,8 +332,6 @@ exports.login = (req, res, next) => {
             }
 
             //tutaj uzytkonik wpisal dore haslo i musimy wygenerowac token dla klienta
-          
-
             const token = jwt.sign({
                 email: loadedUser.email, 
                 userId: loadedUser._id.toString()
@@ -287,10 +340,16 @@ exports.login = (req, res, next) => {
 
             res.status(200).json({token: token, userId: loadedUser._id.toString(), userName:loadedUser.name });
         })
-        .catch(error => {
-            if(!error.statusCode){
-                error.statusCode = 500;
-            }
+        .catch(() => {
+
+            console.log(chalk.red("Something went wrong with loggin in the user"))
+
+            const error = new Error("Something went wrong with loggin in the user");
+            error.statusCode = 500;
+            error.data = [];
+    
             next(error);
+
+           
         });
 }

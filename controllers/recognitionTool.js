@@ -8,7 +8,8 @@ const ProjectFile = require('../models/projectFile');
 const User = require('../models/user');
 const utils = require('../utils/utils');
 const ffmpeg = require('ffmpeg');
-const Container = require('../models/Container')
+const Container = require('../models/Container');
+const chalk = require('chalk');
 
 exports.startFileRecognitionOK = (req, res, next) => {
     const audioFrom = req.body.audioFrom;
@@ -46,9 +47,6 @@ exports.startFileRecognitionOK = (req, res, next) => {
             projectId,
             sentEntryId)
             .then(task => {
-
-
-
                 console.log(' TASK ZAKONCZONY SUKCESEM');
                 res.status(201).json({ message: "task finished with sucess", sentEntryId: { sentEntryId } });
             })
@@ -103,13 +101,13 @@ exports.startFileRecognitionOK = (req, res, next) => {
 
                 let fileTo = appRoot + '/repo/uploaded_temp/' + newOryginalName;
 
-                console.log(fileFrom)
-                console.log(fileTo)
+                //console.log(fileFrom)
+                //console.log(fileTo)
 
                 fs.copy(fileFrom, fileTo)
                     .then(() => {
                         // gdy plik juz jest w katalogu repo/uploaded_files konwertuje go na 16khz do rozpoznawania
-                        console.log("przekopiowany!")
+                        //console.log("przekopiowany!")
                         try {
                             var process = new ffmpeg(fileTo);
                             process.then(function (audio) {
@@ -124,11 +122,11 @@ exports.startFileRecognitionOK = (req, res, next) => {
 
                                         //ponieważ byłem zmuszony przekonwertować plik dodając rozszrzenie wav
                                         //musze je teraz usunac
-                                        console.log('Przekonwertowałem plik: ' + file);
+                                        //console.log('Przekonwertowałem plik: ' + file);
 
                                         fs.move(file, fileTo, { overwrite: true })
                                             .then(() => {
-                                                console.log('Plik został przekonwertowany!: ' + fileTo);
+                                                //console.log('Plik został przekonwertowany!: ' + fileTo);
                                                 //moge robić dalej rozpoznawanie!
                                                 //tutaj uruchamiam task z dockera
                                                 dockerTaskControllerOK.runTaskOK(
@@ -143,18 +141,17 @@ exports.startFileRecognitionOK = (req, res, next) => {
                                                     projectId,
                                                     sentEntryId)
                                                     .then(task => {
-                                                        console.log(' TASK ZAKONCZONY SUKCESEM');
-                                                        res.status(201).json({ message: "task finished with sucess", sentEntryId: { sentEntryId } });
+                                                        console.log(chalk.green('RECOGNITION TASK ZAKONCZONY SUKCESEM'));
+                                                        res.status(201).json({ message: "recognition task finished with sucess", sentEntryId: { sentEntryId } });
                                                     })
                                                     .catch(err => {
-                                                        console.log(' PROBLEM Z TASKIEM ');
+                                                        console.log(chalk.red(' PROBLEM Z TASKIEM ROZPOZNAWANIA'));
                                                         if (!err.statusCode) {
                                                             err.statusCode = 500;
                                                         }
-                                                        res.status(500).json({ message: "Something went wrong!", sentEntryId: { sentEntryId } });
+                                                        res.status(500).json({ message: "Something went wrong with recognition task!", sentEntryId: { sentEntryId } });
                                                         next(err);
                                                     })
-                                                
                                             })
                                             .catch(err => {
                                                 console.log('Wystąpił błąd zamiany nazwy pliku: ' + err);
