@@ -249,13 +249,23 @@ exports.registration = (req, res, next) => {
         mkdirp(dirpath, function(err) {
             // if any errors then print the errors to our console
             if (err) {
-                console.log(err);
+                console.log(chalk.red(err));
                 return err;
             } else {
-                // else print a success message.
-                console.log(chalk.green("Successfully created user directory"));
-                
-                res.status(201).json({message: 'The user has been created', userId: user._id})
+
+                //tworze katalog z plikami tymczasowymi, wgrywanymi bez GUI
+                mkdirp(dirpath+'/temporary', function(err) {
+                    if (err) {
+                        console.log(chalk.red(err));
+                        return err;
+                    } else {
+                        // else print a success message.
+                        console.log(chalk.green("Successfully created user directory"));
+                                        
+                        res.status(201).json({message: 'The user has been created', userId: user._id});
+                    }
+                })
+              
             }
           });
     })

@@ -1,6 +1,6 @@
 
 //const dockerTaskController = require('./runTask');
-const dockerTaskControllerOK = require('./runTaskOK_');
+//const dockerTaskControllerOK = require('./runTaskOK_');
 const appRoot = require('app-root-path'); //zwraca roota aplikacji    
 const fs = require('fs-extra');
 const ProjectEntry = require('../models/projectEntry');
@@ -11,6 +11,7 @@ const ffmpeg = require('ffmpeg');
 const Container = require('../models/Container');
 const chalk = require('chalk');
 
+/*
 exports.startFileRecognitionOK = (req, res, next) => {
     const audioFrom = req.body.audioFrom;
     const projectId = req.body.projectId;          //project Id
@@ -174,7 +175,9 @@ exports.startFileRecognitionOK = (req, res, next) => {
     }
 
 }
+*/
 
+/*
 // zapisuje plik na dysku i robie rozpoznawanie
 exports.startFileRecognition = (req, res, next) => {
 
@@ -231,6 +234,9 @@ exports.startFileRecognition = (req, res, next) => {
 
 };
 
+*/
+
+/*
 exports.startBatchRecognition = (req, res, next) => {
 
     if (!req.files) {
@@ -253,6 +259,8 @@ exports.startBatchRecognition = (req, res, next) => {
 
     next();
 }
+
+*/
 
 exports.saveTranscription = (req, res, next) => {
     const transcription =  req.body.transcription;

@@ -226,33 +226,82 @@ exports.changeContainerName = (req, res, next) => {
     console.log(chalk.red("Something went wrong with the update of the container name"))
     res.status(500).json({message: 'Something went wrong with the update of the container name'})
   })
-
-  
-
 }
 
 
+
+
+/**
+ * @api {put} /repoFiles/runSpeechVAD/:containerId?api_key=your_API_key Run VAD tool
+ * @apiDescription Voice Activity Detection (VAD) tool
+ * @apiName VADTool
+ * @apiGroup Tools
+ *
+ * @apiParam {String} containerId The container ID for which you want to run the tool
+ * @apiParam {String} api_key Your API key
+ *
+ * @apiSuccess {String} message that this tool finished working
+ * @apiSuccess {String} containerId  the container ID which was used
+ * @apiSuccess {String} toolType  returns "VAD" string 
+ * @apiSuccess {Object} VADSegments  returns segments with recognized voice in JSON format. If you wish to get output as a file in CTM or TextGrid format, see how to get output file 
+ * 
+ *
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "message": ''The service for this container has finished working with success!!',
+ *       "containerId": "5f58a92dfa006c8aed96f846",
+ *       "toolType": "VAD",
+ *       "VADSegments": [
+ *                          {
+ *                              "startTime":0.68,
+ *                              "endTime":2.74,
+ *                              "editable":true,
+ *                              "color":"#394b55",
+ *                              "labelText":"speech"
+ *                          },
+ *                          {
+ *                              "startTime":2.74,
+ *                              "endTime":5.97,
+ *                              "editable":true,
+ *                              "color":"#394b55",
+ *                              "labelText":"speech"
+ *                          }
+ *                        ]
+ *     }
+ *
+ * @apiError (503) Service Unavailable When something goes wrong with the service
+ * @apiError (500) ServerError 
+ * 
+ * @apiErrorExample Error-Response:
+ *     HTTP/1.1 503 Service Unavailable
+ *     {
+ *       "message": 'Something wrong with the VAD on the server!',
+ *       "containerId": "5f58a92dfa006c8aed96f846",
+ *       "toolType": "VAD"
+ *     }
+ * 
+ */
+
 //##########################################
-//#### wykonuje VAD ######
+//#### run SPEECH VAD ######
 //#######################################
 exports.runSpeechVAD = (req, res, next) => {
 
-  const containerId = req.body.containerId;
-  const toolType = req.body.toolType;
+  let containerIdOK = req.params.containerId;
+  //const toolType = req.body.toolType;
 
-  // tutaj odpalam odpowiednia usługę
-  //asdlfkajds
-
-  Container.findById(containerId).then(container => {  
-    runTask.runVAD(container)
+  Container.findById(containerIdOK).then(container => {  
+    runTask.runVAD(container, outputFormat)
       .then(VADsegments => {
-        res.status(200).json({ message: 'The service for this container has finished working with success!!', containerId: containerId, toolType: toolType, VADSegments: VADsegments});
+        console.log(chalk.green("VAD TASK DONE!"))
+        res.status(200).json({ message: 'The service for this container has finished working with success!!', containerId: containerIdOK, toolType: "VAD", VADSegments: VADsegments});
       }).catch(error => {
 
         //jeżeli coś poszło nie tak to aktualizuje to w bazie
         
         // wystapil blad wiec wpisuje ta wiadomosc
-        res.status(503).json({ message: 'Something wrong with the VAD on the server!', containerId: containerId, toolType: toolType});
+        res.status(503).json({ message: 'Something wrong with the VAD on the server!', containerId: containerIdOK, toolType: "VAD"});
         console.log(chalk.red('ERROR Z TASKIEM'))
         console.log(chalk.red(error))
       })
@@ -261,56 +310,174 @@ exports.runSpeechVAD = (req, res, next) => {
   })
 }
 
+
+
+/**
+ * @api {put} /repoFiles/runSpeechDiarization/:containerId?api_key=your_API_key Run DIA tool
+ * @apiDescription Diarization (DIA) tool
+ * @apiName DIATool
+ * @apiGroup Tools
+ *
+ * @apiParam {String} containerId The container ID for which you want to run the tool
+ * @apiParam {String} api_key Your API key
+ *
+ * @apiSuccess {String} message that this tool finished working
+ * @apiSuccess {String} containerId  the container ID which was used
+ * @apiSuccess {String} toolType  returns "DIA" string 
+ * @apiSuccess {Object} DIAsegments  returns Diarization segments in JSON format. If you wish to get output as a file in CTM or TextGrid format, see how to get output file 
+ * 
+ *
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "message": ''The service for this container has finished working with success!!',
+ *       "containerId": "5f58a92dfa006c8aed96f846",
+ *       "toolType": "DIA",
+ *       "VADSegments": [
+ *                          {
+ *                              "startTime":0.68,
+ *                              "endTime":2.74,
+ *                              "editable":true,
+ *                              "color":"#394b55",
+ *                              "labelText":"1"
+ *                          },
+ *                          {
+ *                              "startTime":2.74,
+ *                              "endTime":4.62,
+ *                              "editable":true,
+ *                              "color":"#394b55",
+ *                              "labelText":"2"
+ *                          },
+  *                       ]
+ *     }
+ *
+ * @apiError (503) Service Unavailable When something goes wrong with the service
+ * @apiError (500) ServerError 
+ * 
+ * @apiErrorExample Error-Response:
+ *     HTTP/1.1 503 Service Unavailable
+ *     {
+ *       "message": 'Something wrong with the VAD on the server!',
+ *       "containerId": "5f58a92dfa006c8aed96f846",
+ *       "toolType": "DIA"
+ *     }
+ * 
+ */
+
 //##########################################
 //#### wykonuje Diaryzacje ######
 //#######################################
 exports.runSpeechDiarization = (req, res, next) => {
 
   const containerId = req.body.containerId;
-  const toolType = req.body.toolType;
+  //const toolType = req.body.toolType;
 
   Container.findById(containerId).then(container => {  
     runTask.runDIA(container)
       .then(DIAsegments => {
-        res.status(200).json({ message: 'The service for this container has finished working with success!!', containerId: containerId, toolType: toolType,  DIAsegments: DIAsegments});
+        res.status(200).json({ message: 'The service for this container has finished working with success!!', containerId: containerId, toolType: "DIA",  DIAsegments: DIAsegments});
       }).catch(error => {
-        res.status(503).json({ message: 'Something wrong with the Diarization on the server!!', containerId: containerId, toolType: toolType});
+        res.status(503).json({ message: 'Something wrong with the Diarization on the server!!', containerId: containerId, toolType: "DIA"});
         console.log(chalk.red('ERROR Z TASKIEM'))
         console.log(error)
       })
   }).catch(err => {
     console.log(chalk.red("Error: container not found"))
   })
-
-
 }
 
+
+/**
+ * @api {put} /runSpeechSegmentation/:containerId?api_key=your_API_key Run SEG tool
+ * @apiDescription Segmentation (SEG) tool. It requires to run the recognition first. In order to download the results of the segmentaion, you have to run separate API request.
+ * @apiName SEGTool
+ * @apiGroup Tools
+ *
+ * @apiParam {String} containerId The container ID for which you want to run the tool
+ * @apiParam {String} api_key Your API key
+ *
+ * @apiSuccess {String} message that this tool finished working
+ * @apiSuccess {String} containerId  the container ID which was used
+ * @apiSuccess {String} toolType  returns "SEG" string 
+ * 
+ *
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "message": ''The service for this container has finished working with success!!',
+ *       "containerId": "5f58a92dfa006c8aed96f846",
+ *       "toolType": "SEG",
+ *     }
+ *
+ * @apiError (503) Service Unavailable When something goes wrong with the service
+ * @apiError (500) ServerError 
+ * 
+ * @apiErrorExample Error-Response:
+ *     HTTP/1.1 503 Service Unavailable
+ *     {
+ *       "message": 'Something wrong with the Segmentation on the server!',
+ *       "containerId": "5f58a92dfa006c8aed96f846",
+ *       "toolType": "SEG"
+ *     }
+ * 
+ */
 //##########################################
 //#### wykonuje segmentacje ######
 //#######################################
 exports.runSpeechSegmentation = (req, res, next) => {
 
   const containerId = req.body.containerId;
-  const toolType = req.body.toolType;
+  //const toolType = req.body.toolType;
 
   Container.findById(containerId).then(container => {  
     runTask.runSEG(container)
       .then(updatedContainer => {
-        res.status(200).json({ message: 'The service for this container has finished working with success!!', containerId: updatedContainer._id, toolType: toolType});
-      }).catch(errorMessage => {
-        //console.log("EEEEEEEEE")
-        console.log(errorMessage)
-        res.status(503).json({ message: errorMessage, containerId: containerId, toolType: toolType});
-        console.log('ERROR Z TASKIEM')
-        console.log(errorMessage)
+        res.status(200).json({ message: 'The service for this container has finished working with success!!', containerId: updatedContainer._id, toolType: "SEG"});
+      }).catch(error => {
+        res.status(503).json({ message: 'Something wrong with the Segmentation on the server!!', containerId: containerId, toolType: "SEG"});
+        cconsole.log(chalk.red('ERROR Z TASKIEM'))
+        console.log(chalk.red(error))
       })
   }).catch(err => {
-    console.log("Error: container not found")
+    console.log(chalk.red("Error: container not found"));
   })
-
-
 }
 
+
+/**
+ * @api {put} /runSpeechRecognition/:containerId?api_key=your_API_key Run SEG tool
+ * @apiDescription Recognition (REC) tool. In order to download the results of the recognition, you have to run separate API request
+ * @apiName RECTool
+ * @apiGroup Tools
+ *
+ * @apiParam {String} containerId The container ID for which you want to run the tool
+ * @apiParam {String} api_key Your API key
+ *
+ * @apiSuccess {String} message that this tool finished working
+ * @apiSuccess {String} containerId  the container ID which was used
+ * @apiSuccess {String} toolType  returns "SEG" string 
+ * 
+ *
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "message": ''The service for this container has finished working with success!!',
+ *       "containerId": "5f58a92dfa006c8aed96f846",
+ *       "toolType": "REC",
+ *     }
+ *
+ * @apiError (503) Service Unavailable When something goes wrong with the service
+ * @apiError (500) ServerError 
+ * 
+ * @apiErrorExample Error-Response:
+ *     HTTP/1.1 503 Service Unavailable
+ *     {
+ *       "message": 'Something wrong with the Recognition on the server!',
+ *       "containerId": "5f58a92dfa006c8aed96f846",
+ *       "toolType": "REC"
+ *     }
+ * 
+ */
 
 
 //##########################################
@@ -319,7 +486,7 @@ exports.runSpeechSegmentation = (req, res, next) => {
 exports.runSpeechRecognition = (req, res, next) => {
 
   const containerId = req.body.containerId;
-  const toolType = req.body.toolType;
+  //const toolType = req.body.toolType;
 
   console.log(chalk.cyan("uruchamiam runSpeechRecognition"))
 
@@ -329,14 +496,14 @@ exports.runSpeechRecognition = (req, res, next) => {
     console.log(chalk.cyan("znalazłem container"))
     runTask.runREC(container)
       .then(updatedContainer => {
-        res.status(200).json({ message: 'The service for this container has finished working with success!!', containerId: updatedContainer._id, toolType: toolType});
+        res.status(200).json({ message: 'The service for this container has finished working with success!!', containerId: updatedContainer._id, toolType: "REC"});
       }).catch(error => {
-        res.status(503).json({ message: 'Something wrong with the Recognition on the server!!', containerId: updatedContainer._id, toolType: toolType});
-        console.log('ERROR Z TASKIEM')
-        console.log(error)
+        res.status(503).json({ message: 'Something wrong with the Recognition on the server!!', containerId: updatedContainer._id, toolType: "REC"});
+        cconsole.log(chalk.red('ERROR Z TASKIEM'))
+        console.log(chalk.red(error))
       })
   }).catch(err => {
-    console.log("Error: container not found")
+    console.log(chalk.red("Error: container not found"))
   })
 }
 
@@ -363,18 +530,36 @@ exports.getReadyKorpus = (req,res,next) => {
 
 
 
-
-
-
+ 
+/**
+ * @api {GET} /repoFiles/download/:containerId/:fileType?api_key=your_API_key Download the tool's output
+ * @apiDescription If the task has been finised his job, you can download its result in choosen file format. Besides you can also download the oryginal file that you have sent to server and also the file that has been converted into 16000 Hz and 8bits. The conversion was neccessary to do in order to run speech services.
+ * @apiName GETOutputFile
+ * @apiGroup Tools
+ *
+ * @apiParam {String} containerId   The container ID for which you want to download the results.
+ * @apiParam {String} fileType      you have to indicate one of the following flag to indicate which kind of output you are interested in: <h3>Audio File related</h3><ul><li>"oryginalAudio": you can download the same file which was sent.</li><li>"audio" : download the audio converted into PCM 16000Hz and 8bits</li></ul><h3>Voice Activity Detection (VAD) related</h3><ul><li>"VADctm": downloads the output of VAD in CTM format</li><li>"VADtextGrid": downloads the output of VAD in TextGrid format</li><li>"VADJSON": downloads the output of VAD in JSON format</li></ul><h3>Diarization related</h3><ul><li>"DIActm": downloads the output of diarization in CTM format.</li><li>"DIAtextGrid": downloads the output of diarization in TextGrid format.</li><li>"DIAJSON": downloads the outpu of the dirization in JSON format.</li></ul><h3>Speech Recognition related</h3><ul><li>"JSONTranscript": downloads the transcription in JSON format</li><li>"TXTTranscript": downloads the transcription in TXT file format.</li></ul><h3>Segmentation related</h3><ul><li>"SEGctm": downloads the output of Segmentation in CTM format</li><li>"SEGtextGrid": downloads the output of Segmentation in TextGrid format.</li><li>"EMUJSON": downloads the outpu of Segmentation in EMU-SDMS format.</li></ul> 
+ * @apiParam {String} api_key       Your API key
+ *
+ * @apiSuccess {Object} returns audio file or file with the output to download
+ * 
+ *
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK input 1 0.120 7.610 speech
+ *
+ * @apiError (404) NotFound When the resource could not be found
+ * @apiError (500) ServerError 
+ * 
+ */
 // ###################################################
 // ########### pobieram plik z repozytorium użytkownika
 // ######################################################
-
-//'/:userId/:projectId/:sessionId/:containerId/:fileType'
 exports.getFileFromContainer = (req,res,next) => {
-  const userId = req.params.userId;
-  const projectId = req.params.projectId;
-  const sessionId = req.params.sessionId;
+
+ // const userId = req.params.userId;
+ // const projectId = req.params.projectId;
+ // const sessionId = req.params.sessionId;
+
   const containerId = req.params.containerId;
   
   const fileType = req.params.fileType;
@@ -382,6 +567,10 @@ exports.getFileFromContainer = (req,res,next) => {
   //pobieram kontener z bazy danych
   Container.findById(containerId)
     .then(container => {
+
+        const userId = container.owner;
+        const projectId = container.project;
+        const sessionId = container.session;
 
         //sciezka do pliku dat
         const repoPath = appRoot + "/repo/" + userId + "/" + projectId + "/" + sessionId;
@@ -468,16 +657,10 @@ exports.getFileFromContainer = (req,res,next) => {
             filePath = '';
             filename = 'default';
             console.log("wrong file type!!")
-
         }
 
-
- 
-
-        //res.status(200).({ message: 'The data for previewing has been sent!', containerData: filePath});
-        
+        //res.status(200).({ message: 'The data for previewing has been sent!', containerData: filePath});        
        // res.sendFile(filePath);
-
         //res.set('Content-Type', 'application/json');
        // res.status(200).json({toolType: toolType});
        // res.append("toolType", toolType);
@@ -527,29 +710,90 @@ exports.removeSession = (req,res,next) => {
 }
 
 
+
+/**
+ * @api {delete} /repoFiles/delete/:containerId?api_key=your_API_key delete container
+ * @apiDescription Removes everthing related to uploaded file
+ * @apiName DELETEcontainer
+ * @apiGroup Tools
+ *
+ * @apiParam {String} containerId The container ID which you want to delete
+ * @apiParam {String} api_key Your API key
+ *
+ * @apiSuccess {String} message 
+ * @apiSuccess {String} containerId  which was deleted
+ * @apiSuccess {String} sessionId  the id of the session to which the container belonged to
+ * 
+ *
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "message": 'The container has been removed!',
+ *       "sessionId": "5f58a92dfa006c8aed96f846",
+ *       "containerId": "5f58a92dfa006c8aed96f846",
+ *     }
+ * 
+ *
+ * @apiError (500) ServerError 
+ * 
+ * @apiErrorExample Error-Response:
+ *     HTTP/1.1 500 Service Unavailable
+ *     {
+ *       "message": 'Something went wrong with removing the container!',
+ *       "sessionId": "5f58a92dfa006c8aed96f846",
+ *       "containerId": "5f58a92dfa006c8aed96f846",
+ *     }
+ * 
+ */
+
 //##########################################
 //#### usuwanie pojedynczego kontenera z repo ######
-//#######################################
-
+//##########################################
 exports.removeContainer = (req,res,next) => {
 
-  const userId = req.params.userId;
-  const projectId = req.params.projectId;
-  const sessionId = req.params.sessionId;
   const containerId = req.params.containerId;
 
   //console.log("USUWAM CONTAONER: " + containerId)
   Container.findById({_id:containerId})
     .then(foundContainer => {
 
-      //console.log("USUWAM CONTAONER: " + foundContainer)
-        // tutaj usuwanie z repo, bazy danych, audio i txt
+        const userId = foundContainer.owner;
+        const projectId = foundContainer.project;
+        const sessionId = foundContainer.session;
 
         const conainerFolder = utils.getFileNameWithNoExt(foundContainer.fileName);
 
         const containerPath = appRoot + "/repo/" + userId + "/" + projectId + "/" + sessionId + "/" + conainerFolder;
 
         //usuwam folder kontenera z dysku fizycznie
+        fs.remove(containerPath).then(()=>{
+          //usuwam wpis w kolekcji Containers
+          Container.findByIdAndRemove(containerId)
+          .then(removedContainer => {
+            
+              //usuwam odniesienie w kolekcji Sessions
+              Session.findByIdAndUpdate(sessionId,{$pull: {containersIds: containerId}})
+              .then(updatedSession =>{
+                res.status(200).json({ message: 'The container has been removed!', sessionId: sessionId, containerId: containerId});
+              })
+              .catch(error => {
+                res.status(500).json({ message: 'Something went wrong with removing the container!', sessionId: sessionId, containerId: containerId});
+                console.log(error);
+                throw error;
+              })
+          })
+          .catch(error => {
+            res.status(500).json({ message: 'Something went wrong with removing the container!', sessionId: sessionId, containerId: containerId});
+            console.log(error);
+            throw error;
+          })
+        }).catch(error=>{
+          res.status(500).json({ message: 'Something went wrong with removing the container!', sessionId: sessionId, containerId: containerId});
+          console.log(error);
+          throw error;
+        });
+
+        /*
         fs.rmdir(containerPath,{recursive: true}, function (err) {
           if (err) throw err;
 
@@ -574,6 +818,7 @@ exports.removeContainer = (req,res,next) => {
             throw error;
           })
         });
+        */
     })
 }
 
@@ -686,34 +931,13 @@ exports.uploadFile = (req, res, next) => {
                         throw error;
                       })
                     }
-
-
-               // })
-               // .catch(err => {
-                //  console.error('Problem z usunietceim pliku gdy istnieje już poprawnie przekonwertowany' + err)
-               // })
-
               }).catch(err =>{
-                console.log('ERROR SAVE FFMPEG: coś poszło nie tak')
+                console.log(chalk.red('ERROR SAVE FFMPEG: coś poszło nie tak'))
               })
       }).catch(err=>{
         console.log('Error FFMPEG: ' + err)
       })
 
-    /*
-        const shellcomm = 'ffmpeg -i ' + fullFilePath + ' -ar 16000 -sample_fmt s16 -ac 1 -y ' + utils.getFileNameWithNoExt(fullFilePath) + '.wav';
-
-        //obliczam z pliku audio podgląd dat
-      if (shell.exec(shellcomm).code !== 0) {
-        shell.echo('Error: Problem with FFMPG');
-        shell.exit(1);
-      } else {
-
-      }
-
-      */
-
-        
 
   } catch (e) {
     console.log("ups!! jakis wyjatek...")
@@ -721,47 +945,7 @@ exports.uploadFile = (req, res, next) => {
 	  console.log(e.msg);
   }
   
-/*
-  let newContainer = new Container({
-    fileName: savedFile,
-    containerName: oryginalFileName,
-    size: fs.statSync(fullFilePath).size,
-    owner: userId,
-    project: projectId,
-    session: sessionId,
-    ifVAD: false,
-    ifDIA: false,
-    ifREC: false,
-    ifSEG: false,
-  });
 
-
-  let ext = utils.getFileExtention(oryginalFileName);
-  ext = (ext[0]+'').toLowerCase();
-
-  const shellcomm = 'audiowaveform -i '+fullFilePath+' -o '+fullFilePath+'.dat -z 128 -b 8 --input-format ' + ext;
-
-    //obliczam z pliku audio podgląd dat
-  if (shell.exec(shellcomm).code !== 0) {
-    shell.echo('Error: Problem with extracting dat for audio file');
-    shell.exit(1);
-  } else {
-    newContainer.save()
-    .then(createdContainer => {
-
-      //updating the reference in given session
-      Session.findOneAndUpdate({_id: sessionId},{$push: {containersIds: createdContainer._id }})
-        .then(updatedSession => {
-          res.status(200).json({ message: 'New file has been uploaded!', sessionId: sessionId, oryginalName: oryginalFileName, containerId: createdContainer._id})
-        })
-
-    })
-    .catch(error => {
-      throw error;
-    })
-  }
-
-  */
 
 }
 

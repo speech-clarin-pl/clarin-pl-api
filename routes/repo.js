@@ -5,7 +5,8 @@ const router = express.Router();
 const isAuth = require('../middleware/is-auth');
 
  //GET /repoFiles/:userId/:projectId/:sessionId/:containerId/:fileType - pobieram plik z repozytorium użytkownika
- router.get('/:userId/:projectId/:sessionId/:containerId/:fileType', isAuth, repoController.getFileFromContainer);
+ //router.get('/:userId/:projectId/:sessionId/:containerId/:fileType', isAuth, repoController.getFileFromContainer);
+ router.get('/download/:containerId/:fileType', isAuth, repoController.getFileFromContainer);
  
  // GET /repoFiles/loadAudioFile/REC/:containerId - dostarcza plik audio
  router.get('/loadAudioFile/:toolType/:containerId', audioEditorController.loadAudioFile);
@@ -27,8 +28,8 @@ router.get('/:projectId/:userId', isAuth, repoController.getRepoAssets);
 
 
 
- //DELETE /repoFiles/deleteFile/userId - usuwa container
-router.delete('/:userId/:projectId/:sessionId/:containerId', isAuth, repoController.removeContainer);
+ //DELETE /repoFiles/delete/:containerId - usuwa container
+router.delete('/delete/:containerId', isAuth, repoController.removeContainer);
 
  //DELETE /repoFiles/deleteFile/userId - usuwa sesje
  router.delete('/:userId/:projectId/:sessionId/', isAuth, repoController.removeSession);

@@ -14,7 +14,7 @@ const chalk = require('chalk');
 
 
 
-exports.runVAD = (container) => {
+exports.runVAD = (container, outputFormat) => {
     return new Promise((resolve, reject) => {
         
         const userId = container.owner;
@@ -42,10 +42,6 @@ exports.runVAD = (container) => {
         // uruchamiam usługę z dockera
         dockerTask.save()
             .then(savedTask => {
-
-                //uruchamiam odpytywanie bazy co sekunde 
-                console.log(chalk.green("waiting VAD task to finish...."))
-
                 let block = true;
 
                 checkerdb = setInterval(function () {
@@ -57,7 +53,7 @@ exports.runVAD = (container) => {
                             block = false;
                             //jeżeli zmienił się jego status na ukończony
                             if (task.done) {
-                                console.log("TASK DONE")
+                                
                                 //i jeżeli nie ma errorów
                                 if (!task.error) {
                                     const inputFilePath = task.input;
@@ -136,7 +132,7 @@ exports.runVAD = (container) => {
                                     let gdziedot = finalPathToResult.lastIndexOf('.');
                                     let finalPathToResultJSON = finalPathToResult.substring(0,gdziedot) + '.json';
 
-                                    //UWAGA!! nie używam go - te dane wpisuje w baze danych w konener!!
+                                    //UWAGA!!  te dane wpisuje w baze danych w konener!!
                                     fs.writeJsonSync(finalPathToResultJSON, segments);
 
                                     //convertuje na textGrid
@@ -149,7 +145,6 @@ exports.runVAD = (container) => {
                                                     fs.removeSync(pathToResult+'_log.txt');
                                                     //i usuwam tymczasowy plik txt
                                                     fs.removeSync(pathToResult);
-
                                                     resolve(segments)
                                         })
                                         .catch(error => {

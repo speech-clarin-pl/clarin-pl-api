@@ -9,6 +9,7 @@ var serveStatic = require('serve-static');
 const isAuth = require('./middleware/is-auth');
 const utils = require('./utils/utils');
 const uniqueFilename = require('unique-filename');
+const chalk = require('chalk');
 
 
 const log = require('simple-node-logger').createSimpleLogger('projectLogs.log'); //logging
@@ -40,7 +41,7 @@ const recognitionRoutes =  require('./routes/recognitionTool');
 const VADRoutes =  require('./routes/VADTool');
 const DIARoutes =  require('./routes/DIATool');
 const SEGRoutes =  require('./routes/SEGTool');
-const segmentationRoutes = require('./routes/segmentationTool');
+//const segmentationRoutes = require('./routes/segmentationTool');
 const repoRoutes = require('./routes/repo'); 
 const authRoutes =  require('./routes/auth');
 
@@ -144,7 +145,7 @@ app.use('/repoFiles', isAuth, express.static(path.join(__dirname, '/repo')));
 //routes for different parts of requests in app
 app.use('/projectsList', projectsListRoutes);
 app.use('/recognition', recognitionRoutes);
-app.use('/segmentation', segmentationRoutes);
+//app.use('/segmentation', segmentationRoutes);
 app.use('/repoFiles', repoRoutes);
 app.use('/vad', VADRoutes);
 app.use('/dia', DIARoutes);

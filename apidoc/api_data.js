@@ -1,9 +1,553 @@
 define({ "api": [
   {
+    "type": "delete",
+    "url": "/repoFiles/delete/:containerId?api_key=your_API_key",
+    "title": "delete container",
+    "description": "<p>Removes everthing related to uploaded file</p>",
+    "name": "DELETEcontainer",
+    "group": "Tools",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "containerId",
+            "description": "<p>The container ID which you want to delete</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "api_key",
+            "description": "<p>Your API key</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "fields": {
+        "Success 200": [
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "message",
+            "description": ""
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "containerId",
+            "description": "<p>which was deleted</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "sessionId",
+            "description": "<p>the id of the session to which the container belonged to</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\n  \"message\": 'The container has been removed!',\n  \"sessionId\": \"5f58a92dfa006c8aed96f846\",\n  \"containerId\": \"5f58a92dfa006c8aed96f846\",\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "error": {
+      "fields": {
+        "500": [
+          {
+            "group": "500",
+            "optional": false,
+            "field": "ServerError",
+            "description": ""
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Error-Response:",
+          "content": "HTTP/1.1 500 Service Unavailable\n{\n  \"message\": 'Something went wrong with removing the container!',\n  \"sessionId\": \"5f58a92dfa006c8aed96f846\",\n  \"containerId\": \"5f58a92dfa006c8aed96f846\",\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "0.0.0",
+    "filename": "controllers/repoPanel.js",
+    "groupTitle": "Tools"
+  },
+  {
+    "type": "put",
+    "url": "/repoFiles/runSpeechDiarization/:containerId?api_key=your_API_key",
+    "title": "Run DIA tool",
+    "description": "<p>Diarization (DIA) tool</p>",
+    "name": "DIATool",
+    "group": "Tools",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "containerId",
+            "description": "<p>The container ID for which you want to run the tool</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "api_key",
+            "description": "<p>Your API key</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "fields": {
+        "Success 200": [
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "message",
+            "description": "<p>that this tool finished working</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "containerId",
+            "description": "<p>the container ID which was used</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "toolType",
+            "description": "<p>returns &quot;DIA&quot; string</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "Object",
+            "optional": false,
+            "field": "DIAsegments",
+            "description": "<p>returns Diarization segments in JSON format. If you wish to get output as a file in CTM or TextGrid format, see how to get output file</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\n  \"message\": ''The service for this container has finished working with success!!',\n  \"containerId\": \"5f58a92dfa006c8aed96f846\",\n  \"toolType\": \"DIA\",\n  \"VADSegments\": [\n                     {\n                         \"startTime\":0.68,\n                         \"endTime\":2.74,\n                         \"editable\":true,\n                         \"color\":\"#394b55\",\n                         \"labelText\":\"1\"\n                     },\n                     {\n                         \"startTime\":2.74,\n                         \"endTime\":4.62,\n                         \"editable\":true,\n                         \"color\":\"#394b55\",\n                         \"labelText\":\"2\"\n                     },\n                  ]\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "error": {
+      "fields": {
+        "500": [
+          {
+            "group": "500",
+            "optional": false,
+            "field": "ServerError",
+            "description": ""
+          }
+        ],
+        "503": [
+          {
+            "group": "503",
+            "optional": false,
+            "field": "Service",
+            "description": "<p>Unavailable When something goes wrong with the service</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Error-Response:",
+          "content": "HTTP/1.1 503 Service Unavailable\n{\n  \"message\": 'Something wrong with the VAD on the server!',\n  \"containerId\": \"5f58a92dfa006c8aed96f846\",\n  \"toolType\": \"DIA\"\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "0.0.0",
+    "filename": "controllers/repoPanel.js",
+    "groupTitle": "Tools"
+  },
+  {
+    "type": "GET",
+    "url": "/repoFiles/download/:containerId/:fileType?api_key=your_API_key",
+    "title": "Download the tool's output",
+    "description": "<p>If the task has been finised his job, you can download its result in choosen file format. Besides you can also download the oryginal file that you have sent to server and also the file that has been converted into 16000 Hz and 8bits. The conversion was neccessary to do in order to run speech services.</p>",
+    "name": "GETOutputFile",
+    "group": "Tools",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "containerId",
+            "description": "<p>The container ID for which you want to download the results.</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "fileType",
+            "description": "<p>you have to indicate one of the following flag to indicate which kind of output you are interested in: <h3>Audio File related</h3><ul><li>&quot;oryginalAudio&quot;: you can download the same file which was sent.</li><li>&quot;audio&quot; : download the audio converted into PCM 16000Hz and 8bits</li></ul><h3>Voice Activity Detection (VAD) related</h3><ul><li>&quot;VADctm&quot;: downloads the output of VAD in CTM format</li><li>&quot;VADtextGrid&quot;: downloads the output of VAD in TextGrid format</li><li>&quot;VADJSON&quot;: downloads the output of VAD in JSON format</li></ul><h3>Diarization related</h3><ul><li>&quot;DIActm&quot;: downloads the output of diarization in CTM format.</li><li>&quot;DIAtextGrid&quot;: downloads the output of diarization in TextGrid format.</li><li>&quot;DIAJSON&quot;: downloads the outpu of the dirization in JSON format.</li></ul><h3>Speech Recognition related</h3><ul><li>&quot;JSONTranscript&quot;: downloads the transcription in JSON format</li><li>&quot;TXTTranscript&quot;: downloads the transcription in TXT file format.</li></ul><h3>Segmentation related</h3><ul><li>&quot;SEGctm&quot;: downloads the output of Segmentation in CTM format</li><li>&quot;SEGtextGrid&quot;: downloads the output of Segmentation in TextGrid format.</li><li>&quot;EMUJSON&quot;: downloads the outpu of Segmentation in EMU-SDMS format.</li></ul></p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "api_key",
+            "description": "<p>Your API key</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "fields": {
+        "Success 200": [
+          {
+            "group": "Success 200",
+            "type": "Object",
+            "optional": false,
+            "field": "returns",
+            "description": "<p>audio file or file with the output to download</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK input 1 0.120 7.610 speech",
+          "type": "json"
+        }
+      ]
+    },
+    "error": {
+      "fields": {
+        "404": [
+          {
+            "group": "404",
+            "optional": false,
+            "field": "NotFound",
+            "description": "<p>When the resource could not be found</p>"
+          }
+        ],
+        "500": [
+          {
+            "group": "500",
+            "optional": false,
+            "field": "ServerError",
+            "description": ""
+          }
+        ]
+      }
+    },
+    "version": "0.0.0",
+    "filename": "controllers/repoPanel.js",
+    "groupTitle": "Tools"
+  },
+  {
+    "type": "put",
+    "url": "/runSpeechRecognition/:containerId?api_key=your_API_key",
+    "title": "Run SEG tool",
+    "description": "<p>Recognition (REC) tool. In order to download the results of the recognition, you have to run separate API request</p>",
+    "name": "RECTool",
+    "group": "Tools",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "containerId",
+            "description": "<p>The container ID for which you want to run the tool</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "api_key",
+            "description": "<p>Your API key</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "fields": {
+        "Success 200": [
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "message",
+            "description": "<p>that this tool finished working</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "containerId",
+            "description": "<p>the container ID which was used</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "toolType",
+            "description": "<p>returns &quot;SEG&quot; string</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\n  \"message\": ''The service for this container has finished working with success!!',\n  \"containerId\": \"5f58a92dfa006c8aed96f846\",\n  \"toolType\": \"REC\",\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "error": {
+      "fields": {
+        "500": [
+          {
+            "group": "500",
+            "optional": false,
+            "field": "ServerError",
+            "description": ""
+          }
+        ],
+        "503": [
+          {
+            "group": "503",
+            "optional": false,
+            "field": "Service",
+            "description": "<p>Unavailable When something goes wrong with the service</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Error-Response:",
+          "content": "HTTP/1.1 503 Service Unavailable\n{\n  \"message\": 'Something wrong with the Recognition on the server!',\n  \"containerId\": \"5f58a92dfa006c8aed96f846\",\n  \"toolType\": \"REC\"\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "0.0.0",
+    "filename": "controllers/repoPanel.js",
+    "groupTitle": "Tools"
+  },
+  {
+    "type": "put",
+    "url": "/runSpeechSegmentation/:containerId?api_key=your_API_key",
+    "title": "Run SEG tool",
+    "description": "<p>Segmentation (SEG) tool. It requires to run the recognition first. In order to download the results of the segmentaion, you have to run separate API request.</p>",
+    "name": "SEGTool",
+    "group": "Tools",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "containerId",
+            "description": "<p>The container ID for which you want to run the tool</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "api_key",
+            "description": "<p>Your API key</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "fields": {
+        "Success 200": [
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "message",
+            "description": "<p>that this tool finished working</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "containerId",
+            "description": "<p>the container ID which was used</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "toolType",
+            "description": "<p>returns &quot;SEG&quot; string</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\n  \"message\": ''The service for this container has finished working with success!!',\n  \"containerId\": \"5f58a92dfa006c8aed96f846\",\n  \"toolType\": \"SEG\",\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "error": {
+      "fields": {
+        "500": [
+          {
+            "group": "500",
+            "optional": false,
+            "field": "ServerError",
+            "description": ""
+          }
+        ],
+        "503": [
+          {
+            "group": "503",
+            "optional": false,
+            "field": "Service",
+            "description": "<p>Unavailable When something goes wrong with the service</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Error-Response:",
+          "content": "HTTP/1.1 503 Service Unavailable\n{\n  \"message\": 'Something wrong with the Segmentation on the server!',\n  \"containerId\": \"5f58a92dfa006c8aed96f846\",\n  \"toolType\": \"SEG\"\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "0.0.0",
+    "filename": "controllers/repoPanel.js",
+    "groupTitle": "Tools"
+  },
+  {
+    "type": "put",
+    "url": "/repoFiles/runSpeechVAD/:containerId?api_key=your_API_key",
+    "title": "Run VAD tool",
+    "description": "<p>Voice Activity Detection (VAD) tool</p>",
+    "name": "VADTool",
+    "group": "Tools",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "containerId",
+            "description": "<p>The container ID for which you want to run the tool</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "api_key",
+            "description": "<p>Your API key</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "fields": {
+        "Success 200": [
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "message",
+            "description": "<p>that this tool finished working</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "containerId",
+            "description": "<p>the container ID which was used</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "toolType",
+            "description": "<p>returns &quot;VAD&quot; string</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "Object",
+            "optional": false,
+            "field": "VADSegments",
+            "description": "<p>returns segments with recognized voice in JSON format. If you wish to get output as a file in CTM or TextGrid format, see how to get output file</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\n  \"message\": ''The service for this container has finished working with success!!',\n  \"containerId\": \"5f58a92dfa006c8aed96f846\",\n  \"toolType\": \"VAD\",\n  \"VADSegments\": [\n                     {\n                         \"startTime\":0.68,\n                         \"endTime\":2.74,\n                         \"editable\":true,\n                         \"color\":\"#394b55\",\n                         \"labelText\":\"speech\"\n                     },\n                     {\n                         \"startTime\":2.74,\n                         \"endTime\":5.97,\n                         \"editable\":true,\n                         \"color\":\"#394b55\",\n                         \"labelText\":\"speech\"\n                     }\n                   ]\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "error": {
+      "fields": {
+        "500": [
+          {
+            "group": "500",
+            "optional": false,
+            "field": "ServerError",
+            "description": ""
+          }
+        ],
+        "503": [
+          {
+            "group": "503",
+            "optional": false,
+            "field": "Service",
+            "description": "<p>Unavailable When something goes wrong with the service</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Error-Response:",
+          "content": "HTTP/1.1 503 Service Unavailable\n{\n  \"message\": 'Something wrong with the VAD on the server!',\n  \"containerId\": \"5f58a92dfa006c8aed96f846\",\n  \"toolType\": \"VAD\"\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "0.0.0",
+    "filename": "controllers/repoPanel.js",
+    "groupTitle": "Tools"
+  },
+  {
     "type": "post",
     "url": "/forgotPass/:emailAddress",
     "title": "Password recovery",
-    "description": "<p>Allows the user to generate new password for his account. This only send email to the user with the link which the user has to click to access the page where he will be able to enter new password</p>",
+    "description": "<p>Allows the user to generate new password for his account. This only sends email to the user with the link which the user has to click to access the page where he will be able to enter new password</p>",
     "name": "ForgotPassword",
     "group": "User",
     "parameter": {
@@ -80,7 +624,7 @@ define({ "api": [
   {
     "type": "post",
     "url": "/login",
-    "title": "Log in of registered user",
+    "title": "Log in",
     "description": "<p>Allows to log in of registered user and get the token</p>",
     "name": "LoginUser",
     "group": "User",
