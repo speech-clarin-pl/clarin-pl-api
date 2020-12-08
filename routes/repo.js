@@ -47,10 +47,14 @@ router.delete('/delete/:containerId', isAuth, repoController.removeContainer);
   router.put('/runSpeechVAD/:containerId', isAuth, repoController.runSpeechVAD);
 
   //GET /repoFiles/exportToEmu/:userId/:projectId - exportuje do EMU
-  router.get('/exportToEmu/:userId/:projectId', isAuth, repoController.exportToEmu);
+  //router.get('/exportToEmu/:userId/:projectId', isAuth, repoController.exportToEmu);
+  router.get('/createCorpus/:projectId', isAuth, repoController.exportToEmu);
+  //router.get('/createCorpus/', isAuth, repoController.exportToEmu);
 
    //GET /downloadKorpus/:userId/:projectId' - exportuje do EMU
-   router.get('/downloadKorpus/:userId/:projectId', isAuth, repoController.getReadyKorpus);
+   //router.get('/downloadKorpus/:userId/:projectId', isAuth, repoController.getReadyKorpus);
+   router.get('/downloadCorpus/:projectId', isAuth, repoController.getReadyKorpus);
+  // router.get('/downloadCorpus/', isAuth, repoController.getReadyKorpus);
 
   
 

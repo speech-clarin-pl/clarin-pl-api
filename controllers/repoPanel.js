@@ -192,9 +192,41 @@ exports.createKorpus = (projectId, userId) => {
 }
 
 
+/**
+ * @api {get} /repoFiles/createCorpus/:projectId?api_key=your_API_key Create EMU corpus
+ * @apiDescription It initializes the process of creating the corpus in EMU-SDMS format. It might take some longer time until it will finish working. It creates a ZIP bundle with only those files for which VAD, DIA, REC and SEG were run. So all the layers of anotation have to be defined. After finish, you can download the results by using "Download Corpus" API endpoint.
+ * @apiName CreateCorpus
+ * @apiGroup Files
+ *
+ * @apiParam {String} projectId The project ID for which you want to create the corpus. You can find it in UI
+ * @apiParam {String} api_key Your API key
+ *
+ * @apiSuccess {String} message that the corpus has been created and you can download it
+ * 
+ *
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "message": 'Korpus has been created! you can download it',
+ *     }
+ *
+ * @apiError (500) ServerError 
+ * 
+ * 
+ */
 exports.exportToEmu = (req, res, next) => {
-  const projectId = req.params.projectId;
-  const userId = req.params.userId;
+
+
+  //kiedy projectId jest podawany w parametrze URL
+  if(req.params.projectId){
+    const projectId = req.params.projectId;
+  } else { //jak nie to jakos to stworzyc - TO DO
+    const projectId = req.params.projectId;
+  }
+  
+  
+  //const userId = req.params.userId;
+  const userId = req.userId;
 
   this.createKorpus(projectId, userId)
     .then((pathToZIP)=>{
@@ -208,6 +240,45 @@ exports.exportToEmu = (req, res, next) => {
       res.status(204).json({ message: 'You have not created all annotation levels or something went wrong in the server!'});
     }) 
 }
+
+
+/**
+ * @api {get} /repoFiles/downloadCorpus/:projectId?api_key=your_API_key Download EMU corpus
+ * @apiDescription After when you create the corpus you can download it. 
+ * @apiName DownloadCorpus
+ * @apiGroup Files
+ *
+ * @apiParam {String} projectId The project ID for which you want to create the corpus. You can find it in UI
+ * @apiParam {String} api_key Your API key
+ *
+ * @apiSuccess {Object} you can save the ZIP file in EMU-SDMS corpus
+ * 
+ *
+ * @apiError (500) ServerError 
+ * 
+ * 
+ */
+
+// ###################################################
+// ########### pobieram gotowy korpus
+// ######################################################
+
+exports.getReadyKorpus = (req,res,next) => {
+
+  const userId = req.params.userId;
+  const projectId = req.params.projectId;
+  
+  const nazwaKorpusu = 'KORPUS';
+  const pathToUserProject = appRoot + '/repo/' + userId + '/' + projectId;
+  const pathToCorpus = pathToUserProject + '/' + nazwaKorpusu;
+  const pathToZIP = pathToCorpus+'.zip';
+   
+  res.download(pathToZIP,(nazwaKorpusu+'.zip'));
+ 
+ }
+
+
+
 
 //##########################################
 //#### zmieniam nazwe contenera ######
@@ -233,7 +304,7 @@ exports.changeContainerName = (req, res, next) => {
 
 /**
  * @api {put} /repoFiles/runSpeechVAD/:containerId?api_key=your_API_key Run VAD tool
- * @apiDescription Voice Activity Detection (VAD) tool
+ * @apiDescription Voice Activity Detection (VAD) tool to recognize the speech fragments within the recording. By default, it returns the output in JSON format. However, if you want to download the output in different format, look at the "Download outputs" API endpoint.
  * @apiName VADTool
  * @apiGroup Tools
  *
@@ -273,13 +344,6 @@ exports.changeContainerName = (req, res, next) => {
  * @apiError (503) Service Unavailable When something goes wrong with the service
  * @apiError (500) ServerError 
  * 
- * @apiErrorExample Error-Response:
- *     HTTP/1.1 503 Service Unavailable
- *     {
- *       "message": 'Something wrong with the VAD on the server!',
- *       "containerId": "5f58a92dfa006c8aed96f846",
- *       "toolType": "VAD"
- *     }
  * 
  */
 
@@ -297,9 +361,6 @@ exports.runSpeechVAD = (req, res, next) => {
         console.log(chalk.green("VAD TASK DONE!"))
         res.status(200).json({ message: 'The service for this container has finished working with success!!', containerId: containerIdOK, toolType: "VAD", VADSegments: VADsegments});
       }).catch(error => {
-
-        //jeżeli coś poszło nie tak to aktualizuje to w bazie
-        
         // wystapil blad wiec wpisuje ta wiadomosc
         res.status(503).json({ message: 'Something wrong with the VAD on the server!', containerId: containerIdOK, toolType: "VAD"});
         console.log(chalk.red('ERROR Z TASKIEM'))
@@ -314,7 +375,7 @@ exports.runSpeechVAD = (req, res, next) => {
 
 /**
  * @api {put} /repoFiles/runSpeechDiarization/:containerId?api_key=your_API_key Run DIA tool
- * @apiDescription Diarization (DIA) tool
+ * @apiDescription Diarization (DIA) tool for recognizing speech parts within recordings and assigning the number to a particular speaker. By default, it returns the output in JSON format. However, if you want to download the output in different format, look at the "Download outputs" API endpoint.
  * @apiName DIATool
  * @apiGroup Tools
  *
@@ -353,15 +414,6 @@ exports.runSpeechVAD = (req, res, next) => {
  *
  * @apiError (503) Service Unavailable When something goes wrong with the service
  * @apiError (500) ServerError 
- * 
- * @apiErrorExample Error-Response:
- *     HTTP/1.1 503 Service Unavailable
- *     {
- *       "message": 'Something wrong with the VAD on the server!',
- *       "containerId": "5f58a92dfa006c8aed96f846",
- *       "toolType": "DIA"
- *     }
- * 
  */
 
 //##########################################
@@ -389,7 +441,7 @@ exports.runSpeechDiarization = (req, res, next) => {
 
 /**
  * @api {put} /runSpeechSegmentation/:containerId?api_key=your_API_key Run SEG tool
- * @apiDescription Segmentation (SEG) tool. It requires to run the recognition first. In order to download the results of the segmentaion, you have to run separate API request.
+ * @apiDescription Segmentation (SEG) tool. It requires to run the recognition first. In order to download the results of the segmentaion, you have to run separate API request. Please look at the "Download outputs" API endpoint.
  * @apiName SEGTool
  * @apiGroup Tools
  *
@@ -412,13 +464,6 @@ exports.runSpeechDiarization = (req, res, next) => {
  * @apiError (503) Service Unavailable When something goes wrong with the service
  * @apiError (500) ServerError 
  * 
- * @apiErrorExample Error-Response:
- *     HTTP/1.1 503 Service Unavailable
- *     {
- *       "message": 'Something wrong with the Segmentation on the server!',
- *       "containerId": "5f58a92dfa006c8aed96f846",
- *       "toolType": "SEG"
- *     }
  * 
  */
 //##########################################
@@ -443,10 +488,11 @@ exports.runSpeechSegmentation = (req, res, next) => {
   })
 }
 
+//TO DO: dorobić wgrywanie polikow txt
 
 /**
  * @api {put} /runSpeechRecognition/:containerId?api_key=your_API_key Run SEG tool
- * @apiDescription Recognition (REC) tool. In order to download the results of the recognition, you have to run separate API request
+ * @apiDescription Recognition (REC) tool. In order to download the results of the recognition, you have to run separate API request. Please look at the "Download outputs" API endpoint.
  * @apiName RECTool
  * @apiGroup Tools
  *
@@ -468,14 +514,6 @@ exports.runSpeechSegmentation = (req, res, next) => {
  *
  * @apiError (503) Service Unavailable When something goes wrong with the service
  * @apiError (500) ServerError 
- * 
- * @apiErrorExample Error-Response:
- *     HTTP/1.1 503 Service Unavailable
- *     {
- *       "message": 'Something wrong with the Recognition on the server!',
- *       "containerId": "5f58a92dfa006c8aed96f846",
- *       "toolType": "REC"
- *     }
  * 
  */
 
@@ -508,34 +546,16 @@ exports.runSpeechRecognition = (req, res, next) => {
 }
 
 
-// ###################################################
-// ########### pobieram gotowy korpus
-// ######################################################
 
-
-exports.getReadyKorpus = (req,res,next) => {
-
- const userId = req.params.userId;
- const projectId = req.params.projectId;
- 
-
-  const nazwaKorpusu = 'KORPUS';
-  const pathToUserProject = appRoot + '/repo/' + userId + '/' + projectId;
-  const pathToCorpus = pathToUserProject + '/' + nazwaKorpusu;
-  const pathToZIP = pathToCorpus+'.zip';
-  
-  res.download(pathToZIP,(nazwaKorpusu+'.zip'));
-
-}
 
 
 
  
 /**
- * @api {GET} /repoFiles/download/:containerId/:fileType?api_key=your_API_key Download the tool's output
+ * @api {GET} /repoFiles/download/:containerId/:fileType?api_key=your_API_key Download outputs
  * @apiDescription If the task has been finised his job, you can download its result in choosen file format. Besides you can also download the oryginal file that you have sent to server and also the file that has been converted into 16000 Hz and 8bits. The conversion was neccessary to do in order to run speech services.
  * @apiName GETOutputFile
- * @apiGroup Tools
+ * @apiGroup Files
  *
  * @apiParam {String} containerId   The container ID for which you want to download the results.
  * @apiParam {String} fileType      you have to indicate one of the following flag to indicate which kind of output you are interested in: <h3>Audio File related</h3><ul><li>"oryginalAudio": you can download the same file which was sent.</li><li>"audio" : download the audio converted into PCM 16000Hz and 8bits</li></ul><h3>Voice Activity Detection (VAD) related</h3><ul><li>"VADctm": downloads the output of VAD in CTM format</li><li>"VADtextGrid": downloads the output of VAD in TextGrid format</li><li>"VADJSON": downloads the output of VAD in JSON format</li></ul><h3>Diarization related</h3><ul><li>"DIActm": downloads the output of diarization in CTM format.</li><li>"DIAtextGrid": downloads the output of diarization in TextGrid format.</li><li>"DIAJSON": downloads the outpu of the dirization in JSON format.</li></ul><h3>Speech Recognition related</h3><ul><li>"JSONTranscript": downloads the transcription in JSON format</li><li>"TXTTranscript": downloads the transcription in TXT file format.</li></ul><h3>Segmentation related</h3><ul><li>"SEGctm": downloads the output of Segmentation in CTM format</li><li>"SEGtextGrid": downloads the output of Segmentation in TextGrid format.</li><li>"EMUJSON": downloads the outpu of Segmentation in EMU-SDMS format.</li></ul> 
@@ -712,10 +732,10 @@ exports.removeSession = (req,res,next) => {
 
 
 /**
- * @api {delete} /repoFiles/delete/:containerId?api_key=your_API_key delete container
- * @apiDescription Removes everthing related to uploaded file
+ * @api {delete} /repoFiles/delete/:containerId?api_key=your_API_key Delete container
+ * @apiDescription Removes everthing related to uploaded file: the audio files themselves, the output from the tools and data from database
  * @apiName DELETEcontainer
- * @apiGroup Tools
+ * @apiGroup Files
  *
  * @apiParam {String} containerId The container ID which you want to delete
  * @apiParam {String} api_key Your API key
@@ -735,14 +755,6 @@ exports.removeSession = (req,res,next) => {
  * 
  *
  * @apiError (500) ServerError 
- * 
- * @apiErrorExample Error-Response:
- *     HTTP/1.1 500 Service Unavailable
- *     {
- *       "message": 'Something went wrong with removing the container!',
- *       "sessionId": "5f58a92dfa006c8aed96f846",
- *       "containerId": "5f58a92dfa006c8aed96f846",
- *     }
  * 
  */
 

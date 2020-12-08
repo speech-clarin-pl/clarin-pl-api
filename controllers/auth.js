@@ -105,7 +105,7 @@ exports.applyNewPass = (req,res,next) => {
 }
 
 /**
- * @api {post} /forgotPass/:emailAddress Password recovery
+ * @api {post} /auth/forgotPass/:emailAddress Password recovery
  * @apiDescription Allows the user to generate new password for his account. This only sends email to the user with the link which the user has to click to access the page where he will be able to enter new password
  * @apiName ForgotPassword
  * @apiGroup User
@@ -189,7 +189,7 @@ exports.forgotPass = (req,res,next) => {
 
 
 /**
- * @api {put} /registration Register new User
+ * @api {put} /auth/registration Register new User
  * @apiDescription Allows to register new user. Its necessary to run speech services using user interface and to process files in batch.
  * @apiName RegisterUser
  * @apiGroup User
@@ -246,13 +246,16 @@ exports.registration = (req, res, next) => {
 
         //tutaj tworzenie folderu z id uzytkownika w repo
         const dirpath = appRoot + '/repo/'+user._id;
+
+
+        //--------------------------
+      
         mkdirp(dirpath, function(err) {
             // if any errors then print the errors to our console
             if (err) {
                 console.log(chalk.red(err));
                 return err;
             } else {
-
                 //tworze katalog z plikami tymczasowymi, wgrywanymi bez GUI
                 mkdirp(dirpath+'/temporary', function(err) {
                     if (err) {
@@ -268,12 +271,12 @@ exports.registration = (req, res, next) => {
               
             }
           });
+          
     })
     .catch(() => {
 
-        console.log(chalk.red("Something went wrong with saving the user to DB"))
-
-        const error = new Error("Something went wrong with saving the user to database");
+        console.log(chalk.red("Something went wrong with creating the user"))
+        const error = new Error("Something went wrong with creating the user");
         error.statusCode = 500;
         error.data = [];
 
@@ -282,7 +285,7 @@ exports.registration = (req, res, next) => {
 }
 
 /**
- * @api {post} /login Log in
+ * @api {post} /auth/login Log in
  * @apiDescription Allows to log in of registered user and get the token
  * @apiName LoginUser
  * @apiGroup User
