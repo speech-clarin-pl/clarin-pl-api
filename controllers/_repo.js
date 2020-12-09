@@ -50,11 +50,6 @@ exports.uploadFiles = (req, res, next) => {
   const userId = req.body.userId;
   const projectId = req.body.projectId;
 
-  console.log(filesToSave)
-  console.log(folderKey)
-  console.log(userId)
-  console.log(projectId)
-
   //musze przenieść plik z plikow tymczasowych do katalogu repo użytkownika
   const finalFileDest = appRoot + '/repo/' + userId + '/' + projectId + '/';
 

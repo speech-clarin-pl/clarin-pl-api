@@ -9,6 +9,7 @@ const dotenv = require('dotenv');
 const nodemailer = require('nodemailer');
 const transporter = require('../transporter');
 var generator = require('generate-password');
+const projectsList = require('../controllers/projectsList');
 
 dotenv.config();
 
@@ -257,6 +258,15 @@ exports.registration = (req, res, next) => {
                 return err;
             } else {
                 //tworze katalog z plikami tymczasowymi, wgrywanymi bez GUI
+
+                projectsList.createProjectHandler("Your First Demo Project",user._id).then((results)=>{
+                    //console.log(chalk.green("Successfully created user directory"));          
+                    res.status(201).json({message: 'The user has been created', userId: user._id});
+                }).catch((err)=>{
+                    return err;
+                })
+
+                /*
                 mkdirp(dirpath+'/temporary', function(err) {
                     if (err) {
                         console.log(chalk.red(err));
@@ -268,6 +278,7 @@ exports.registration = (req, res, next) => {
                         res.status(201).json({message: 'The user has been created', userId: user._id});
                     }
                 })
+                */
               
             }
           });
