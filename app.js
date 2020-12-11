@@ -155,17 +155,17 @@ app.use('/auth', authRoutes);
 
 //error handling...
 app.use((error, req, res, next) => {
-    console.log(chalk.red("GLOBAL ERROR HANDLER:"))
-    //console.log(error);
+    console.log(chalk.red('GLOBAL ERROR HANDLER'))
     const status = error.statusCode || 500;
     const message = error.message;  //wiadomosc przekazana w konstruktorze Error
+    console.log(chalk.red(message))
     const data = error.data;
     res.status(status).json({ message: message, data: data });
 })
 
 //najpierw lacze sie z baza a nastepnie startuje serwer
 mongoose
-    .connect(config.dbPath)
+    .connect(config.dbPath, {useFindAndModify: false, useNewUrlParser: true, useUnifiedTopology: true})
     .then(result => {
 
         let listen = app.listen(config.port);

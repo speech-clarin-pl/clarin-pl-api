@@ -630,8 +630,8 @@
   {
     "type": "post",
     "url": "/auth/forgotPass/:emailAddress",
-    "title": "Password recovery",
-    "description": "<p>Allows the user to generate new password for his account. This only sends email to the user with the link which the user has to click to access the page where he will be able to enter new password</p>",
+    "title": "Odzyskanie hasła",
+    "description": "<p>Pozwala użytkownikowi wygenerować nowe hasło. Wywołanie tego api powoduje wysłąnie wiadomości email na adres użytkownika z linkiem do strony gdzie użytkownik może wprowadzić nowe hasło.</p>",
     "name": "ForgotPassword",
     "group": "User",
     "parameter": {
@@ -642,7 +642,7 @@
             "type": "String",
             "optional": false,
             "field": "email",
-            "description": "<p>User email</p>"
+            "description": "<p>Email</p>"
           }
         ]
       }
@@ -655,21 +655,14 @@
             "type": "String",
             "optional": false,
             "field": "message",
-            "description": "<p>that the user has been created</p>"
-          },
-          {
-            "group": "Success 200",
-            "type": "String",
-            "optional": false,
-            "field": "userId",
-            "description": "<p>the user id created</p>"
+            "description": "<p>Wiadomość potwierdzająca wysłanie maila</p>"
           }
         ]
       },
       "examples": [
         {
           "title": "Success-Response:",
-          "content": "HTTP/1.1 200 OK\n{\n  \"message\": \"The email with further instructions has been sent\",\n}",
+          "content": "HTTP/1.1 200 OK\n{\n  \"message\": \"Wiadomość z dalszymi instrukcjami została wysłana na podany adres email\",\n}",
           "type": "json"
         }
       ]
@@ -681,7 +674,7 @@
             "group": "401",
             "optional": false,
             "field": "Unathorized",
-            "description": "<p>The email has not been registered</p>"
+            "description": "<p>Nie znaleziono danego adres email</p>"
           }
         ],
         "500": [
@@ -689,17 +682,18 @@
             "group": "500",
             "optional": false,
             "field": "ServerError",
-            "description": "<p>Something went wrong in the server.</p>"
+            "description": "<p>Serwer error</p>"
+          }
+        ],
+        "502": [
+          {
+            "group": "502",
+            "optional": false,
+            "field": "BadGateway",
+            "description": "<p>Problem z wysłaniem maila</p>"
           }
         ]
-      },
-      "examples": [
-        {
-          "title": "Error-Response:",
-          "content": "HTTP/1.1 500 Internal Server Error\n{\n  \"message\": \"Something went wrong with sending the email\"\n}",
-          "type": "json"
-        }
-      ]
+      }
     },
     "version": "0.0.0",
     "filename": "controllers/auth.js",
@@ -708,8 +702,8 @@
   {
     "type": "post",
     "url": "/auth/login",
-    "title": "Log in",
-    "description": "<p>Allows to log in of registered user and get the token</p>",
+    "title": "Logowanie",
+    "description": "<p>Pozwala na zalogowanie się już zarejestrowanym użytkownikom i uzyskanie tokenu do przeprowadzania dzalszych zapytań</p>",
     "name": "LoginUser",
     "group": "User",
     "parameter": {
@@ -720,14 +714,14 @@
             "type": "String",
             "optional": false,
             "field": "email",
-            "description": "<p>User email</p>"
+            "description": "<p>Email użytkownika</p>"
           },
           {
             "group": "Parameter",
             "type": "String",
             "optional": false,
             "field": "password",
-            "description": "<p>User password</p>"
+            "description": "<p>Hasło użytkownika</p>"
           }
         ]
       }
@@ -739,22 +733,36 @@
             "group": "Success 200",
             "type": "String",
             "optional": false,
-            "field": "message",
-            "description": "<p>that the user has been created</p>"
+            "field": "token",
+            "description": "<p>Token który należy używać w polu api_key podczas wykonywania operacji na plikach. Token jest ważny przez 192h (8 dni). Po tym czasie należy zalogować się ponownie.</p>"
           },
           {
             "group": "Success 200",
             "type": "String",
             "optional": false,
             "field": "userId",
-            "description": "<p>the user id created</p>"
+            "description": "<p>Identyfikator użytkownika</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "userName",
+            "description": "<p>Nazwa użytkownika</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "firstProjectId",
+            "description": "<p>Identyfikator pierwszego stworzonego projektu do którego domyślnie będą wgrywane pliki oraz rezultaty działania narzędzi (o ile nie stworzysz osobnego projektu)</p>"
           }
         ]
       },
       "examples": [
         {
           "title": "Success-Response:",
-          "content": "HTTP/1.1 200 OK\n{\n  \"token\": eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1rbGVjQHBqd3N0ay5lZHUucGwiLCJ1c2VySWQiOiI1ZjU4YTkyZGZhMDA2YzhhZWQ5NmY4NDYiLCJpYXQiOjE2MDYzMDc1NzEsImV9cXI6MPYwNjY1MzEeMX0.-ABd2a0F3lcuI0yDV7eymq4ey5_J__xGdyYAk56icO4,\n  \"userId\": \"5f58a92dfa006c8aed96f846\"\n}",
+          "content": "HTTP/1.1 200 OK\n{\n  \"token\": eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1rbGVjQHBqd3N0ay5lZHUucGwiLCJ1c2VySWQiOiI1ZjU4YTkyZGZhMDA2YzhhZWQ5NmY4NDYiLCJpYXQiOjE2MDYzMDc1NzEsImV9cXI6MPYwNjY1MzEeMX0.-ABd2a0F3lcuI0yDV7eymq4ey5_J__xGdyYAk56icO4,\n  \"userId\": \"5f58a92dfa006c8aed96f846\",\n  \"userName\": Kowalski,\n  \"firstProjectId\": \"5fd33950667fa7255da2dfa9\"\n}",
           "type": "json"
         }
       ]
@@ -766,7 +774,15 @@
             "group": "401",
             "optional": false,
             "field": "Unathorized",
-            "description": "<p>can not find given email or is wrong password</p>"
+            "description": "<p>Błędne hasło</p>"
+          }
+        ],
+        "404": [
+          {
+            "group": "404",
+            "optional": false,
+            "field": "Not",
+            "description": "<p>Found Użytkownik o podanym email nie został znaleziony</p>"
           }
         ],
         "500": [
@@ -774,17 +790,10 @@
             "group": "500",
             "optional": false,
             "field": "ServerError",
-            "description": "<p>internal server error</p>"
+            "description": "<p>Serwer error</p>"
           }
         ]
-      },
-      "examples": [
-        {
-          "title": "Error-Response:",
-          "content": "HTTP/1.1 500 Internal Server Error\n{\n  \"message\": \"Something went wrong with loggin in the user\",\n  \"data\": undefined\n}",
-          "type": "json"
-        }
-      ]
+      }
     },
     "version": "0.0.0",
     "filename": "controllers/auth.js",
@@ -793,8 +802,8 @@
   {
     "type": "put",
     "url": "/auth/registration",
-    "title": "Register new User",
-    "description": "<p>Allows to register new user. Its necessary to run speech services using user interface and to process files in batch.</p>",
+    "title": "Rejestracja użytkowników",
+    "description": "<p>Rejestracja nowego użytkownika. Jest ona konieczna aby uzyskać po zalogowaniu specjalny token na potrzeby uruchamiania narzędzi mowy. Dzięki temu masz pewność że Twoje dane i rezultaty ich przetwarzania są bezpieczne!</p>",
     "name": "RegisterUser",
     "group": "User",
     "parameter": {
@@ -805,21 +814,21 @@
             "type": "String",
             "optional": false,
             "field": "email",
-            "description": "<p>User email</p>"
+            "description": "<p>Email</p>"
           },
           {
             "group": "Parameter",
             "type": "String",
             "optional": false,
             "field": "name",
-            "description": "<p>User name</p>"
+            "description": "<p>Imię</p>"
           },
           {
             "group": "Parameter",
             "type": "String",
             "optional": false,
             "field": "password",
-            "description": "<p>User password (min. 6 characters)</p>"
+            "description": "<p>Hasło</p>"
           }
         ]
       }
@@ -832,21 +841,28 @@
             "type": "String",
             "optional": false,
             "field": "message",
-            "description": "<p>that the user has been created</p>"
+            "description": "<p>wiadomość potwierdzająca</p>"
           },
           {
             "group": "Success 200",
             "type": "String",
             "optional": false,
             "field": "userId",
-            "description": "<p>the user id created</p>"
+            "description": "<p>Identyfikator użytkownika</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "firstProjectId",
+            "description": "<p>Identyfikator pierwszego stworzonego projektu do którego domyślnie będą wgrywane pliki oraz rezultaty działania narzędzi (o ile nie stworzysz osobnego projektu).</p>"
           }
         ]
       },
       "examples": [
         {
           "title": "Success-Response:",
-          "content": "HTTP/1.1 201 CREATED\n{\n  \"message\": 'The user has been created',\n  \"userId\": \"5f58a92dfa006c8aed96f846\"\n}",
+          "content": "HTTP/1.1 201 CREATED\n{\n  \"message\": 'Użytkownik został stworzony',\n  \"userId\": \"5f58a92dfa006c8aed96f846\",\n  \"firstProjectId\": \"5fd33950667fa7255da2dfa9\"\n}",
           "type": "json"
         }
       ]
@@ -857,8 +873,8 @@
           {
             "group": "422",
             "optional": false,
-            "field": "ValidationFailed",
-            "description": "<p>When profided wrong data.</p>"
+            "field": "UnprocesssableEntity",
+            "description": "<p>Błędy walidacji</p>"
           }
         ],
         "500": [
@@ -866,17 +882,10 @@
             "group": "500",
             "optional": false,
             "field": "ServerError",
-            "description": "<p>When can not save the user to database.</p>"
+            "description": "<p>Serwer error</p>"
           }
         ]
-      },
-      "examples": [
-        {
-          "title": "Error-Response:",
-          "content": "HTTP/1.1 500 Internal Server Error\n{\n  \"message\": \"\"Something went wrong with saving the user to database\",\n  \"data\": undefined\n}",
-          "type": "json"
-        }
-      ]
+      }
     },
     "version": "0.0.0",
     "filename": "controllers/auth.js",

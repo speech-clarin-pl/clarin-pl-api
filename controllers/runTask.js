@@ -14,7 +14,7 @@ const chalk = require('chalk');
 
 
 
-exports.runVAD = (container, outputFormat) => {
+exports.runVAD = (container) => {
     return new Promise((resolve, reject) => {
         
         const userId = container.owner;
@@ -148,7 +148,7 @@ exports.runVAD = (container, outputFormat) => {
                                                     resolve(segments)
                                         })
                                         .catch(error => {
-                                            console.error(chalk.red(error))
+                                            console.error(chalk.red(error.message))
                                             clearInterval(checkerdb);
                                             reject(error)
                                         })
@@ -156,7 +156,7 @@ exports.runVAD = (container, outputFormat) => {
                                     .catch(()=>{
 
                                         //jeżeli był jakiś problem to
-                                        Container.findOneAndUpdate({_id: container._id},{ifVAD: false, VADUserSegments: segments, statusVAD: 'error',errorMessage:'something went wrong with the conversion of ctm into textGrid'})
+                                        Container.findOneAndUpdate({_id: container._id},{ifVAD: false, VADUserSegments: segments, statusVAD: 'error',errorMessage:'Coś nie tak z konwersją CTM na TextGrid'})
                                         .then(updatedContainer => {
                                                     //teraz usuwam z dysku plik  log
                                                     fs.removeSync(pathToResult+'_log.txt');
@@ -164,22 +164,25 @@ exports.runVAD = (container, outputFormat) => {
                                                     fs.removeSync(pathToResult);
 
                                                     clearInterval(checkerdb);
-                                                    reject()
+
+                                                    const error = new Error('Coś nie tak z konwersją CTM na TextGrid');
+                                                    reject(error)
                                         })
                                         .catch(error => {
-                                            console.error(chalk.red(error))
+                                            console.error(chalk.red(error.message))
                                             clearInterval(checkerdb);
                                             reject(error)
                                         })
                                         
-                                        console.error(chalk.red("Coś poszło nie tak z konwersją VAD 2 TextGrid"));
-                                        reject("Something wrong with ctm VAD 2 TexGrid")
+                                        const error = new Error('Coś nie tak z konwersją CTM na TextGrid');
+                                        reject(error)
                                     }) 
                                     
                                 } else {
+                                    
+                                    const error = new Error('Task zakończył działanie ale zawiera błędy');
                                     clearInterval(checkerdb);
-                                 
-                                    reject(task.error)
+                                    reject(error)
                                 }
 
                                 clearInterval(checkerdb);
@@ -187,18 +190,17 @@ exports.runVAD = (container, outputFormat) => {
                             }
                         })
                         .catch(error=>{
-                            console.log(chalk.red("ERROR: nie mogłem znaleźć tasku: " + error))
                             clearInterval(checkerdb);
                             reject(error)
                         })
                 },1000);
                 
                 
-                //jak nie ma odpowiedzi w ciagu 30min to zatrzymuje
+               //jak nie ma odpowiedzi w ciagu 2h to zatrzymuje task
                 setTimeout(() => {
                     clearInterval(checkerdb);
-                }, 1800000);
-                //docelowo na 30min czyli 1800000
+                }, 7200000);
+               
 
             }).catch(error => {
                 reject(error)
@@ -240,7 +242,7 @@ exports.runDIA = (container) => {
             .then(savedTask => {
 
                 //uruchamiam odpytywanie bazy co sekunde 
-                console.log(chalk.green("waiting DIA task to finish...."))
+               // console.log(chalk.green("waiting DIA task to finish...."))
 
                 let block = true;
 
@@ -253,7 +255,7 @@ exports.runDIA = (container) => {
                             
                             //jeżeli zmienił się jego status na ukończony
                             if (task.done) {
-                                console.log("TASK DONE")
+                                //console.log("TASK DONE")
                                 //i jeżeli nie ma errorów
                                 if (!task.error) {
                                     const inputFilePath = task.input;
@@ -339,8 +341,8 @@ exports.runDIA = (container) => {
                                             //aktualizuje flage w kontenrze
                                             Container.findOneAndUpdate({_id: container._id},{ifDIA: true, DIAUserSegments: segments, statusDIA: 'done',errorMessage:''})
                                             .then(updatedContainer => {
-                                                console.log("Zrobiłem update containera")
-                                                console.log("Zabieram się za czyszczenie katalogu repo z pozostalosci")
+                                                //console.log("Zrobiłem update containera")
+                                                //console.log("Zabieram się za czyszczenie katalogu repo z pozostalosci")
 
                                                 //teraz usuwam z dysku plik  log
                                                 fs.removeSync(pathToResult+'_log.txt');
@@ -348,13 +350,12 @@ exports.runDIA = (container) => {
                                                 //i usuwam tymczasowy plik txt
                                                 fs.removeSync(pathToResult);
 
-                                                console.log(chalk.green("ZROBIONE :)"))
-                                              
+                                                //console.log(chalk.green("ZROBIONE :)"))
+                                                
                                                 resolve(segments)
                                                 
                                             })
                                             .catch(error => {
-                                                console.error(error)
                                                 clearInterval(checkerdb);
                                                 reject(error)
                                             })
@@ -362,7 +363,7 @@ exports.runDIA = (container) => {
                                     .catch(()=>{
 
                                         //aktualizuje flage w kontenrze
-                                        Container.findOneAndUpdate({_id: container._id},{ifDIA: true, DIAUserSegments: segments, statusDIA: 'error',errorMessage:'something went wrong with the conversion of ctm to textGrid'})
+                                        Container.findOneAndUpdate({_id: container._id},{ifDIA: true, DIAUserSegments: segments, statusDIA: 'error',errorMessage:'Coś poszło nie tak z konwersją CTM na TextGrid'})
                                         .then(updatedContainer => {
                                            
                                             //teraz usuwam z dysku plik  log
@@ -372,41 +373,41 @@ exports.runDIA = (container) => {
                                             fs.removeSync(pathToResult);
                                           
                                             clearInterval(checkerdb);
+
+                                            const error = new Error("Coś poszło nie tak z konwersją CTM na TextGrid");
                                             reject(error)
                                         })
                                         .catch(error => {
-                                            console.log(chalk.red("coś poszło nie tak z updatem kontenera gdy byl error ctm2tg"));
                                             clearInterval(checkerdb);
                                             reject(error)
                                         })
 
                                         
-                                        console.log(chalk.red("coś poszło nie tak z konwersją DIA 2 TextGrid"));
                                         clearInterval(checkerdb);
+                                        const error = new Error("Coś poszło nie tak z konwersją CTM na TextGrid");
                                         reject("coś poszło nie tak z konwersją DIA 2 TextGrid")
 
                                         
                                     })
                                 } else {
                                     clearInterval(checkerdb);
-                                    reject(task.error)
+                                    const error = new Error(task.error);
+                                    reject(error)
                                 }
 
                                 clearInterval(checkerdb);
                             }
                         })
                         .catch(error=>{
-                            console.log(chalk.red("ERROR: nie mogłem znaleźć tasku: " + error))
                             clearInterval(checkerdb);
                             reject(error)
                         })
                 },1000);
                 
-                
-                //jak nie ma odpowiedzi w ciagu 20min to zatrzymuje
+                //jak nie ma odpowiedzi w ciagu 2h to zatrzymuje task
                 setTimeout(() => {
                     clearInterval(checkerdb);
-                }, 1200000);
+                }, 7200000);
               
 
             }).catch(error => {
@@ -424,17 +425,16 @@ exports.runSEG = (container) => {
         if(container.ifREC == false){
 
             //aktualizuje flage w kontenrze
-            Container.findOneAndUpdate({_id: container._id},{ifSEG: true, statusSEG: 'error',errorMessage:'You have to have the transcription first before aligment. '})
+            Container.findOneAndUpdate({_id: container._id},{ifSEG: true, statusSEG: 'error',errorMessage:'Musisz mieć najpier wykonane rozpoznawanie mowy aby użyć segmentacji'})
             .then(updatedContainer => {
-                console.log("You have to have the transcription first before aligment.");
+                console.log(chalk.red("You have to have the transcription first before aligment."));
             })
             .catch(error => {
-                console.error(error);
-                
+                console.error(chalk.red(error.message));
             })
 
-            reject("You have to have the transcription first before aligment.");
-           
+            const error = new Error("Brak wgranej transkrypcji");
+            reject(error);
         }
         
         const userId = container.owner;
@@ -498,7 +498,7 @@ exports.runSEG = (container) => {
             .then(savedTask => {
 
                 //uruchamiam odpytywanie bazy co sekunde 
-                console.log(chalk.green("waiting for SEGMENTATION to finish...."))
+                //console.log(chalk.green("waiting for SEGMENTATION to finish...."))
                 
                 let block = true;
                 
@@ -512,7 +512,7 @@ exports.runSEG = (container) => {
                             
                             //jeżeli zmienił się jego status na ukończony
                             if (task.done) {
-                                console.log("TASK DONE")
+                                //console.log("TASK DONE")
                                 //i jeżeli nie ma errorów
                                 if (!task.error) {
 
@@ -534,8 +534,8 @@ exports.runSEG = (container) => {
                                             //aktualizuje flage w kontenrze
                                             Container.findOneAndUpdate({_id: container._id},{ifSEG: true, statusSEG: 'done',errorMessage:''})
                                             .then(updatedContainer => {
-                                                console.log("Zrobiłem update containera")
-                                                console.log("Zabieram się za czyszczenie katalogu repo z pozostalosci")
+                                                //console.log("Zrobiłem update containera")
+                                                //console.log("Zabieram się za czyszczenie katalogu repo z pozostalosci")
 
                                                 //teraz usuwam z dysku plik  log
                                                 fs.removeSync(pathToResult+'_log.txt');
@@ -543,12 +543,18 @@ exports.runSEG = (container) => {
                                                 //i usuwam tymczasowy plik txt
                                                 fs.removeSync(TXTFilePath);
 
-                                                console.log(chalk.green("ZROBIONE :)"))
-                                                resolve(updatedContainer)
+                                                //console.log(chalk.green("ZROBIONE :)"))
+
+                                                let returnData = {
+                                                    updatedContainer: updatedContainer,
+                                                    EMUlink: "https://ips-lmu.github.io/EMU-webApp/?audioGetUrl=TODO",
+                                                };
+
+                                                resolve(returnData)
                                                 
                                             })
                                             .catch(error => {
-                                                console.error(error)
+                                                console.log(chalk.red(error.message));
                                                 clearInterval(checkerdb);
                                                 reject(error)
                                             })
@@ -556,50 +562,46 @@ exports.runSEG = (container) => {
                                     .catch(()=>{
 
                                         //aktualizuje flage w kontenrze
-                                        Container.findOneAndUpdate({_id: container._id},{ifSEG: true, statusSEG: 'error',errorMessage:'something went wrong with the conversion of ctm to textGrid'})
+                                        Container.findOneAndUpdate({_id: container._id},{ifSEG: true, statusSEG: 'error',errorMessage:'Coś poszło nie tak z konwersją CTM na TextGrid'})
                                         .then(updatedContainer => {
                                             //teraz usuwam z dysku plik  log
                                             fs.removeSync(pathToResult+'_log.txt');
                                             //i usuwam tymczasowy plik txt
                                             fs.removeSync(TXTFilePath);
                                             clearInterval(checkerdb);
-                                            reject(updatedContainer)
-                                            
+
+                                            const error = new Error("Coś poszło nie tak z konwersją CTM na TextGrid");
+                                            reject(error)
                                         })
                                         .catch(error => {
-                                            console.error(error)
                                             clearInterval(checkerdb);
                                             reject(error)
                                         })
 
-                                        console.error(chalk.red("coś poszło nie tak z konwersją SEG to TextGrid"));
                                         clearInterval(checkerdb);
                                         reject(error)
                                     })
-                                    
-                                       
                                 } else {
+                                    const error = new Error(task.error);
                                     clearInterval(checkerdb);
-                                    reject(task.error)
+                                    reject(error);
                                 }
 
                                 clearInterval(checkerdb);
                             }
                         })
                         .catch(error=>{
-                            console.log(chalk.red("ERROR: nie mogłem znaleźć tasku: " + error))
                             clearInterval(checkerdb);
                             reject(error)
                         })
                 },1000);
                 
                 
-                //jak nie ma odpowiedzi w ciagu 30min to zatrzymuje
+                //jak nie ma odpowiedzi w ciagu 2h to zatrzymuje task
                 setTimeout(() => {
                     clearInterval(checkerdb);
-                }, 1800000);
-                //docelowo na 30min czyli 1800000
-
+                }, 7200000);
+               
             }).catch(error => {
                 reject(error)
             })
@@ -612,9 +614,6 @@ exports.runSEG = (container) => {
 exports.runREC = (container) => {
     return new Promise((resolve, reject) => {
 
-        console.log(chalk.cyan("Uruchamiam runREC"))
-        
-        
         const userId = container.owner;
         const projectId = container.project;
         const sessionId = container.session;
@@ -622,9 +621,6 @@ exports.runREC = (container) => {
         const audioFileName = container.fileName;       //np. lektor-fe2e3423.wav - na serwerze
         const containerFolderName = utils.getFileNameWithNoExt(audioFileName);  //np.lektor-fe2e3423 - na serwerze folder
     
-        //let outputFileName = containerFolderName + ".json";
-        //let outputFilePath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerFolderName + '/' + outputFileName;
-
         let inputAudioFilePath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerFolderName + '/' + audioFileName;
     
         //do dockera podaje ścieżke relatywną
@@ -644,21 +640,19 @@ exports.runREC = (container) => {
         dockerTask.save()
             .then(savedTask => {
 
-                //uruchamiam odpytywanie bazy co sekunde 
-                console.log(chalk.green("waiting RECO task to finish...."))
-                
                 let block = true;
-                
+
+                //uruchamiam odpytywanie bazy co sekunde 
                 checkerdb = setInterval(function () {
                     Task.findById(savedTask._id)
                         .then(task=>{
-                            if(block) console.log(chalk.green("Znalazłem task i czekam aż się ukończy...."))
+
+                            if(block) console.log(chalk.cyan("Znalazłem task REC w DB i czekam aż się ukończy...."));
+
                             block = false;
                             
                             //jeżeli zmienił się jego status na ukończony
                             if (task.done) {
-                                console.log("TASK DONE")
-                                //i jeżeli nie ma errorów
                                 if (!task.error) {
                                     const inputFilePath = task.input;
                                     const resultFile = task.result;
@@ -671,14 +665,10 @@ exports.runREC = (container) => {
                                     const JSONTransPath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerFolderName + '/' + containerFolderName + '.json';
                     
                                     fs.writeJson(JSONTransPath, JSONtranscription).then(() => {
-                                        console.log("ZAPISAŁEM TRANSKRYPCJE W JSONIE")
+                                        //console.log("ZAPISAŁEM TRANSKRYPCJE W JSONIE")
                                         //aktualizuje flage w kontenrze
                                         Container.findOneAndUpdate({_id: container._id},{ifREC: true, statusREC: 'done',errorMessage:''})
                                             .then(updatedContainer => {
-                                                console.log("Zrobiłem update containera")
-
-                                                console.log("Zabieram się za czyszczenie katalogu repo z pozostalosci")
-
                                                 //teraz przenosze plik txt do katalogu usera i usuwam logi
                                                 //fs.removeSync(pathToResult);
                                                 const TXTTransPath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerFolderName + '/' + containerFolderName + '_TXT.txt';
@@ -686,43 +676,43 @@ exports.runREC = (container) => {
                                                 fs.renameSync(pathToResult, TXTTransPath);
 
                                                 fs.removeSync(pathToResult+'_log.txt');
-                                                console.log(chalk.green("ZROBIONE :)"))
+                                                //console.log(chalk.green("ZROBIONY REC :)"))
                                                 resolve(updatedContainer)
                                                 
                                             })
                                             .catch(error => {
-                                                console.error(error)
+                                                console.error(chalk.red(error.message))
                                                 clearInterval(checkerdb);
                                                 reject(error)
                                             })
                                     })
                                     .catch(error => {
-                                        console.error(error)
+                                        console.error(chalk.red(error))
                                         clearInterval(checkerdb);
                                         reject(error)
                                     })
                                        
                                 } else {
+                                    const error = new Error('Task REC został wykonany lecz zawiera błędy');
                                     clearInterval(checkerdb);
-                                    reject(task.error)
+                                    reject(error)
                                 }
 
                                 clearInterval(checkerdb);
                             }
                         })
                         .catch(error=>{
-                            console.log(chalk.red("ERROR: nie mogłem znaleźć tasku: " + error))
                             clearInterval(checkerdb);
                             reject(error)
                         })
                 },1000);
                 
                 
-                //jak nie ma odpowiedzi w ciagu 30min to zatrzymuje
+                //jak nie ma odpowiedzi w ciagu 2h to zatrzymuje task
                 setTimeout(() => {
                     clearInterval(checkerdb);
-                }, 1800000);
-                //docelowo na 30min czyli 1800000
+                }, 7200000);
+               
 
             }).catch(error => {
                 reject(error)

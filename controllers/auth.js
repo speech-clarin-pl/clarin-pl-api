@@ -1,4 +1,5 @@
 const User = require('../models/user');
+const Project = require('../models/projectEntry')
 const {validationResult} = require('express-validator/check');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -37,28 +38,13 @@ sendEmail = (sendTo, title, htmlContent) => {
             } else {
                 console.log("Message sent: %s", inf.messageId);
                 console.log("Preview URL: %s", nodemailer.getTestMessageUrl(inf));
-                return resolve({ msg: 'Email has been send successfully' });
+                return resolve({ msg: 'Email został wysłany pomyślnie' });
             }
         })
     });
   }
 
 
-sendEmailToResetPass = (emailAddr, user) => {
-
-
-    User.findByIdAndUpdate(user._id,{password: newpassword })
-    .then(updatedUser => {
-        sendEmail('mklec@pjwstk.edu.pl','CLARIN-PL: reset hasła', '<b>Testowa wiadomość</b>')
-        .then(message => {
-            console.log('Email wysłany with success!!')
-        })
-        .catch(console.error);
-    })
-    .catch(err => {
-
-    })
-}
 
 
 
@@ -68,12 +54,11 @@ exports.applyNewPass = (req,res,next) => {
     const {token} = req.params;
     const newPassword = req.body.newPassword;
 
-
      User.findOne({_id: userId})
      .then(user => {
-         //jezeli nie ma takiego uzera 
+         //jezeli nie ma takiego usera 
          if(!user){
-            res.status(204).json({message: "This email has not been registered before!"});
+            res.status(204).json({message: "Ten email nie został zarejestrowany wcześniej"});
          } else {
 
             const secret = user.password + "-" + user.createdAt;
@@ -84,12 +69,12 @@ exports.applyNewPass = (req,res,next) => {
                 .then(hashedPass => {
                     User.findOneAndUpdate({_id: userId}, {password: hashedPass})
                         .then(()=>{
-                            console.log("HASLO ZMIENIONE")
-                            res.status(202).json("Password changed")
+                            console.log(chalk.green("HASLO ZMIENIONE"))
+                            res.status(202).json("Hasło zmienione")
                         })
                         .catch(err=>{
-                            console.log("PROBLEM ZE ZMIANA HASLA")
-                            res.status(500).json(err)
+                            console.log(chalk.red("PROBLEM ZE ZMIANA HASLA"))
+                            throw err;
                         })
                 })
             }
@@ -99,37 +84,31 @@ exports.applyNewPass = (req,res,next) => {
         if(!error.statusCode){
             error.statusCode = 500;
         }
-        console.log(error)
+        console.log(chalk.red(error.message));
         next(error);
      })
      
 }
 
 /**
- * @api {post} /auth/forgotPass/:emailAddress Password recovery
- * @apiDescription Allows the user to generate new password for his account. This only sends email to the user with the link which the user has to click to access the page where he will be able to enter new password
+ * @api {post} /auth/forgotPass/:emailAddress Odzyskanie hasła
+ * @apiDescription Pozwala użytkownikowi wygenerować nowe hasło. Wywołanie tego api powoduje wysłąnie wiadomości email na adres użytkownika z linkiem do strony gdzie użytkownik może wprowadzić nowe hasło.
  * @apiName ForgotPassword
  * @apiGroup User
  *
- * @apiParam {String} email User email
+ * @apiParam {String} email Email
  *
- * @apiSuccess {String} message that the user has been created
- * @apiSuccess {String} userId  the user id created
+ * @apiSuccess {String} message Wiadomość potwierdzająca wysłanie maila
  *
  * @apiSuccessExample Success-Response:
  *     HTTP/1.1 200 OK
  *     {
- *       "message": "The email with further instructions has been sent",
+ *       "message": "Wiadomość z dalszymi instrukcjami została wysłana na podany adres email",
  *     }
  *
- * @apiError (401) Unathorized The email has not been registered
- * @apiError (500) ServerError Something went wrong in the server.
- * 
- * @apiErrorExample Error-Response:
- *     HTTP/1.1 500 Internal Server Error
- *     {
- *       "message": "Something went wrong with sending the email"
- *     }
+ * @apiError (401) Unathorized Nie znaleziono danego adres email
+ * @apiError (500) ServerError Serwer error
+ * @apiError (502) BadGateway Problem z wysłaniem maila
  * 
  */
 exports.forgotPass = (req,res,next) => {
@@ -140,7 +119,7 @@ exports.forgotPass = (req,res,next) => {
      .then(user => {
          //jezeli nie ma takiego usera 
          if(!user){
-            res.status(401).json({message: "This email has not been registered before!"});
+            res.status(401).json({message: "Ten email nie został wcześniej zarejestrowany!"});
          } else {
 
             const oldPassHash = user.password;
@@ -169,61 +148,53 @@ exports.forgotPass = (req,res,next) => {
             //wysyłka emaila z resetem hasła
             sendEmail(emailAddress,'CLARIN-PL: Potwierdź zmianę hasła', messageemail)
                 .then(message => {
-                    res.status(200).json({message: "The email with further instructions has been sent"});
+                    res.status(200).json({message: "Wiadomość z dalszymi instrukcjami została wysłana na podany adres email"});
                 })
-                .catch(err => {
-                    console.log(err);
-                    res.status(500).json({message: "Something went wrong with sending the email"});   
+                .catch(error => {
+                    error.statusCode = 502;
+                    error.message = 'Coś poszło nie tak z wysłaniem maila';
+                    throw error;
                 });
          }
      })
-     .catch(() => {
-        console.log(chalk.red("Something went wrong with FORGOT PASSWORD"))
-
-        const error = new Error("Something went wrong with FORGOT PASSWORD");
-        error.statusCode = 500;
-        error.data = [];
-
-        next(error);;
+     .catch((error) => {
+        console.log(chalk.red(error.message));
+        error.statusCode = error.statusCode || 500;
+        next(error);
      })
 }
 
 
 /**
- * @api {put} /auth/registration Register new User
- * @apiDescription Allows to register new user. Its necessary to run speech services using user interface and to process files in batch.
+ * @api {put} /auth/registration Rejestracja użytkownika
+ * @apiDescription Rejestracja nowego użytkownika. Jest ona konieczna aby uzyskać po zalogowaniu specjalny token na potrzeby uruchamiania narzędzi mowy. Dzięki temu masz pewność że Twoje dane i rezultaty ich przetwarzania są bezpieczne!
  * @apiName RegisterUser
  * @apiGroup User
  *
- * @apiParam {String} email User email
- * @apiParam {String} name User name
- * @apiParam {String} password User password (min. 6 characters)
+ * @apiParam {String} email Email 
+ * @apiParam {String} name Imię
+ * @apiParam {String} password Hasło
  *
- * @apiSuccess {String} message that the user has been created
- * @apiSuccess {String} userId  the user id created
+ * @apiSuccess {String} message wiadomość potwierdzająca
+ * @apiSuccess {String} userId  Identyfikator użytkownika
+ * @apiSuccess {String} firstProjectId Identyfikator pierwszego stworzonego projektu do którego domyślnie będą wgrywane pliki oraz rezultaty działania narzędzi (o ile nie stworzysz osobnego projektu).
  *
  * @apiSuccessExample Success-Response:
  *     HTTP/1.1 201 CREATED
  *     {
- *       "message": 'The user has been created',
- *       "userId": "5f58a92dfa006c8aed96f846"
+ *       "message": 'Użytkownik został stworzony',
+ *       "userId": "5f58a92dfa006c8aed96f846",
+ *       "firstProjectId": "5fd33950667fa7255da2dfa9"
  *     }
  *
- * @apiError (422) ValidationFailed When profided wrong data.
- * @apiError (500) ServerError When can not save the user to database.
- * 
- * @apiErrorExample Error-Response:
- *     HTTP/1.1 500 Internal Server Error
- *     {
- *       "message": ""Something went wrong with saving the user to database",
- *       "data": undefined
- *     }
+ * @apiError (422) UnprocesssableEntity Błędy walidacji
+ * @apiError (500) ServerError Serwer error
  * 
  */
 exports.registration = (req, res, next) => {
     const errors = validationResult(req);
     if(!errors.isEmpty()){
-        const error = new Error('Validation failed.');
+        const error = new Error('Błąd walidacji');
         error.statusCode = 422;
         error.data = errors.array();
         throw error;
@@ -248,7 +219,6 @@ exports.registration = (req, res, next) => {
         //tutaj tworzenie folderu z id uzytkownika w repo
         const dirpath = appRoot + '/repo/'+user._id;
 
-
         //--------------------------
       
         mkdirp(dirpath, function(err) {
@@ -257,72 +227,49 @@ exports.registration = (req, res, next) => {
                 console.log(chalk.red(err));
                 return err;
             } else {
-                //tworze katalog z plikami tymczasowymi, wgrywanymi bez GUI
-
-                projectsList.createProjectHandler("Your First Demo Project",user._id).then((results)=>{
-                    //console.log(chalk.green("Successfully created user directory"));          
-                    res.status(201).json({message: 'The user has been created', userId: user._id});
+                projectsList.createProjectHandler("DEMO",user._id).then((results)=>{        
+                    res.status(201).json({message: 'Użytkownik został stworzony', userId: user._id});
                 }).catch((err)=>{
                     return err;
                 })
-
-                /*
-                mkdirp(dirpath+'/temporary', function(err) {
-                    if (err) {
-                        console.log(chalk.red(err));
-                        return err;
-                    } else {
-                        // else print a success message.
-                        console.log(chalk.green("Successfully created user directory"));
-                                        
-                        res.status(201).json({message: 'The user has been created', userId: user._id});
-                    }
-                })
-                */
-              
             }
           });
           
     })
-    .catch(() => {
-
-        console.log(chalk.red("Something went wrong with creating the user"))
-        const error = new Error("Something went wrong with creating the user");
-        error.statusCode = 500;
-        error.data = [];
-
+    .catch((error) => {
+        console.log(chalk.red(error.message));
+        error.statusCode = error.statusCode || 500;
         next(error);
     });
 }
 
 /**
- * @api {post} /auth/login Log in
- * @apiDescription Allows to log in of registered user and get the token
+ * @api {post} /auth/login Logowanie
+ * @apiDescription Pozwala na zalogowanie się już zarejestrowanym użytkownikom i uzyskanie tokenu do przeprowadzania dzalszych zapytań
  * @apiName LoginUser
  * @apiGroup User
  *
- * @apiParam {String} email User email
- * @apiParam {String} password User password 
+ * @apiParam {String} email Email użytkownika
+ * @apiParam {String} password Hasło użytkownika
  *
- * @apiSuccess {String} message that the user has been created
- * @apiSuccess {String} userId  the user id created
+ * @apiSuccess {String} token Token który należy używać w polu api_key podczas wykonywania operacji na plikach. Token jest ważny przez 192h (8 dni). Po tym czasie należy zalogować się ponownie.
+ * @apiSuccess {String} userId Identyfikator użytkownika
+ * @apiSuccess {String} userName Nazwa użytkownika
+ * @apiSuccess {String} firstProjectId Identyfikator pierwszego stworzonego projektu do którego domyślnie będą wgrywane pliki oraz rezultaty działania narzędzi (o ile nie stworzysz osobnego projektu)
  *
  * @apiSuccessExample Success-Response:
  *     HTTP/1.1 200 OK
  *     {
  *       "token": eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1rbGVjQHBqd3N0ay5lZHUucGwiLCJ1c2VySWQiOiI1ZjU4YTkyZGZhMDA2YzhhZWQ5NmY4NDYiLCJpYXQiOjE2MDYzMDc1NzEsImV9cXI6MPYwNjY1MzEeMX0.-ABd2a0F3lcuI0yDV7eymq4ey5_J__xGdyYAk56icO4,
- *       "userId": "5f58a92dfa006c8aed96f846"
+ *       "userId": "5f58a92dfa006c8aed96f846",
+ *       "userName": Kowalski,
+ *       "firstProjectId": "5fd33950667fa7255da2dfa9"
  *     }
  *
- * @apiError (401) Unathorized can not find given email or is wrong password
- * @apiError (500) ServerError internal server error
+ * @apiError (401) Unathorized Błędne hasło
+ * @apiError (404) Not Found Użytkownik o podanym email nie został znaleziony
+ * @apiError (500) ServerError Serwer error
  * 
- * @apiErrorExample Error-Response:
- *     HTTP/1.1 500 Internal Server Error
- *     {
- *       "message": "Something went wrong with loggin in the user",
- *       "data": undefined
- *     }
  * 
  */
 exports.login = (req, res, next) => {
@@ -337,8 +284,8 @@ exports.login = (req, res, next) => {
         .then(user => {
             //jezeli nie ma takiego uzera 
             if(!user){
-                const error = new Error('A user with this email could not be found.');
-                error.statusCode = 401;
+                const error = new Error('Użytkownik o tym adresie email nie został znaleziony');
+                error.statusCode = 404;
                 throw error;
             }
 
@@ -350,7 +297,7 @@ exports.login = (req, res, next) => {
         .then(isEqual => {
             //wtedy uzytkownik wpisal zle haslo
             if(!isEqual){
-                const error = new Error('Wrong password or login');
+                const error = new Error('Błędne hasło');
                 error.statusCode = 401;
                 throw error
             }
@@ -360,20 +307,40 @@ exports.login = (req, res, next) => {
                 email: loadedUser.email, 
                 userId: loadedUser._id.toString()
             }, config.tokenKey,
-            {expiresIn: '96h'});
+            {expiresIn: '192h'});
 
-            res.status(200).json({token: token, userId: loadedUser._id.toString(), userName:loadedUser.name });
+          
+            Project.findOne({owner: loadedUser._id, name: 'DEMO'}).then(firstProject => {
+                let fpid = undefined;
+                if(firstProject){
+                    fpid = firstProject._id
+                }
+                res.status(200).json({token: token, userId: loadedUser._id.toString(), userName:loadedUser.name, firstProjectId: fpid});
+            });
+            
         })
-        .catch(() => {
-
-            console.log(chalk.red("Something went wrong with loggin in the user"))
-
-            const error = new Error("Something went wrong with loggin in the user");
-            error.statusCode = 500;
-            error.data = [];
-    
-            next(error);
-
-           
+        .catch((err) => {
+            console.log(chalk.red(err.message));
+            err.statusCode = err.statusCode || 500;
+            next(err);
         });
 }
+
+
+
+/*
+sendEmailToResetPass = (emailAddr, user) => {
+
+    User.findByIdAndUpdate(user._id,{password: newpassword })
+    .then(updatedUser => {
+        sendEmail('mklec@pjwstk.edu.pl','CLARIN-PL: reset hasła', '<b>Testowa wiadomość</b>')
+        .then(message => {
+            console.log(chalk.green('Email wysłany!'))
+        })
+        .catch(console.error);
+    })
+    .catch(err => {
+
+    })
+}
+*/

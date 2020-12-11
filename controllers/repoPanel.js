@@ -303,24 +303,24 @@ exports.changeContainerName = (req, res, next) => {
 
 
 /**
- * @api {put} /repoFiles/runSpeechVAD/:containerId?api_key=your_API_key Run VAD tool
- * @apiDescription Voice Activity Detection (VAD) tool to recognize the speech fragments within the recording. By default, it returns the output in JSON format. However, if you want to download the output in different format, look at the "Download outputs" API endpoint.
+ * @api {put} /repoFiles/runSpeechVAD/:containerId?api_key=your_API_key Detekcja mowy
+ * @apiDescription Narzędzie detekcji mowy. Po wykonaniu zapytania należy poczekać na zakończenie pracy. Po zakończeniu serwer zapisze rezultaty w kontenerze o danym ID. Aby ściągnąć rezultaty działania narzędzia należy skorzystać z osobnego zapytania API. W międzyczasie możesz odpytywać serwer na temat statusu wykonania tego narzędzia korzystając z osobnego zapytania API.
  * @apiName VADTool
  * @apiGroup Tools
  *
- * @apiParam {String} containerId The container ID for which you want to run the tool
- * @apiParam {String} api_key Your API key
+  * @apiParam {String} containerId Identyfikator zasobu. Możesz go również znaleźć w graficznym interfejsie użytkownika
+ * @apiParam {String} api_key Token uzyskany po zalogowaniu
  *
- * @apiSuccess {String} message that this tool finished working
- * @apiSuccess {String} containerId  the container ID which was used
- * @apiSuccess {String} toolType  returns "VAD" string 
- * @apiSuccess {Object} VADSegments  returns segments with recognized voice in JSON format. If you wish to get output as a file in CTM or TextGrid format, see how to get output file 
+ * @apiSuccess {String} message informacja o zakończeniu działania
+ * @apiSuccess {String} containerId  Identyfikator zasobu
+ * @apiSuccess {String} toolType  zwraca flagę "VAD"  
+ * @apiSuccess {Object} VADSegments zwraca segmenty detekcji w postaci JSON. Aby pobrać wynik w innym formacie (CTM lub TextGrid) należy skorzystać z osobnego zapytania API.
  * 
  *
  * @apiSuccessExample Success-Response:
  *     HTTP/1.1 200 OK
  *     {
- *       "message": ''The service for this container has finished working with success!!',
+ *       "message": 'Zakończono detekcję mowy!',
  *       "containerId": "5f58a92dfa006c8aed96f846",
  *       "toolType": "VAD",
  *       "VADSegments": [
@@ -341,57 +341,56 @@ exports.changeContainerName = (req, res, next) => {
  *                        ]
  *     }
  *
- * @apiError (503) Service Unavailable When something goes wrong with the service
+ * @apiError (503) ServiceUnavailable Gdy coś pójdzie nie tak z usługą
  * @apiError (500) ServerError 
  * 
  * 
  */
 
-//##########################################
-//#### run SPEECH VAD ######
-//#######################################
 exports.runSpeechVAD = (req, res, next) => {
 
-  let containerIdOK = req.params.containerId;
+  let containerId = req.params.containerId;
   //const toolType = req.body.toolType;
 
-  Container.findById(containerIdOK).then(container => {  
-    runTask.runVAD(container, outputFormat)
+  Container.findById(containerId).then(container => {  
+    runTask.runVAD(container)
       .then(VADsegments => {
-        console.log(chalk.green("VAD TASK DONE!"))
-        res.status(200).json({ message: 'The service for this container has finished working with success!!', containerId: containerIdOK, toolType: "VAD", VADSegments: VADsegments});
+        console.log(chalk.green("Zakończono VAD dla: " + containerId));
+        res.status(200).json({ message: 'Zakończono detekcję mowy!', containerId: containerId, toolType: "VAD", VADSegments: VADsegments});
       }).catch(error => {
-        // wystapil blad wiec wpisuje ta wiadomosc
-        res.status(503).json({ message: 'Something wrong with the VAD on the server!', containerId: containerIdOK, toolType: "VAD"});
-        console.log(chalk.red('ERROR Z TASKIEM'))
-        console.log(chalk.red(error))
+        console.log(chalk.red('TASK ERROR'));
+        console.log(chalk.red(error.message))
+        res.status(503).json({ message: 'Coś poszło nie tak z detekcją mowy!', containerId: containerId, toolType: "VAD"});
       })
-  }).catch(err => {
-    console.log(chalk.red("Error: container not found"))
+  }).catch(error => {
+    console.log(chalk.red(error.message));
+    error.statusCode = error.statusCode || 500;
+    next(error);
   })
 }
 
 
 
 /**
- * @api {put} /repoFiles/runSpeechDiarization/:containerId?api_key=your_API_key Run DIA tool
- * @apiDescription Diarization (DIA) tool for recognizing speech parts within recordings and assigning the number to a particular speaker. By default, it returns the output in JSON format. However, if you want to download the output in different format, look at the "Download outputs" API endpoint.
+ * @api {put} /repoFiles/runSpeechDiarization/:containerId?api_key=your_API_key Diaryzacja
+ * @apiDescription Narzędzie diaryzacji. Po wykonaniu zapytania należy poczekać na zakończenie pracy. Po zakończeniu serwer zapisze rezultaty w kontenerze o danym ID. Aby ściągnąć rezultaty działania narzędzia należy skorzystać z osobnego zapytania API. W międzyczasie możesz odpytywać serwer na temat statusu wykonania tego narzędzia korzystając z osobnego zapytania API.
+ * 
  * @apiName DIATool
  * @apiGroup Tools
  *
- * @apiParam {String} containerId The container ID for which you want to run the tool
- * @apiParam {String} api_key Your API key
+ * @apiParam {String} containerId Identyfikator zasobu. Możesz go również znaleźć w graficznym interfejsie użytkownika
+ * @apiParam {String} api_key Token uzyskany po zalogowaniu
  *
- * @apiSuccess {String} message that this tool finished working
- * @apiSuccess {String} containerId  the container ID which was used
- * @apiSuccess {String} toolType  returns "DIA" string 
- * @apiSuccess {Object} DIAsegments  returns Diarization segments in JSON format. If you wish to get output as a file in CTM or TextGrid format, see how to get output file 
+ * @apiSuccess {String} message informacja o zakończeniu działania
+ * @apiSuccess {String} containerId  Identyfikator zasobu
+ * @apiSuccess {String} toolType  zwraca flagę "DIA"  
+ * @apiSuccess {Object} DIAsegments zwraca segmenty diaryzacji w postaci JSON. Aby pobrać wynik w innym formacie (CTM lub TextGrid) należy skorzystać z osobnego zapytania API.
  * 
  *
  * @apiSuccessExample Success-Response:
  *     HTTP/1.1 200 OK
  *     {
- *       "message": ''The service for this container has finished working with success!!',
+ *       "message": 'Diaryzacja zakończona sukcesem!',
  *       "containerId": "5f58a92dfa006c8aed96f846",
  *       "toolType": "DIA",
  *       "VADSegments": [
@@ -412,136 +411,141 @@ exports.runSpeechVAD = (req, res, next) => {
   *                       ]
  *     }
  *
- * @apiError (503) Service Unavailable When something goes wrong with the service
+ * @apiError (503) ServiceUnavailable Gdy coś pójdzie nie tak z usługą
  * @apiError (500) ServerError 
  */
 
-//##########################################
-//#### wykonuje Diaryzacje ######
-//#######################################
+
 exports.runSpeechDiarization = (req, res, next) => {
 
-  const containerId = req.body.containerId;
+  const containerId = req.params.containerId;
   //const toolType = req.body.toolType;
 
   Container.findById(containerId).then(container => {  
     runTask.runDIA(container)
       .then(DIAsegments => {
-        res.status(200).json({ message: 'The service for this container has finished working with success!!', containerId: containerId, toolType: "DIA",  DIAsegments: DIAsegments});
+        console.log(chalk.green("Zakończono Diaryzacje dla: " + containerId));
+        res.status(200).json({ message: 'Diaryzacja zakończona sukcesem!', containerId: containerId, toolType: "DIA",  DIAsegments: DIAsegments});
       }).catch(error => {
-        res.status(503).json({ message: 'Something wrong with the Diarization on the server!!', containerId: containerId, toolType: "DIA"});
-        console.log(chalk.red('ERROR Z TASKIEM'))
-        console.log(error)
+        console.log(chalk.red('TASK ERROR'));
+        console.log(chalk.red(error.message))
+        res.status(503).json({ message: 'Coś poszło nie tak z diaryzacją!', containerId: containerId, toolType: "DIA"});
       })
-  }).catch(err => {
-    console.log(chalk.red("Error: container not found"))
+  }).catch(error => {
+    console.log(chalk.red(error.message));
+    error.statusCode = error.statusCode || 500;
+    next(error);
   })
 }
 
 
 /**
- * @api {put} /runSpeechSegmentation/:containerId?api_key=your_API_key Run SEG tool
- * @apiDescription Segmentation (SEG) tool. It requires to run the recognition first. In order to download the results of the segmentaion, you have to run separate API request. Please look at the "Download outputs" API endpoint.
+ * @api {put} /runSpeechSegmentation/:containerId?api_key=your_API_key Segmentacja
+ * @apiDescription Narzędzie segmentacji. Dla krótkich nagrań (poniżej 0.5MB) uruchamiany jest algorytm forcealign. Dla dłuższych plików segmentalign. Usługa wymaga uruchomienia najpierw usługi rozpoznawania. Po wykonaniu zapytania należy poczekać na zakończenie pracy. Po zakończeniu serwer zapisze rezultaty w kontenerze o danym ID. Aby ściągnąć rezultaty działania narzędzia należy skorzystać z osobnego zapytania API. W międzyczasie możesz odpytywać serwer na temat statusu wykonania tego narzędzia korzystając z osobnego zapytania API.
+ * 
  * @apiName SEGTool
  * @apiGroup Tools
  *
- * @apiParam {String} containerId The container ID for which you want to run the tool
- * @apiParam {String} api_key Your API key
+ * @apiParam {String} containerId Identyfikator zasobu. Możesz go również znaleźć w graficznym interfejsie użytkownika
+ * @apiParam {String} api_key Token uzyskany po zalogowaniu
  *
- * @apiSuccess {String} message that this tool finished working
- * @apiSuccess {String} containerId  the container ID which was used
- * @apiSuccess {String} toolType  returns "SEG" string 
+ * @apiSuccess {String} message informacja o zakończeniu działania
+ * @apiSuccess {String} containerId  Identyfikator kontenera
+ * @apiSuccess {String} toolType  zawiera flage "REC"
+ * @apiSuccess {String} EMUlink  zawiera link do podglądu segmentacji w aplikacji EMU
  * 
  *
  * @apiSuccessExample Success-Response:
  *     HTTP/1.1 200 OK
  *     {
- *       "message": ''The service for this container has finished working with success!!',
+ *       "message": 'Segmentacja została wykonana pomyślnie',
  *       "containerId": "5f58a92dfa006c8aed96f846",
  *       "toolType": "SEG",
+ *       "EMUlink": "https://ips-lmu.github.io/EMU-webApp/?audioGetUrl=TODO"
  *     }
  *
- * @apiError (503) Service Unavailable When something goes wrong with the service
+ * @apiError (503) ServiceUnavailable Gdy coś pójdzie nie tak z usługą segmentacji
  * @apiError (500) ServerError 
  * 
  * 
  */
-//##########################################
-//#### wykonuje segmentacje ######
-//#######################################
 exports.runSpeechSegmentation = (req, res, next) => {
 
-  const containerId = req.body.containerId;
+  const containerId = req.params.containerId;
   //const toolType = req.body.toolType;
 
   Container.findById(containerId).then(container => {  
     runTask.runSEG(container)
-      .then(updatedContainer => {
-        res.status(200).json({ message: 'The service for this container has finished working with success!!', containerId: updatedContainer._id, toolType: "SEG"});
+      .then(returnData => {
+        let updatedContainer = returnData.updatedContainer;
+        let EMUlink = returnData.EMUlink;
+
+
+        console.log(chalk.green("Zakończono Segmentacje dla: " + containerId));
+        res.status(200).json({ message: 'Segmentacja została wykonana pomyślnie', containerId: updatedContainer._id, toolType: "SEG", EMUlink: EMUlink});
       }).catch(error => {
-        res.status(503).json({ message: 'Something wrong with the Segmentation on the server!!', containerId: containerId, toolType: "SEG"});
-        cconsole.log(chalk.red('ERROR Z TASKIEM'))
-        console.log(chalk.red(error))
+        console.log(chalk.red('TASK ERROR'));
+        console.log(chalk.red(error.message))
+        res.status(503).json({ message: 'Coś poszło nie tak z segmentacją!', containerId: containerId, toolType: "SEG"});
       })
-  }).catch(err => {
-    console.log(chalk.red("Error: container not found"));
+  }).catch(error => {
+    console.log(chalk.red(error.message));
+    error.statusCode = error.statusCode || 500;
+    next(error);
   })
 }
 
 //TO DO: dorobić wgrywanie polikow txt
 
 /**
- * @api {put} /runSpeechRecognition/:containerId?api_key=your_API_key Run SEG tool
- * @apiDescription Recognition (REC) tool. In order to download the results of the recognition, you have to run separate API request. Please look at the "Download outputs" API endpoint.
+ * @api {put} /runSpeechRecognition/:containerId?api_key=your_API_key Rozpoznawanie mowy
+ * @apiDescription Narzędzie rozpoznaje automatycznie mowę z wgranego pliku. Po wykonaniu zapytania należy poczekać na zakończenie pracy. Po zakończeniu serwer zapisze rezultaty w kontenerze o danym ID. Aby ściągnąć rezultaty działania narzędzia należy skorzystać z osobnego zapytania API. W międzyczasie możesz odpytywać serwer na temat statusu wykonania tego narzędzia korzystając z osobnego zapytania API.
  * @apiName RECTool
  * @apiGroup Tools
  *
- * @apiParam {String} containerId The container ID for which you want to run the tool
- * @apiParam {String} api_key Your API key
+ * @apiParam {String} containerId Identyfikator zasobu. Możesz go również znaleźć w graficznym interfejsie użytkownika
+ * @apiParam {String} api_key Token uzyskany po zalogowaniu
  *
  * @apiSuccess {String} message that this tool finished working
- * @apiSuccess {String} containerId  the container ID which was used
- * @apiSuccess {String} toolType  returns "SEG" string 
+ * @apiSuccess {String} containerId  Identyfikator kontenera
+ * @apiSuccess {String} toolType  zawiera flage "REC"
  * 
  *
  * @apiSuccessExample Success-Response:
  *     HTTP/1.1 200 OK
  *     {
- *       "message": ''The service for this container has finished working with success!!',
+ *       "message": 'Rozpoznawanie mowy zostało zakończone!',
  *       "containerId": "5f58a92dfa006c8aed96f846",
  *       "toolType": "REC",
  *     }
  *
- * @apiError (503) Service Unavailable When something goes wrong with the service
- * @apiError (500) ServerError 
+ * @apiError (503) Service Unavailable Gdy coś pójdzie nie tak z usługą rozpoznawania
+ * @apiError (500) Serwer error 
  * 
  */
 
-
-//##########################################
-//#### wykonuje rozpoznawanie mowy ######
-//#######################################
 exports.runSpeechRecognition = (req, res, next) => {
-
-  const containerId = req.body.containerId;
+  //const containerId = req.body.containerId;
   //const toolType = req.body.toolType;
-
-  console.log(chalk.cyan("uruchamiam runSpeechRecognition"))
+  const containerId = req.params.containerId;
+  console.log(containerId)
+  console.log(chalk.cyan("uruchamiam SpeechRecognition"));
 
   // tutaj odpalam odpowiednia usługę
-
   Container.findById(containerId).then(container => {  
-    console.log(chalk.cyan("znalazłem container"))
     runTask.runREC(container)
       .then(updatedContainer => {
-        res.status(200).json({ message: 'The service for this container has finished working with success!!', containerId: updatedContainer._id, toolType: "REC"});
+          console.log(chalk.green("Zakończono speech recognition dla: " + containerId ));
+          res.status(200).json({ message: 'Rozpoznawanie mowy zostało zakończone!', containerId: updatedContainer._id, toolType: "REC"});
       }).catch(error => {
-        res.status(503).json({ message: 'Something wrong with the Recognition on the server!!', containerId: updatedContainer._id, toolType: "REC"});
-        cconsole.log(chalk.red('ERROR Z TASKIEM'))
-        console.log(chalk.red(error))
+          console.log(chalk.red('TASK ERROR'));
+          console.log(chalk.red(error.message))
+          res.status(503).json({ message: 'Coś poszło nie tak z rozpoznawaniem mowy!', containerId: containerId, toolType: "REC"});
       })
-  }).catch(err => {
-    console.log(chalk.red("Error: container not found"))
+  }).catch(error => {
+    console.log(chalk.red(error.message));
+    error.statusCode = error.statusCode || 500;
+    next(error);
   })
 }
 

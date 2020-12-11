@@ -25,12 +25,12 @@ exports.ctmVAD2tg = (container) => {
 
         
         ctmVAD_2_tg.stdout.on('data', (data) => {
-            console.log('Pipe data from python script ...' + data.toString());
+            //console.log('Pipe data from python script ...' + data.toString());
         });
     
         ctmVAD_2_tg.on('close', (code) => {
-            console.log("konversja ctm VAD 2 tg zakonczona")
-            console.log(`child process close all stdio with code ${code}`);
+            //console.log("konversja ctm VAD 2 tg zakonczona")
+            //console.log(`child process close all stdio with code ${code}`);
             // 0 cussess, 2 error, 1 cos nie tak z argumentami
             if(code==0){
                 resolve();
@@ -60,8 +60,8 @@ exports.ctmDIA2tg = (container) => {
         const ctmDIA_2_tg = spawn('python3', [appRoot + '/emu/convert_ctm_tg.py', diaCtmFileName, diaTextGridFileName]);
     
         ctmDIA_2_tg.on('close', (code) => {
-            console.log("konversja ctm DIA 2 tg zakonczona")
-            console.log(`child process close all stdio with code ${code}`);
+            //console.log("konversja ctm DIA 2 tg zakonczona")
+            //console.log(`child process close all stdio with code ${code}`);
             // 0 cussess, 2 error, 1 cos nie tak z argumentami
             if(code==0){
                 resolve();
@@ -92,8 +92,8 @@ exports.ctmSEG2tg = (container) => {
         const ctmalign_2_tg = spawn('python3', [appRoot + '/emu/convert_ctm_tg.py', segCtmFileName, segTextGridFileName]);
     
         ctmalign_2_tg.on('close', (code) => {
-            console.log("konversja ctm SEG 2 tg zakonczona")
-            console.log(`child process close all stdio with code ${code}`);
+            //console.log("konversja ctm SEG 2 tg zakonczona")
+            //console.log(`child process close all stdio with code ${code}`);
             // 0 cussess, 2 error, 1 cos nie tak z argumentami
             if(code==0){
                 resolve();
@@ -131,8 +131,8 @@ exports.ctms2EMU = (container) => {
                                             JSONOutputFileName]);
 
         ctms_2_emu.on('close', (code) => {
-            console.log("konversja ctm CTMs 2 JSON zakonczona")
-            console.log(`child process close all stdio with code ${code}`);
+           // console.log("konversja ctm CTMs 2 JSON zakonczona")
+           // console.log(`child process close all stdio with code ${code}`);
             // 0 cussess, 2 error, 1 cos nie tak z argumentami
             if(code>0){
                 reject(code);
