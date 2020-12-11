@@ -276,8 +276,8 @@
   {
     "type": "put",
     "url": "/repoFiles/runSpeechDiarization/:containerId?api_key=your_API_key",
-    "title": "Run DIA tool",
-    "description": "<p>Diarization (DIA) tool for recognizing speech parts within recordings and assigning the number to a particular speaker. By default, it returns the output in JSON format. However, if you want to download the output in different format, look at the &quot;Download outputs&quot; API endpoint.</p>",
+    "title": "Diaryzacja",
+    "description": "<p>Narzędzie diaryzacji. Po wykonaniu zapytania należy poczekać na zakończenie pracy. Po zakończeniu serwer zapisze rezultaty w kontenerze o danym ID. Aby ściągnąć rezultaty działania narzędzia należy skorzystać z osobnego zapytania API. W międzyczasie możesz odpytywać serwer na temat statusu wykonania tego narzędzia korzystając z osobnego zapytania API.</p>",
     "name": "DIATool",
     "group": "Tools",
     "parameter": {
@@ -288,14 +288,14 @@
             "type": "String",
             "optional": false,
             "field": "containerId",
-            "description": "<p>The container ID for which you want to run the tool</p>"
+            "description": "<p>Identyfikator zasobu. Możesz go również znaleźć w graficznym interfejsie użytkownika</p>"
           },
           {
             "group": "Parameter",
             "type": "String",
             "optional": false,
             "field": "api_key",
-            "description": "<p>Your API key</p>"
+            "description": "<p>Token uzyskany po zalogowaniu</p>"
           }
         ]
       }
@@ -308,35 +308,35 @@
             "type": "String",
             "optional": false,
             "field": "message",
-            "description": "<p>that this tool finished working</p>"
+            "description": "<p>informacja o zakończeniu działania</p>"
           },
           {
             "group": "Success 200",
             "type": "String",
             "optional": false,
             "field": "containerId",
-            "description": "<p>the container ID which was used</p>"
+            "description": "<p>Identyfikator zasobu</p>"
           },
           {
             "group": "Success 200",
             "type": "String",
             "optional": false,
             "field": "toolType",
-            "description": "<p>returns &quot;DIA&quot; string</p>"
+            "description": "<p>zwraca flagę &quot;DIA&quot;</p>"
           },
           {
             "group": "Success 200",
             "type": "Object",
             "optional": false,
             "field": "DIAsegments",
-            "description": "<p>returns Diarization segments in JSON format. If you wish to get output as a file in CTM or TextGrid format, see how to get output file</p>"
+            "description": "<p>zwraca segmenty diaryzacji w postaci JSON. Aby pobrać wynik w innym formacie (CTM lub TextGrid) należy skorzystać z osobnego zapytania API.</p>"
           }
         ]
       },
       "examples": [
         {
           "title": "Success-Response:",
-          "content": "HTTP/1.1 200 OK\n{\n  \"message\": ''The service for this container has finished working with success!!',\n  \"containerId\": \"5f58a92dfa006c8aed96f846\",\n  \"toolType\": \"DIA\",\n  \"VADSegments\": [\n                     {\n                         \"startTime\":0.68,\n                         \"endTime\":2.74,\n                         \"editable\":true,\n                         \"color\":\"#394b55\",\n                         \"labelText\":\"1\"\n                     },\n                     {\n                         \"startTime\":2.74,\n                         \"endTime\":4.62,\n                         \"editable\":true,\n                         \"color\":\"#394b55\",\n                         \"labelText\":\"2\"\n                     },\n                  ]\n}",
+          "content": "HTTP/1.1 200 OK\n{\n  \"message\": 'Diaryzacja zakończona sukcesem!',\n  \"containerId\": \"5f58a92dfa006c8aed96f846\",\n  \"toolType\": \"DIA\",\n  \"VADSegments\": [\n                     {\n                         \"startTime\":0.68,\n                         \"endTime\":2.74,\n                         \"editable\":true,\n                         \"color\":\"#394b55\",\n                         \"labelText\":\"1\"\n                     },\n                     {\n                         \"startTime\":2.74,\n                         \"endTime\":4.62,\n                         \"editable\":true,\n                         \"color\":\"#394b55\",\n                         \"labelText\":\"2\"\n                     },\n                  ]\n}",
           "type": "json"
         }
       ]
@@ -355,8 +355,8 @@
           {
             "group": "503",
             "optional": false,
-            "field": "Service",
-            "description": "<p>Unavailable When something goes wrong with the service</p>"
+            "field": "ServiceUnavailable",
+            "description": "<p>Gdy coś pójdzie nie tak z usługą</p>"
           }
         ]
       }
@@ -368,8 +368,8 @@
   {
     "type": "put",
     "url": "/runSpeechRecognition/:containerId?api_key=your_API_key",
-    "title": "Run SEG tool",
-    "description": "<p>Recognition (REC) tool. In order to download the results of the recognition, you have to run separate API request. Please look at the &quot;Download outputs&quot; API endpoint.</p>",
+    "title": "Rozpoznawanie mowy",
+    "description": "<p>Narzędzie rozpoznaje automatycznie mowę z wgranego pliku. Po wykonaniu zapytania należy poczekać na zakończenie pracy. Po zakończeniu serwer zapisze rezultaty w kontenerze o danym ID. Aby ściągnąć rezultaty działania narzędzia należy skorzystać z osobnego zapytania API. W międzyczasie możesz odpytywać serwer na temat statusu wykonania tego narzędzia korzystając z osobnego zapytania API.</p>",
     "name": "RECTool",
     "group": "Tools",
     "parameter": {
@@ -380,14 +380,14 @@
             "type": "String",
             "optional": false,
             "field": "containerId",
-            "description": "<p>The container ID for which you want to run the tool</p>"
+            "description": "<p>Identyfikator zasobu. Możesz go również znaleźć w graficznym interfejsie użytkownika</p>"
           },
           {
             "group": "Parameter",
             "type": "String",
             "optional": false,
             "field": "api_key",
-            "description": "<p>Your API key</p>"
+            "description": "<p>Token uzyskany po zalogowaniu</p>"
           }
         ]
       }
@@ -407,21 +407,21 @@
             "type": "String",
             "optional": false,
             "field": "containerId",
-            "description": "<p>the container ID which was used</p>"
+            "description": "<p>Identyfikator kontenera</p>"
           },
           {
             "group": "Success 200",
             "type": "String",
             "optional": false,
             "field": "toolType",
-            "description": "<p>returns &quot;SEG&quot; string</p>"
+            "description": "<p>zawiera flage &quot;REC&quot;</p>"
           }
         ]
       },
       "examples": [
         {
           "title": "Success-Response:",
-          "content": "HTTP/1.1 200 OK\n{\n  \"message\": ''The service for this container has finished working with success!!',\n  \"containerId\": \"5f58a92dfa006c8aed96f846\",\n  \"toolType\": \"REC\",\n}",
+          "content": "HTTP/1.1 200 OK\n{\n  \"message\": 'Rozpoznawanie mowy zostało zakończone!',\n  \"containerId\": \"5f58a92dfa006c8aed96f846\",\n  \"toolType\": \"REC\",\n}",
           "type": "json"
         }
       ]
@@ -432,8 +432,8 @@
           {
             "group": "500",
             "optional": false,
-            "field": "ServerError",
-            "description": ""
+            "field": "Serwer",
+            "description": "<p>error</p>"
           }
         ],
         "503": [
@@ -441,7 +441,7 @@
             "group": "503",
             "optional": false,
             "field": "Service",
-            "description": "<p>Unavailable When something goes wrong with the service</p>"
+            "description": "<p>Unavailable Gdy coś pójdzie nie tak z usługą rozpoznawania</p>"
           }
         ]
       }
@@ -453,8 +453,8 @@
   {
     "type": "put",
     "url": "/runSpeechSegmentation/:containerId?api_key=your_API_key",
-    "title": "Run SEG tool",
-    "description": "<p>Segmentation (SEG) tool. It requires to run the recognition first. In order to download the results of the segmentaion, you have to run separate API request. Please look at the &quot;Download outputs&quot; API endpoint.</p>",
+    "title": "Segmentacja",
+    "description": "<p>Narzędzie segmentacji. Dla krótkich nagrań (poniżej 0.5MB) uruchamiany jest algorytm forcealign. Dla dłuższych plików segmentalign. Usługa wymaga uruchomienia najpierw usługi rozpoznawania. Po wykonaniu zapytania należy poczekać na zakończenie pracy. Po zakończeniu serwer zapisze rezultaty w kontenerze o danym ID. Aby ściągnąć rezultaty działania narzędzia należy skorzystać z osobnego zapytania API. W międzyczasie możesz odpytywać serwer na temat statusu wykonania tego narzędzia korzystając z osobnego zapytania API.</p>",
     "name": "SEGTool",
     "group": "Tools",
     "parameter": {
@@ -465,14 +465,14 @@
             "type": "String",
             "optional": false,
             "field": "containerId",
-            "description": "<p>The container ID for which you want to run the tool</p>"
+            "description": "<p>Identyfikator zasobu. Możesz go również znaleźć w graficznym interfejsie użytkownika</p>"
           },
           {
             "group": "Parameter",
             "type": "String",
             "optional": false,
             "field": "api_key",
-            "description": "<p>Your API key</p>"
+            "description": "<p>Token uzyskany po zalogowaniu</p>"
           }
         ]
       }
@@ -485,28 +485,35 @@
             "type": "String",
             "optional": false,
             "field": "message",
-            "description": "<p>that this tool finished working</p>"
+            "description": "<p>informacja o zakończeniu działania</p>"
           },
           {
             "group": "Success 200",
             "type": "String",
             "optional": false,
             "field": "containerId",
-            "description": "<p>the container ID which was used</p>"
+            "description": "<p>Identyfikator kontenera</p>"
           },
           {
             "group": "Success 200",
             "type": "String",
             "optional": false,
             "field": "toolType",
-            "description": "<p>returns &quot;SEG&quot; string</p>"
+            "description": "<p>zawiera flage &quot;REC&quot;</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "EMUlink",
+            "description": "<p>zawiera link do podglądu segmentacji w aplikacji EMU</p>"
           }
         ]
       },
       "examples": [
         {
           "title": "Success-Response:",
-          "content": "HTTP/1.1 200 OK\n{\n  \"message\": ''The service for this container has finished working with success!!',\n  \"containerId\": \"5f58a92dfa006c8aed96f846\",\n  \"toolType\": \"SEG\",\n}",
+          "content": "HTTP/1.1 200 OK\n{\n  \"message\": 'Segmentacja została wykonana pomyślnie',\n  \"containerId\": \"5f58a92dfa006c8aed96f846\",\n  \"toolType\": \"SEG\",\n  \"EMUlink\": \"https://ips-lmu.github.io/EMU-webApp/?audioGetUrl=TODO\"\n}",
           "type": "json"
         }
       ]
@@ -525,8 +532,8 @@
           {
             "group": "503",
             "optional": false,
-            "field": "Service",
-            "description": "<p>Unavailable When something goes wrong with the service</p>"
+            "field": "ServiceUnavailable",
+            "description": "<p>Gdy coś pójdzie nie tak z usługą segmentacji</p>"
           }
         ]
       }
@@ -538,8 +545,8 @@
   {
     "type": "put",
     "url": "/repoFiles/runSpeechVAD/:containerId?api_key=your_API_key",
-    "title": "Run VAD tool",
-    "description": "<p>Voice Activity Detection (VAD) tool to recognize the speech fragments within the recording. By default, it returns the output in JSON format. However, if you want to download the output in different format, look at the &quot;Download outputs&quot; API endpoint.</p>",
+    "title": "Detekcja mowy",
+    "description": "<p>Narzędzie detekcji mowy. Po wykonaniu zapytania należy poczekać na zakończenie pracy. Po zakończeniu serwer zapisze rezultaty w kontenerze o danym ID. Aby ściągnąć rezultaty działania narzędzia należy skorzystać z osobnego zapytania API. W międzyczasie możesz odpytywać serwer na temat statusu wykonania tego narzędzia korzystając z osobnego zapytania API.</p>",
     "name": "VADTool",
     "group": "Tools",
     "parameter": {
@@ -550,14 +557,14 @@
             "type": "String",
             "optional": false,
             "field": "containerId",
-            "description": "<p>The container ID for which you want to run the tool</p>"
+            "description": "<p>Identyfikator zasobu. Możesz go również znaleźć w graficznym interfejsie użytkownika</p>"
           },
           {
             "group": "Parameter",
             "type": "String",
             "optional": false,
             "field": "api_key",
-            "description": "<p>Your API key</p>"
+            "description": "<p>Token uzyskany po zalogowaniu</p>"
           }
         ]
       }
@@ -570,35 +577,35 @@
             "type": "String",
             "optional": false,
             "field": "message",
-            "description": "<p>that this tool finished working</p>"
+            "description": "<p>informacja o zakończeniu działania</p>"
           },
           {
             "group": "Success 200",
             "type": "String",
             "optional": false,
             "field": "containerId",
-            "description": "<p>the container ID which was used</p>"
+            "description": "<p>Identyfikator zasobu</p>"
           },
           {
             "group": "Success 200",
             "type": "String",
             "optional": false,
             "field": "toolType",
-            "description": "<p>returns &quot;VAD&quot; string</p>"
+            "description": "<p>zwraca flagę &quot;VAD&quot;</p>"
           },
           {
             "group": "Success 200",
             "type": "Object",
             "optional": false,
             "field": "VADSegments",
-            "description": "<p>returns segments with recognized voice in JSON format. If you wish to get output as a file in CTM or TextGrid format, see how to get output file</p>"
+            "description": "<p>zwraca segmenty detekcji w postaci JSON. Aby pobrać wynik w innym formacie (CTM lub TextGrid) należy skorzystać z osobnego zapytania API.</p>"
           }
         ]
       },
       "examples": [
         {
           "title": "Success-Response:",
-          "content": "HTTP/1.1 200 OK\n{\n  \"message\": ''The service for this container has finished working with success!!',\n  \"containerId\": \"5f58a92dfa006c8aed96f846\",\n  \"toolType\": \"VAD\",\n  \"VADSegments\": [\n                     {\n                         \"startTime\":0.68,\n                         \"endTime\":2.74,\n                         \"editable\":true,\n                         \"color\":\"#394b55\",\n                         \"labelText\":\"speech\"\n                     },\n                     {\n                         \"startTime\":2.74,\n                         \"endTime\":5.97,\n                         \"editable\":true,\n                         \"color\":\"#394b55\",\n                         \"labelText\":\"speech\"\n                     }\n                   ]\n}",
+          "content": "HTTP/1.1 200 OK\n{\n  \"message\": 'Zakończono detekcję mowy!',\n  \"containerId\": \"5f58a92dfa006c8aed96f846\",\n  \"toolType\": \"VAD\",\n  \"VADSegments\": [\n                     {\n                         \"startTime\":0.68,\n                         \"endTime\":2.74,\n                         \"editable\":true,\n                         \"color\":\"#394b55\",\n                         \"labelText\":\"speech\"\n                     },\n                     {\n                         \"startTime\":2.74,\n                         \"endTime\":5.97,\n                         \"editable\":true,\n                         \"color\":\"#394b55\",\n                         \"labelText\":\"speech\"\n                     }\n                   ]\n}",
           "type": "json"
         }
       ]
@@ -617,8 +624,8 @@
           {
             "group": "503",
             "optional": false,
-            "field": "Service",
-            "description": "<p>Unavailable When something goes wrong with the service</p>"
+            "field": "ServiceUnavailable",
+            "description": "<p>Gdy coś pójdzie nie tak z usługą</p>"
           }
         ]
       }
@@ -802,7 +809,7 @@
   {
     "type": "put",
     "url": "/auth/registration",
-    "title": "Rejestracja użytkowników",
+    "title": "Rejestracja użytkownika",
     "description": "<p>Rejestracja nowego użytkownika. Jest ona konieczna aby uzyskać po zalogowaniu specjalny token na potrzeby uruchamiania narzędzi mowy. Dzięki temu masz pewność że Twoje dane i rezultaty ich przetwarzania są bezpieczne!</p>",
     "name": "RegisterUser",
     "group": "User",
