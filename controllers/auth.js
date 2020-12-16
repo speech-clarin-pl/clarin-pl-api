@@ -94,7 +94,7 @@ exports.applyNewPass = (req,res,next) => {
  * @api {post} /auth/forgotPass/:emailAddress Odzyskanie hasła
  * @apiDescription Pozwala użytkownikowi wygenerować nowe hasło. Wywołanie tego api powoduje wysłąnie wiadomości email na adres użytkownika z linkiem do strony gdzie użytkownik może wprowadzić nowe hasło.
  * @apiName ForgotPassword
- * @apiGroup User
+ * @apiGroup Użytkownik
  *
  * @apiParam {String} email Email
  *
@@ -167,9 +167,9 @@ exports.forgotPass = (req,res,next) => {
 
 /**
  * @api {put} /auth/registration Rejestracja użytkownika
- * @apiDescription Rejestracja nowego użytkownika. Jest ona konieczna aby uzyskać po zalogowaniu specjalny token na potrzeby uruchamiania narzędzi mowy. Dzięki temu masz pewność że Twoje dane i rezultaty ich przetwarzania są bezpieczne!
+ * @apiDescription Rejestracja nowego użytkownika. Po zalogowaniu uzyskasz token na potrzeby uruchamiania narzędzi mowy z uwzględnieniem bezpieczeństwa Twoich danych. 
  * @apiName RegisterUser
- * @apiGroup User
+ * @apiGroup Użytkownik
  *
  * @apiParam {String} email Email 
  * @apiParam {String} name Imię
@@ -245,14 +245,14 @@ exports.registration = (req, res, next) => {
 
 /**
  * @api {post} /auth/login Logowanie
- * @apiDescription Pozwala na zalogowanie się już zarejestrowanym użytkownikom i uzyskanie tokenu do przeprowadzania dzalszych zapytań
+ * @apiDescription Pozwala na zalogowanie się już zarejestrowanym użytkownikom i uzyskanie tokenu JWT do przeprowadzania dzalszych zapytań
  * @apiName LoginUser
- * @apiGroup User
+ * @apiGroup Użytkownik
  *
  * @apiParam {String} email Email użytkownika
  * @apiParam {String} password Hasło użytkownika
  *
- * @apiSuccess {String} token Token który należy używać w polu api_key podczas wykonywania operacji na plikach. Token jest ważny przez 192h (8 dni). Po tym czasie należy zalogować się ponownie.
+ * @apiSuccess {String} token Token który należy podać w nagłówku zapytania do API w polu "Authorization" jako 'Bearer <token>'. Token jest ważny przez 192h (8 dni). Po tym czasie należy zalogować się ponownie.
  * @apiSuccess {String} userId Identyfikator użytkownika
  * @apiSuccess {String} userName Nazwa użytkownika
  * @apiSuccess {String} firstProjectId Identyfikator pierwszego stworzonego projektu do którego domyślnie będą wgrywane pliki oraz rezultaty działania narzędzi (o ile nie stworzysz osobnego projektu)

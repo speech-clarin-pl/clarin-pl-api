@@ -1,285 +1,11 @@
 define({ "api": [
   {
-    "type": "get",
-    "url": "/repoFiles/createCorpus/:projectId?api_key=your_API_key",
-    "title": "Create EMU corpus",
-    "description": "<p>It initializes the process of creating the corpus in EMU-SDMS format. It might take some longer time until it will finish working. It creates a ZIP bundle with only those files for which VAD, DIA, REC and SEG were run. So all the layers of anotation have to be defined. After finish, you can download the results by using &quot;Download Corpus&quot; API endpoint.</p>",
-    "name": "CreateCorpus",
-    "group": "Files",
-    "parameter": {
-      "fields": {
-        "Parameter": [
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "projectId",
-            "description": "<p>The project ID for which you want to create the corpus. You can find it in UI</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "api_key",
-            "description": "<p>Your API key</p>"
-          }
-        ]
-      }
-    },
-    "success": {
-      "fields": {
-        "Success 200": [
-          {
-            "group": "Success 200",
-            "type": "String",
-            "optional": false,
-            "field": "message",
-            "description": "<p>that the corpus has been created and you can download it</p>"
-          }
-        ]
-      },
-      "examples": [
-        {
-          "title": "Success-Response:",
-          "content": "HTTP/1.1 200 OK\n{\n  \"message\": 'Korpus has been created! you can download it',\n}",
-          "type": "json"
-        }
-      ]
-    },
-    "error": {
-      "fields": {
-        "500": [
-          {
-            "group": "500",
-            "optional": false,
-            "field": "ServerError",
-            "description": ""
-          }
-        ]
-      }
-    },
-    "version": "0.0.0",
-    "filename": "controllers/repoPanel.js",
-    "groupTitle": "Files"
-  },
-  {
-    "type": "delete",
-    "url": "/repoFiles/delete/:containerId?api_key=your_API_key",
-    "title": "Delete container",
-    "description": "<p>Removes everthing related to uploaded file: the audio files themselves, the output from the tools and data from database</p>",
-    "name": "DELETEcontainer",
-    "group": "Files",
-    "parameter": {
-      "fields": {
-        "Parameter": [
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "containerId",
-            "description": "<p>The container ID which you want to delete</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "api_key",
-            "description": "<p>Your API key</p>"
-          }
-        ]
-      }
-    },
-    "success": {
-      "fields": {
-        "Success 200": [
-          {
-            "group": "Success 200",
-            "type": "String",
-            "optional": false,
-            "field": "message",
-            "description": ""
-          },
-          {
-            "group": "Success 200",
-            "type": "String",
-            "optional": false,
-            "field": "containerId",
-            "description": "<p>which was deleted</p>"
-          },
-          {
-            "group": "Success 200",
-            "type": "String",
-            "optional": false,
-            "field": "sessionId",
-            "description": "<p>the id of the session to which the container belonged to</p>"
-          }
-        ]
-      },
-      "examples": [
-        {
-          "title": "Success-Response:",
-          "content": "HTTP/1.1 200 OK\n{\n  \"message\": 'The container has been removed!',\n  \"sessionId\": \"5f58a92dfa006c8aed96f846\",\n  \"containerId\": \"5f58a92dfa006c8aed96f846\",\n}",
-          "type": "json"
-        }
-      ]
-    },
-    "error": {
-      "fields": {
-        "500": [
-          {
-            "group": "500",
-            "optional": false,
-            "field": "ServerError",
-            "description": ""
-          }
-        ]
-      }
-    },
-    "version": "0.0.0",
-    "filename": "controllers/repoPanel.js",
-    "groupTitle": "Files"
-  },
-  {
-    "type": "get",
-    "url": "/repoFiles/downloadCorpus/:projectId?api_key=your_API_key",
-    "title": "Download EMU corpus",
-    "description": "<p>After when you create the corpus you can download it.</p>",
-    "name": "DownloadCorpus",
-    "group": "Files",
-    "parameter": {
-      "fields": {
-        "Parameter": [
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "projectId",
-            "description": "<p>The project ID for which you want to create the corpus. You can find it in UI</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "api_key",
-            "description": "<p>Your API key</p>"
-          }
-        ]
-      }
-    },
-    "success": {
-      "fields": {
-        "Success 200": [
-          {
-            "group": "Success 200",
-            "type": "Object",
-            "optional": false,
-            "field": "you",
-            "description": "<p>can save the ZIP file in EMU-SDMS corpus</p>"
-          }
-        ]
-      }
-    },
-    "error": {
-      "fields": {
-        "500": [
-          {
-            "group": "500",
-            "optional": false,
-            "field": "ServerError",
-            "description": ""
-          }
-        ]
-      }
-    },
-    "version": "0.0.0",
-    "filename": "controllers/repoPanel.js",
-    "groupTitle": "Files"
-  },
-  {
-    "type": "GET",
-    "url": "/repoFiles/download/:containerId/:fileType?api_key=your_API_key",
-    "title": "Download outputs",
-    "description": "<p>If the task has been finised his job, you can download its result in choosen file format. Besides you can also download the oryginal file that you have sent to server and also the file that has been converted into 16000 Hz and 8bits. The conversion was neccessary to do in order to run speech services.</p>",
-    "name": "GETOutputFile",
-    "group": "Files",
-    "parameter": {
-      "fields": {
-        "Parameter": [
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "containerId",
-            "description": "<p>The container ID for which you want to download the results.</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "fileType",
-            "description": "<p>you have to indicate one of the following flag to indicate which kind of output you are interested in: <h3>Audio File related</h3><ul><li>&quot;oryginalAudio&quot;: you can download the same file which was sent.</li><li>&quot;audio&quot; : download the audio converted into PCM 16000Hz and 8bits</li></ul><h3>Voice Activity Detection (VAD) related</h3><ul><li>&quot;VADctm&quot;: downloads the output of VAD in CTM format</li><li>&quot;VADtextGrid&quot;: downloads the output of VAD in TextGrid format</li><li>&quot;VADJSON&quot;: downloads the output of VAD in JSON format</li></ul><h3>Diarization related</h3><ul><li>&quot;DIActm&quot;: downloads the output of diarization in CTM format.</li><li>&quot;DIAtextGrid&quot;: downloads the output of diarization in TextGrid format.</li><li>&quot;DIAJSON&quot;: downloads the outpu of the dirization in JSON format.</li></ul><h3>Speech Recognition related</h3><ul><li>&quot;JSONTranscript&quot;: downloads the transcription in JSON format</li><li>&quot;TXTTranscript&quot;: downloads the transcription in TXT file format.</li></ul><h3>Segmentation related</h3><ul><li>&quot;SEGctm&quot;: downloads the output of Segmentation in CTM format</li><li>&quot;SEGtextGrid&quot;: downloads the output of Segmentation in TextGrid format.</li><li>&quot;EMUJSON&quot;: downloads the outpu of Segmentation in EMU-SDMS format.</li></ul></p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "api_key",
-            "description": "<p>Your API key</p>"
-          }
-        ]
-      }
-    },
-    "success": {
-      "fields": {
-        "Success 200": [
-          {
-            "group": "Success 200",
-            "type": "Object",
-            "optional": false,
-            "field": "returns",
-            "description": "<p>audio file or file with the output to download</p>"
-          }
-        ]
-      },
-      "examples": [
-        {
-          "title": "Success-Response:",
-          "content": "HTTP/1.1 200 OK input 1 0.120 7.610 speech",
-          "type": "json"
-        }
-      ]
-    },
-    "error": {
-      "fields": {
-        "404": [
-          {
-            "group": "404",
-            "optional": false,
-            "field": "NotFound",
-            "description": "<p>When the resource could not be found</p>"
-          }
-        ],
-        "500": [
-          {
-            "group": "500",
-            "optional": false,
-            "field": "ServerError",
-            "description": ""
-          }
-        ]
-      }
-    },
-    "version": "0.0.0",
-    "filename": "controllers/repoPanel.js",
-    "groupTitle": "Files"
-  },
-  {
     "type": "put",
-    "url": "/repoFiles/runSpeechDiarization/:containerId?api_key=your_API_key",
+    "url": "/repoFiles/runSpeechDiarization/:containerId",
     "title": "Diaryzacja",
-    "description": "<p>Narzędzie diaryzacji. Po wykonaniu zapytania należy poczekać na zakończenie pracy. Po zakończeniu serwer zapisze rezultaty w kontenerze o danym ID. Aby ściągnąć rezultaty działania narzędzia należy skorzystać z osobnego zapytania API. W międzyczasie możesz odpytywać serwer na temat statusu wykonania tego narzędzia korzystając z osobnego zapytania API.</p>",
+    "description": "<p>Narzędzie diaryzacji. Po wykonaniu zapytania należy poczekać na zakończenie pracy. Po zakończeniu serwer zapisze rezultaty w kontenerze o danym ID. Aby ściągnąć rezultaty działania narzędzia należy skorzystać z osobnego zapytania API. W międzyczasie możesz odpytywać serwer na temat statusu wykonania tego narzędzia wykorzystując containerId w osobnym zapytaniu API.</p>",
     "name": "DIATool",
-    "group": "Tools",
+    "group": "Narzędzia",
     "parameter": {
       "fields": {
         "Parameter": [
@@ -294,8 +20,8 @@ define({ "api": [
             "group": "Parameter",
             "type": "String",
             "optional": false,
-            "field": "api_key",
-            "description": "<p>Token uzyskany po zalogowaniu</p>"
+            "field": "Authorization",
+            "description": "<p>Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.</p>"
           }
         ]
       }
@@ -363,15 +89,15 @@ define({ "api": [
     },
     "version": "0.0.0",
     "filename": "controllers/repoPanel.js",
-    "groupTitle": "Tools"
+    "groupTitle": "Narzędzia"
   },
   {
     "type": "put",
-    "url": "/runSpeechRecognition/:containerId?api_key=your_API_key",
+    "url": "/runSpeechRecognition/:containerId",
     "title": "Rozpoznawanie mowy",
     "description": "<p>Narzędzie rozpoznaje automatycznie mowę z wgranego pliku. Po wykonaniu zapytania należy poczekać na zakończenie pracy. Po zakończeniu serwer zapisze rezultaty w kontenerze o danym ID. Aby ściągnąć rezultaty działania narzędzia należy skorzystać z osobnego zapytania API. W międzyczasie możesz odpytywać serwer na temat statusu wykonania tego narzędzia korzystając z osobnego zapytania API.</p>",
     "name": "RECTool",
-    "group": "Tools",
+    "group": "Narzędzia",
     "parameter": {
       "fields": {
         "Parameter": [
@@ -386,8 +112,8 @@ define({ "api": [
             "group": "Parameter",
             "type": "String",
             "optional": false,
-            "field": "api_key",
-            "description": "<p>Token uzyskany po zalogowaniu</p>"
+            "field": "Authorization",
+            "description": "<p>Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.</p>"
           }
         ]
       }
@@ -448,15 +174,15 @@ define({ "api": [
     },
     "version": "0.0.0",
     "filename": "controllers/repoPanel.js",
-    "groupTitle": "Tools"
+    "groupTitle": "Narzędzia"
   },
   {
     "type": "put",
-    "url": "/runSpeechSegmentation/:containerId?api_key=your_API_key",
+    "url": "/runSpeechSegmentation/:containerId",
     "title": "Segmentacja",
     "description": "<p>Narzędzie segmentacji. Dla krótkich nagrań (poniżej 0.5MB) uruchamiany jest algorytm forcealign. Dla dłuższych plików segmentalign. Usługa wymaga uruchomienia najpierw usługi rozpoznawania. Po wykonaniu zapytania należy poczekać na zakończenie pracy. Po zakończeniu serwer zapisze rezultaty w kontenerze o danym ID. Aby ściągnąć rezultaty działania narzędzia należy skorzystać z osobnego zapytania API. W międzyczasie możesz odpytywać serwer na temat statusu wykonania tego narzędzia korzystając z osobnego zapytania API.</p>",
     "name": "SEGTool",
-    "group": "Tools",
+    "group": "Narzędzia",
     "parameter": {
       "fields": {
         "Parameter": [
@@ -471,8 +197,8 @@ define({ "api": [
             "group": "Parameter",
             "type": "String",
             "optional": false,
-            "field": "api_key",
-            "description": "<p>Token uzyskany po zalogowaniu</p>"
+            "field": "Authorization",
+            "description": "<p>Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.</p>"
           }
         ]
       }
@@ -540,15 +266,15 @@ define({ "api": [
     },
     "version": "0.0.0",
     "filename": "controllers/repoPanel.js",
-    "groupTitle": "Tools"
+    "groupTitle": "Narzędzia"
   },
   {
     "type": "put",
-    "url": "/repoFiles/runSpeechVAD/:containerId?api_key=your_API_key",
+    "url": "/repoFiles/runSpeechVAD/:containerId",
     "title": "Detekcja mowy",
-    "description": "<p>Narzędzie detekcji mowy. Po wykonaniu zapytania należy poczekać na zakończenie pracy. Po zakończeniu serwer zapisze rezultaty w kontenerze o danym ID. Aby ściągnąć rezultaty działania narzędzia należy skorzystać z osobnego zapytania API. W międzyczasie możesz odpytywać serwer na temat statusu wykonania tego narzędzia korzystając z osobnego zapytania API.</p>",
+    "description": "<p>Narzędzie detekcji mowy. Po wykonaniu zapytania należy poczekać na zakończenie pracy. Po zakończeniu serwer zapisze rezultaty w kontenerze o danym ID. Aby ściągnąć rezultaty działania narzędzia należy skorzystać z osobnego zapytania API. W międzyczasie możesz odpytywać serwer na temat statusu wykonania tego narzędzia korzystając z containerId w osobnym zapytaniu API.</p>",
     "name": "VADTool",
-    "group": "Tools",
+    "group": "Narzędzia",
     "parameter": {
       "fields": {
         "Parameter": [
@@ -563,8 +289,8 @@ define({ "api": [
             "group": "Parameter",
             "type": "String",
             "optional": false,
-            "field": "api_key",
-            "description": "<p>Token uzyskany po zalogowaniu</p>"
+            "field": "Authorization",
+            "description": "<p>Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.</p>"
           }
         ]
       }
@@ -632,7 +358,297 @@ define({ "api": [
     },
     "version": "0.0.0",
     "filename": "controllers/repoPanel.js",
-    "groupTitle": "Tools"
+    "groupTitle": "Narzędzia"
+  },
+  {
+    "type": "get",
+    "url": "/repoFiles/createCorpus/:projectId",
+    "title": "Tworzenie korpusu",
+    "description": "<p>Wywołanie powoduje inicjalizację procesu tworzenia korpusu w formacie EMU-SDMS i zapisuje go na serwerze w postaci pliku ZIP. Korpus jest tworzony z plików dla których wykonane zostały wszystkie poziomy anotacji (VAD, DIA, REC oraz SEG). Proces może trać dłuższy czas w zależności od ilości plików w projekcie. Po zakończeniu możesz ściągnąć korpus za pomocą osobnego zapytania API. W trakcie jego tworzenia możesz również odpytać czy korpus dla danego projektu został zakończony.</p>",
+    "name": "CreateCorpus",
+    "group": "Pliki",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "projectId",
+            "description": "<p>Identyfikator projektu dla którego tworzony jest korpus. Możesz go odnaleźć w interfejsie użytkownika bądź skorzystać z domyślnego projektu którego ID jest zwracane podczas rejestracji.</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "Authorization",
+            "description": "<p>Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "fields": {
+        "Success 200": [
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "message",
+            "description": "<p>wiadomość że korpus został utworzony i możesz go ściągnąć.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\n  \"message\": 'Tworzenie korpusu zakończone sukcesem. Możesz go ściągnąć.',\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "error": {
+      "fields": {
+        "204": [
+          {
+            "group": "204",
+            "optional": false,
+            "field": "NoContent",
+            "description": "<p>Twoje pliki nie zawierają wszystkich poziomów anotacji lub coś poszło nie tak na serwerze</p>"
+          }
+        ]
+      }
+    },
+    "version": "0.0.0",
+    "filename": "controllers/repoPanel.js",
+    "groupTitle": "Pliki"
+  },
+  {
+    "type": "delete",
+    "url": "/repoFiles/delete/:containerId",
+    "title": "Usuwanie kontenera",
+    "description": "<p>Usuwa kontener oraz wszystko co z nim związane (pliki, anotacje, wpisy w bazie danych).</p>",
+    "name": "DELETEcontainer",
+    "group": "Pliki",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "containerId",
+            "description": "<p>Identyfikator kontenera który chcesz usunąć</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "Authorization",
+            "description": "<p>Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "fields": {
+        "Success 200": [
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "message",
+            "description": "<p>Kontener został usunięty!</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "containerId",
+            "description": "<p>ID kontenera który został usunięty</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "sessionId",
+            "description": "<p>ID sesji do której należy kontener</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\n  \"message\": 'Kontener został usunięty!',\n  \"sessionId\": \"5f58a92dfa006c8aed96f846\",\n  \"containerId\": \"5f58a92dfa006c8aed96f846\",\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "error": {
+      "fields": {
+        "404": [
+          {
+            "group": "404",
+            "optional": false,
+            "field": "NotFound",
+            "description": "<p>Nie znaleziono kontenera o danym ID</p>"
+          }
+        ],
+        "500": [
+          {
+            "group": "500",
+            "optional": false,
+            "field": "ServerError",
+            "description": ""
+          }
+        ]
+      }
+    },
+    "version": "0.0.0",
+    "filename": "controllers/repoPanel.js",
+    "groupTitle": "Pliki"
+  },
+  {
+    "type": "get",
+    "url": "/repoFiles/downloadCorpus/:projectId",
+    "title": "Pobierz korpus EMU",
+    "description": "<p>After when you create the corpus you can download it.</p>",
+    "name": "DownloadCorpus",
+    "group": "Pliki",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "projectId",
+            "description": "<p>Identyfikator projektu dla którego chcesz pobrać korpus. Znajdziesz go również w interfejsie użytkownika.</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "Authorization",
+            "description": "<p>Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "fields": {
+        "Success 200": [
+          {
+            "group": "Success 200",
+            "type": "Object",
+            "optional": false,
+            "field": "korpus",
+            "description": "<p>w formacie ZIP</p>"
+          }
+        ]
+      }
+    },
+    "error": {
+      "fields": {
+        "404": [
+          {
+            "group": "404",
+            "optional": false,
+            "field": "NotFound",
+            "description": "<p>nie znaleziono projektu o danym ID</p>"
+          }
+        ],
+        "500": [
+          {
+            "group": "500",
+            "optional": false,
+            "field": "ServerError",
+            "description": ""
+          }
+        ]
+      }
+    },
+    "version": "0.0.0",
+    "filename": "controllers/repoPanel.js",
+    "groupTitle": "Pliki"
+  },
+  {
+    "type": "GET",
+    "url": "/repoFiles/download/:containerId/:fileType",
+    "title": "Pobierz wyniki",
+    "description": "<p>Za pomocą tego zapytania możesz pobrać efekty pracy narzędzi automatycznych. Oprócz tego możesz pobrać oryginalnie wgrany plik oraz plik przekonwertowany do formatu PCM 16000Hz 16bits.</p>",
+    "name": "GETOutputFile",
+    "group": "Pliki",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "containerId",
+            "description": "<p>Identyfikator kontenera dla którego chcesz pobrać wynik. Możesz go również znaleźć w interfejsie użytkownika</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "fileType",
+            "description": "<p>Wskazanie formatu w jakim chcesz pobrać wynik. <h3>Pliki audio</h3><ul><li>&quot;oryginalAudio&quot;: Pobranie pliku który został wysłany na serwer.</li><li>&quot;audio&quot; : pobranie pliku przekonwertowanego do PCM 16000Hz 8bits</li></ul><h3>Detekcja mowy (VAD) </h3><ul><li>&quot;VADctm&quot;: Wynik działania VAD w formacie CTM</li><li>&quot;VADtextGrid&quot;: Wynik działania VAD w formacie TextGrid</li><li>&quot;VADJSON&quot;: Wynik działania VAD w formacie JSON</li></ul><h3>Diaryzacja (DIA)</h3><ul><li>&quot;DIActm&quot;: Wynik działania DIA w formacie CTM</li><li>&quot;DIAtextGrid&quot;: Wynik działania DIA w formacie TextGrid.</li><li>&quot;DIAJSON&quot;: Wynik działania DIA w formacie JSON.</li></ul><h3>Rozpoznawanie mowy (REC)</h3><ul><li>&quot;JSONTranscript&quot;: Wynik działania REC w formacie JSCON</li><li>&quot;TXTTranscript&quot;: Wynik działania REC w formacie TXT.</li></ul><h3>Segmentacja (SEG)</h3><ul><li>&quot;SEGctm&quot;: Wynik działania SEG w formacie CTM</li><li>&quot;SEGtextGrid&quot;: Wynik działania SEG w formacie TextGrid.</li><li>&quot;EMUJSON&quot;: Wynik działania SEG w formacie EMU-SDMS.</li></ul></p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "Authorization",
+            "description": "<p>Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "fields": {
+        "Success 200": [
+          {
+            "group": "Success 200",
+            "type": "Object",
+            "optional": false,
+            "field": "zwraca",
+            "description": "<p>dany żądany plik</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK input 1 0.120 7.610 speech",
+          "type": "json"
+        }
+      ]
+    },
+    "error": {
+      "fields": {
+        "404": [
+          {
+            "group": "404",
+            "optional": false,
+            "field": "NotFound",
+            "description": "<p>Nie znaleziono kontenera o danym ID</p>"
+          }
+        ],
+        "500": [
+          {
+            "group": "500",
+            "optional": false,
+            "field": "ServerError",
+            "description": "<p>Coś poszło nie tak na serwerze</p>"
+          }
+        ]
+      }
+    },
+    "version": "0.0.0",
+    "filename": "controllers/repoPanel.js",
+    "groupTitle": "Pliki"
   },
   {
     "type": "post",
@@ -640,7 +656,7 @@ define({ "api": [
     "title": "Odzyskanie hasła",
     "description": "<p>Pozwala użytkownikowi wygenerować nowe hasło. Wywołanie tego api powoduje wysłąnie wiadomości email na adres użytkownika z linkiem do strony gdzie użytkownik może wprowadzić nowe hasło.</p>",
     "name": "ForgotPassword",
-    "group": "User",
+    "group": "Użytkownik",
     "parameter": {
       "fields": {
         "Parameter": [
@@ -704,15 +720,15 @@ define({ "api": [
     },
     "version": "0.0.0",
     "filename": "controllers/auth.js",
-    "groupTitle": "User"
+    "groupTitle": "Użytkownik"
   },
   {
     "type": "post",
     "url": "/auth/login",
     "title": "Logowanie",
-    "description": "<p>Pozwala na zalogowanie się już zarejestrowanym użytkownikom i uzyskanie tokenu do przeprowadzania dzalszych zapytań</p>",
+    "description": "<p>Pozwala na zalogowanie się już zarejestrowanym użytkownikom i uzyskanie tokenu JWT do przeprowadzania dzalszych zapytań</p>",
     "name": "LoginUser",
-    "group": "User",
+    "group": "Użytkownik",
     "parameter": {
       "fields": {
         "Parameter": [
@@ -741,7 +757,7 @@ define({ "api": [
             "type": "String",
             "optional": false,
             "field": "token",
-            "description": "<p>Token który należy używać w polu api_key podczas wykonywania operacji na plikach. Token jest ważny przez 192h (8 dni). Po tym czasie należy zalogować się ponownie.</p>"
+            "description": "<p>Token który należy podać w nagłówku zapytania do API w polu &quot;Authorization&quot; jako 'Bearer <token>'. Token jest ważny przez 192h (8 dni). Po tym czasie należy zalogować się ponownie.</p>"
           },
           {
             "group": "Success 200",
@@ -804,15 +820,15 @@ define({ "api": [
     },
     "version": "0.0.0",
     "filename": "controllers/auth.js",
-    "groupTitle": "User"
+    "groupTitle": "Użytkownik"
   },
   {
     "type": "put",
     "url": "/auth/registration",
     "title": "Rejestracja użytkownika",
-    "description": "<p>Rejestracja nowego użytkownika. Jest ona konieczna aby uzyskać po zalogowaniu specjalny token na potrzeby uruchamiania narzędzi mowy. Dzięki temu masz pewność że Twoje dane i rezultaty ich przetwarzania są bezpieczne!</p>",
+    "description": "<p>Rejestracja nowego użytkownika. Po zalogowaniu uzyskasz token na potrzeby uruchamiania narzędzi mowy z uwzględnieniem bezpieczeństwa Twoich danych.</p>",
     "name": "RegisterUser",
-    "group": "User",
+    "group": "Użytkownik",
     "parameter": {
       "fields": {
         "Parameter": [
@@ -896,6 +912,6 @@ define({ "api": [
     },
     "version": "0.0.0",
     "filename": "controllers/auth.js",
-    "groupTitle": "User"
+    "groupTitle": "Użytkownik"
   }
 ] });

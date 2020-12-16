@@ -193,24 +193,23 @@ exports.createKorpus = (projectId, userId) => {
 
 
 /**
- * @api {get} /repoFiles/createCorpus/:projectId?api_key=your_API_key Create EMU corpus
- * @apiDescription It initializes the process of creating the corpus in EMU-SDMS format. It might take some longer time until it will finish working. It creates a ZIP bundle with only those files for which VAD, DIA, REC and SEG were run. So all the layers of anotation have to be defined. After finish, you can download the results by using "Download Corpus" API endpoint.
+ * @api {get} /repoFiles/createCorpus/:projectId Tworzenie korpusu
+ * @apiDescription Wywołanie powoduje inicjalizację procesu tworzenia korpusu w formacie EMU-SDMS i zapisuje go na serwerze w postaci pliku ZIP. Korpus jest tworzony z plików dla których wykonane zostały wszystkie poziomy anotacji (VAD, DIA, REC oraz SEG). Proces może trać dłuższy czas w zależności od ilości plików w projekcie. Po zakończeniu możesz ściągnąć korpus za pomocą osobnego zapytania API. W trakcie jego tworzenia możesz również odpytać czy korpus dla danego projektu został zakończony.
  * @apiName CreateCorpus
- * @apiGroup Files
+ * @apiGroup Pliki
  *
- * @apiParam {String} projectId The project ID for which you want to create the corpus. You can find it in UI
- * @apiParam {String} api_key Your API key
- *
- * @apiSuccess {String} message that the corpus has been created and you can download it
+ * @apiParam {String} projectId Identyfikator projektu dla którego tworzony jest korpus. Możesz go odnaleźć w interfejsie użytkownika bądź skorzystać z domyślnego projektu którego ID jest zwracane podczas rejestracji.
+ * @apiParam {String} Authorization Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.
+ * @apiSuccess {String} message wiadomość że korpus został utworzony i możesz go ściągnąć.
  * 
  *
  * @apiSuccessExample Success-Response:
  *     HTTP/1.1 200 OK
  *     {
- *       "message": 'Korpus has been created! you can download it',
+ *       "message": 'Tworzenie korpusu zakończone sukcesem. Możesz go ściągnąć.',
  *     }
  *
- * @apiError (500) ServerError 
+ * @apiError (204) NoContent Twoje pliki nie zawierają wszystkich poziomów anotacji lub coś poszło nie tak na serwerze 
  * 
  * 
  */
@@ -230,30 +229,30 @@ exports.exportToEmu = (req, res, next) => {
 
   this.createKorpus(projectId, userId)
     .then((pathToZIP)=>{
-      console.log("ZIP stworzony: " + pathToZIP)
+      console.log(chalk.green("ZIP stworzony: " + pathToZIP))
      // res.sendFile(pathToZIP)
      // res.download(pathToZIP, 'readyZIP.zip');
-      res.status(200).json({ message: 'Korpus has been created! you can download it'});
+      res.status(200).json({ message: 'Tworzenie korpusu zakończone sukcesem. Możesz go ściągnąć.'});
       //res.status(200).json({ message: 'ZIP created successfuly!'});
     })
     .catch((error)=>{
-      res.status(204).json({ message: 'You have not created all annotation levels or something went wrong in the server!'});
+      res.status(204).json({ message: 'Twoje pliki nie zawierają wszystkich poziomów anotacji lub coś poszło nie tak na serwerze'});
     }) 
 }
 
 
 /**
- * @api {get} /repoFiles/downloadCorpus/:projectId?api_key=your_API_key Download EMU corpus
+ * @api {get} /repoFiles/downloadCorpus/:projectId Pobierz korpus EMU
  * @apiDescription After when you create the corpus you can download it. 
  * @apiName DownloadCorpus
- * @apiGroup Files
+ * @apiGroup Pliki
  *
- * @apiParam {String} projectId The project ID for which you want to create the corpus. You can find it in UI
- * @apiParam {String} api_key Your API key
+ * @apiParam {String} projectId Identyfikator projektu dla którego chcesz pobrać korpus. Znajdziesz go również w interfejsie użytkownika.
+ * @apiParam {String} Authorization Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.
  *
- * @apiSuccess {Object} you can save the ZIP file in EMU-SDMS corpus
+ * @apiSuccess {Object} korpus w formacie ZIP
  * 
- *
+ * @apiError (404) NotFound nie znaleziono projektu o danym ID 
  * @apiError (500) ServerError 
  * 
  * 
@@ -267,14 +266,27 @@ exports.getReadyKorpus = (req,res,next) => {
 
   const userId = req.params.userId;
   const projectId = req.params.projectId;
-  
-  const nazwaKorpusu = 'KORPUS';
-  const pathToUserProject = appRoot + '/repo/' + userId + '/' + projectId;
-  const pathToCorpus = pathToUserProject + '/' + nazwaKorpusu;
-  const pathToZIP = pathToCorpus+'.zip';
-   
-  res.download(pathToZIP,(nazwaKorpusu+'.zip'));
- 
+
+  ProjectEntry.findById(projectId)
+    .then(foundPE => {
+      if(!foundPE){
+        const error = new Error('Nie znaleziono projektu o danym ID');
+        error.statusCode = 404;
+        throw error;
+      }
+
+      const nazwaKorpusu = 'KORPUS';
+      const pathToUserProject = appRoot + '/repo/' + userId + '/' + projectId;
+      const pathToCorpus = pathToUserProject + '/' + nazwaKorpusu;
+      const pathToZIP = pathToCorpus+'.zip';
+       
+      res.download(pathToZIP,(nazwaKorpusu+'.zip'));
+
+    }).catch(error=>{
+      console.log(chalk.red(error.message));
+      error.statusCode = error.statusCode || 500;
+      next(error);
+    })
  }
 
 
@@ -303,13 +315,13 @@ exports.changeContainerName = (req, res, next) => {
 
 
 /**
- * @api {put} /repoFiles/runSpeechVAD/:containerId?api_key=your_API_key Detekcja mowy
- * @apiDescription Narzędzie detekcji mowy. Po wykonaniu zapytania należy poczekać na zakończenie pracy. Po zakończeniu serwer zapisze rezultaty w kontenerze o danym ID. Aby ściągnąć rezultaty działania narzędzia należy skorzystać z osobnego zapytania API. W międzyczasie możesz odpytywać serwer na temat statusu wykonania tego narzędzia korzystając z osobnego zapytania API.
+ * @api {put} /repoFiles/runSpeechVAD/:containerId Detekcja mowy
+ * @apiDescription Narzędzie detekcji mowy. Po wykonaniu zapytania należy poczekać na zakończenie pracy. Po zakończeniu serwer zapisze rezultaty w kontenerze o danym ID. Aby ściągnąć rezultaty działania narzędzia należy skorzystać z osobnego zapytania API. W międzyczasie możesz odpytywać serwer na temat statusu wykonania tego narzędzia korzystając z containerId w osobnym zapytaniu API.
  * @apiName VADTool
- * @apiGroup Tools
+ * @apiGroup Narzędzia
  *
   * @apiParam {String} containerId Identyfikator zasobu. Możesz go również znaleźć w graficznym interfejsie użytkownika
- * @apiParam {String} api_key Token uzyskany po zalogowaniu
+ * @apiParam {String} Authorization Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.
  *
  * @apiSuccess {String} message informacja o zakończeniu działania
  * @apiSuccess {String} containerId  Identyfikator zasobu
@@ -372,14 +384,14 @@ exports.runSpeechVAD = (req, res, next) => {
 
 
 /**
- * @api {put} /repoFiles/runSpeechDiarization/:containerId?api_key=your_API_key Diaryzacja
- * @apiDescription Narzędzie diaryzacji. Po wykonaniu zapytania należy poczekać na zakończenie pracy. Po zakończeniu serwer zapisze rezultaty w kontenerze o danym ID. Aby ściągnąć rezultaty działania narzędzia należy skorzystać z osobnego zapytania API. W międzyczasie możesz odpytywać serwer na temat statusu wykonania tego narzędzia korzystając z osobnego zapytania API.
+ * @api {put} /repoFiles/runSpeechDiarization/:containerId Diaryzacja
+ * @apiDescription Narzędzie diaryzacji. Po wykonaniu zapytania należy poczekać na zakończenie pracy. Po zakończeniu serwer zapisze rezultaty w kontenerze o danym ID. Aby ściągnąć rezultaty działania narzędzia należy skorzystać z osobnego zapytania API. W międzyczasie możesz odpytywać serwer na temat statusu wykonania tego narzędzia wykorzystując containerId w osobnym zapytaniu API.
  * 
  * @apiName DIATool
- * @apiGroup Tools
+ * @apiGroup Narzędzia
  *
  * @apiParam {String} containerId Identyfikator zasobu. Możesz go również znaleźć w graficznym interfejsie użytkownika
- * @apiParam {String} api_key Token uzyskany po zalogowaniu
+ * @apiParam {String} Authorization Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.
  *
  * @apiSuccess {String} message informacja o zakończeniu działania
  * @apiSuccess {String} containerId  Identyfikator zasobu
@@ -440,14 +452,14 @@ exports.runSpeechDiarization = (req, res, next) => {
 
 
 /**
- * @api {put} /runSpeechSegmentation/:containerId?api_key=your_API_key Segmentacja
+ * @api {put} /runSpeechSegmentation/:containerId Segmentacja
  * @apiDescription Narzędzie segmentacji. Dla krótkich nagrań (poniżej 0.5MB) uruchamiany jest algorytm forcealign. Dla dłuższych plików segmentalign. Usługa wymaga uruchomienia najpierw usługi rozpoznawania. Po wykonaniu zapytania należy poczekać na zakończenie pracy. Po zakończeniu serwer zapisze rezultaty w kontenerze o danym ID. Aby ściągnąć rezultaty działania narzędzia należy skorzystać z osobnego zapytania API. W międzyczasie możesz odpytywać serwer na temat statusu wykonania tego narzędzia korzystając z osobnego zapytania API.
  * 
  * @apiName SEGTool
- * @apiGroup Tools
+ * @apiGroup Narzędzia
  *
  * @apiParam {String} containerId Identyfikator zasobu. Możesz go również znaleźć w graficznym interfejsie użytkownika
- * @apiParam {String} api_key Token uzyskany po zalogowaniu
+ * @apiParam {String} Authorization Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.
  *
  * @apiSuccess {String} message informacja o zakończeniu działania
  * @apiSuccess {String} containerId  Identyfikator kontenera
@@ -498,13 +510,13 @@ exports.runSpeechSegmentation = (req, res, next) => {
 //TO DO: dorobić wgrywanie polikow txt
 
 /**
- * @api {put} /runSpeechRecognition/:containerId?api_key=your_API_key Rozpoznawanie mowy
+ * @api {put} /runSpeechRecognition/:containerId Rozpoznawanie mowy
  * @apiDescription Narzędzie rozpoznaje automatycznie mowę z wgranego pliku. Po wykonaniu zapytania należy poczekać na zakończenie pracy. Po zakończeniu serwer zapisze rezultaty w kontenerze o danym ID. Aby ściągnąć rezultaty działania narzędzia należy skorzystać z osobnego zapytania API. W międzyczasie możesz odpytywać serwer na temat statusu wykonania tego narzędzia korzystając z osobnego zapytania API.
  * @apiName RECTool
- * @apiGroup Tools
+ * @apiGroup Narzędzia
  *
  * @apiParam {String} containerId Identyfikator zasobu. Możesz go również znaleźć w graficznym interfejsie użytkownika
- * @apiParam {String} api_key Token uzyskany po zalogowaniu
+ * @apiParam {String} Authorization Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.
  *
  * @apiSuccess {String} message that this tool finished working
  * @apiSuccess {String} containerId  Identyfikator kontenera
@@ -556,23 +568,23 @@ exports.runSpeechRecognition = (req, res, next) => {
 
  
 /**
- * @api {GET} /repoFiles/download/:containerId/:fileType?api_key=your_API_key Download outputs
- * @apiDescription If the task has been finised his job, you can download its result in choosen file format. Besides you can also download the oryginal file that you have sent to server and also the file that has been converted into 16000 Hz and 8bits. The conversion was neccessary to do in order to run speech services.
+ * @api {GET} /repoFiles/download/:containerId/:fileType Pobierz wyniki
+ * @apiDescription Za pomocą tego zapytania możesz pobrać efekty pracy narzędzi automatycznych. Oprócz tego możesz pobrać oryginalnie wgrany plik oraz plik przekonwertowany do formatu PCM 16000Hz 16bits.
  * @apiName GETOutputFile
- * @apiGroup Files
+ * @apiGroup Pliki
  *
- * @apiParam {String} containerId   The container ID for which you want to download the results.
- * @apiParam {String} fileType      you have to indicate one of the following flag to indicate which kind of output you are interested in: <h3>Audio File related</h3><ul><li>"oryginalAudio": you can download the same file which was sent.</li><li>"audio" : download the audio converted into PCM 16000Hz and 8bits</li></ul><h3>Voice Activity Detection (VAD) related</h3><ul><li>"VADctm": downloads the output of VAD in CTM format</li><li>"VADtextGrid": downloads the output of VAD in TextGrid format</li><li>"VADJSON": downloads the output of VAD in JSON format</li></ul><h3>Diarization related</h3><ul><li>"DIActm": downloads the output of diarization in CTM format.</li><li>"DIAtextGrid": downloads the output of diarization in TextGrid format.</li><li>"DIAJSON": downloads the outpu of the dirization in JSON format.</li></ul><h3>Speech Recognition related</h3><ul><li>"JSONTranscript": downloads the transcription in JSON format</li><li>"TXTTranscript": downloads the transcription in TXT file format.</li></ul><h3>Segmentation related</h3><ul><li>"SEGctm": downloads the output of Segmentation in CTM format</li><li>"SEGtextGrid": downloads the output of Segmentation in TextGrid format.</li><li>"EMUJSON": downloads the outpu of Segmentation in EMU-SDMS format.</li></ul> 
- * @apiParam {String} api_key       Your API key
+ * @apiParam {String} containerId   Identyfikator kontenera dla którego chcesz pobrać wynik. Możesz go również znaleźć w interfejsie użytkownika
+ * @apiParam {String} fileType  Wskazanie formatu w jakim chcesz pobrać wynik. <h3>Pliki audio</h3><ul><li>"oryginalAudio": Pobranie pliku który został wysłany na serwer.</li><li>"audio" : pobranie pliku przekonwertowanego do PCM 16000Hz 8bits</li></ul><h3>Detekcja mowy (VAD) </h3><ul><li>"VADctm": Wynik działania VAD w formacie CTM</li><li>"VADtextGrid": Wynik działania VAD w formacie TextGrid</li><li>"VADJSON": Wynik działania VAD w formacie JSON</li></ul><h3>Diaryzacja (DIA)</h3><ul><li>"DIActm": Wynik działania DIA w formacie CTM</li><li>"DIAtextGrid": Wynik działania DIA w formacie TextGrid.</li><li>"DIAJSON": Wynik działania DIA w formacie JSON.</li></ul><h3>Rozpoznawanie mowy (REC)</h3><ul><li>"JSONTranscript": Wynik działania REC w formacie JSCON</li><li>"TXTTranscript": Wynik działania REC w formacie TXT.</li></ul><h3>Segmentacja (SEG)</h3><ul><li>"SEGctm": Wynik działania SEG w formacie CTM</li><li>"SEGtextGrid": Wynik działania SEG w formacie TextGrid.</li><li>"EMUJSON": Wynik działania SEG w formacie EMU-SDMS.</li></ul> 
+ * @apiParam {String} Authorization Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.
  *
- * @apiSuccess {Object} returns audio file or file with the output to download
+ * @apiSuccess {Object} zwraca dany żądany plik
  * 
  *
  * @apiSuccessExample Success-Response:
  *     HTTP/1.1 200 OK input 1 0.120 7.610 speech
  *
- * @apiError (404) NotFound When the resource could not be found
- * @apiError (500) ServerError 
+ * @apiError (404) NotFound Nie znaleziono kontenera o danym ID
+ * @apiError (500) ServerError Coś poszło nie tak na serwerze
  * 
  */
 // ###################################################
@@ -591,6 +603,12 @@ exports.getFileFromContainer = (req,res,next) => {
   //pobieram kontener z bazy danych
   Container.findById(containerId)
     .then(container => {
+
+        if(!container){
+          const error = new Error('Nie znaleziono kontenera o danym ID');
+          error.statusCode = 404;
+          throw error;
+        }
 
         const userId = container.owner;
         const projectId = container.project;
@@ -691,6 +709,10 @@ exports.getFileFromContainer = (req,res,next) => {
        // fs.createReadStream(filePath).pipe(res);
         res.download(filePath,filename);
 
+    }).catch(error=>{
+      console.log(chalk.red(error.message));
+      error.statusCode = error.statusCode || 500;
+      next(error);
     })
 }
 
@@ -736,28 +758,28 @@ exports.removeSession = (req,res,next) => {
 
 
 /**
- * @api {delete} /repoFiles/delete/:containerId?api_key=your_API_key Delete container
- * @apiDescription Removes everthing related to uploaded file: the audio files themselves, the output from the tools and data from database
+ * @api {delete} /repoFiles/delete/:containerId Usuwanie kontenera
+ * @apiDescription Usuwa kontener oraz wszystko co z nim związane (pliki, anotacje, wpisy w bazie danych). 
  * @apiName DELETEcontainer
- * @apiGroup Files
+ * @apiGroup Pliki
  *
- * @apiParam {String} containerId The container ID which you want to delete
- * @apiParam {String} api_key Your API key
+ * @apiParam {String} containerId Identyfikator kontenera który chcesz usunąć
+ * @apiParam {String} Authorization Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.
  *
- * @apiSuccess {String} message 
- * @apiSuccess {String} containerId  which was deleted
- * @apiSuccess {String} sessionId  the id of the session to which the container belonged to
+ * @apiSuccess {String} message Kontener został usunięty!
+ * @apiSuccess {String} containerId  ID kontenera który został usunięty
+ * @apiSuccess {String} sessionId  ID sesji do której należy kontener
  * 
  *
  * @apiSuccessExample Success-Response:
  *     HTTP/1.1 200 OK
  *     {
- *       "message": 'The container has been removed!',
+ *       "message": 'Kontener został usunięty!',
  *       "sessionId": "5f58a92dfa006c8aed96f846",
  *       "containerId": "5f58a92dfa006c8aed96f846",
  *     }
  * 
- *
+ * @apiError (404) NotFound Nie znaleziono kontenera o danym ID
  * @apiError (500) ServerError 
  * 
  */
@@ -772,6 +794,12 @@ exports.removeContainer = (req,res,next) => {
   //console.log("USUWAM CONTAONER: " + containerId)
   Container.findById({_id:containerId})
     .then(foundContainer => {
+
+      if(!foundContainer){
+        const error = new Error('Nie znaleziono kontenera o danym ID');
+        error.statusCode = 404;
+        throw error;
+      }
 
         const userId = foundContainer.owner;
         const projectId = foundContainer.project;
@@ -790,51 +818,28 @@ exports.removeContainer = (req,res,next) => {
               //usuwam odniesienie w kolekcji Sessions
               Session.findByIdAndUpdate(sessionId,{$pull: {containersIds: containerId}})
               .then(updatedSession =>{
-                res.status(200).json({ message: 'The container has been removed!', sessionId: sessionId, containerId: containerId});
+                res.status(200).json({ message: 'Kontener został usunięty!', sessionId: sessionId, containerId: containerId});
               })
               .catch(error => {
-                res.status(500).json({ message: 'Something went wrong with removing the container!', sessionId: sessionId, containerId: containerId});
-                console.log(error);
+                //res.status(500).json({ message: 'Something went wrong with removing the container!', sessionId: sessionId, containerId: containerId});
+                //console.log(error);
                 throw error;
               })
           })
           .catch(error => {
-            res.status(500).json({ message: 'Something went wrong with removing the container!', sessionId: sessionId, containerId: containerId});
-            console.log(error);
+            //res.status(500).json({ message: 'Something went wrong with removing the container!', sessionId: sessionId, containerId: containerId});
+            //console.log(error);
             throw error;
           })
         }).catch(error=>{
-          res.status(500).json({ message: 'Something went wrong with removing the container!', sessionId: sessionId, containerId: containerId});
-          console.log(error);
+          //res.status(500).json({ message: 'Something went wrong with removing the container!', sessionId: sessionId, containerId: containerId});
+          //console.log(chalk.red(error.message));
           throw error;
         });
-
-        /*
-        fs.rmdir(containerPath,{recursive: true}, function (err) {
-          if (err) throw err;
-
-          //usuwam wpis w kolekcji Containers
-          Container.findByIdAndRemove(containerId)
-          .then(removedContainer => {
-            
-              //usuwam odniesienie w kolekcji Sessions
-              Session.findByIdAndUpdate(sessionId,{$pull: {containersIds: containerId}})
-              .then(updatedSession =>{
-                res.status(200).json({ message: 'The container has been removed!', sessionId: sessionId, containerId: containerId});
-              })
-              .catch(error => {
-                res.status(500).json({ message: 'Something went wrong with removing the container!', sessionId: sessionId, containerId: containerId});
-                console.log(error);
-                throw error;
-              })
-          })
-          .catch(error => {
-            res.status(500).json({ message: 'Something went wrong with removing the container!', sessionId: sessionId, containerId: containerId});
-            console.log(error);
-            throw error;
-          })
-        });
-        */
+    }).catch(error=>{
+      console.log(chalk.red(error.message));
+      error.statusCode = error.statusCode || 500;
+      next(error);
     })
 }
 
