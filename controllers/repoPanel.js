@@ -890,7 +890,7 @@ exports.uploadFile = (req, res, next) => {
         const fillCorrectAudioPath = containerFolderPath + "/" + finalAudioFileName;
 
         //tworze odpowiednia nazwe kontenera - bez unikatowego ID oraz bez rozszerzenia
-        const finalContainerName = oryginalFileName
+        const finalContainerName = oryginalFileName;
 
         audio.save(fillCorrectAudioPath)
               .then(convertedFile=>{
@@ -953,20 +953,21 @@ exports.uploadFile = (req, res, next) => {
                       })
                     }
               }).catch(err =>{
-                console.log(chalk.red('ERROR SAVE FFMPEG: coś poszło nie tak'))
+                //console.log(chalk.red('ERROR SAVE FFMPEG: coś poszło nie tak'))
+                throw err;
               })
-      }).catch(err=>{
-        console.log('Error FFMPEG: ' + err)
+      }).catch(error=>{
+        //console.log('Error FFMPEG: ' + err)
+        throw error;
       })
 
 
-  } catch (e) {
-    console.log("ups!! jakis wyjatek...")
-    console.log(e.code);
-	  console.log(e.msg);
-  }
-  
+  } catch (error) {
+    console.log(chalk.red(error.message));
+    error.statusCode = error.statusCode || 500;
+    next(error);
 
+  }
 
 }
 
@@ -974,47 +975,59 @@ exports.uploadFile = (req, res, next) => {
 //#### tworzenie nowej sesji ######
 //#######################################
 
+exports.createNewSessionHandler = (sesName, projId) => {
+  return new Promise((resolve, reject) => {
+
+      const sessionName = sesName;
+      const projectId = projId;
+
+      let userId = null;
+      let sessionId = null;
+      
+      ProjectEntry.findById(projectId).then(foundProject=>{
+        return foundProject.owner;
+      }).then(owner => {
+        userId = owner;
+
+        let session = new Session({
+          name: sessionName,
+          projectId: projectId,
+        });
+
+        return session.save();
+      }).then(createdSession=>{
+        sessionId = createdSession._id;
+        return ProjectEntry.findByIdAndUpdate(projectId,{$push: {sessionIds: createdSession._id}});
+      }).then(updatedProject =>{
+        
+        const repoPath = appRoot + "/repo/" + userId + "/" + projectId;
+        fs.mkdir(repoPath + '/' + sessionId).then(()=>{
+          return sessionId;
+        }).catch(error=>{
+          throw error;
+        }) 
+      }).then((sessionId)=>{
+        resolve(sessionId);
+      }).catch(error=>{
+        error.statusCode = error.statusCode || 500;
+        reject(error)
+      });
+     
+  });
+   
+}
+
 exports.createNewSession = (req, res, next) => {
 
     const sessionName = req.body.sessionName;
     const projectId = req.body.projectId;
-    const userId = req.body.userId;
 
-    let session = new Session({
-      name: sessionName,
-      projectId: projectId,
+    this.createNewSessionHandler(sessionName, projectId).then(newSessionId=>{
+      res.status(200).json({ message: 'Nowa sesja została utworzona!', sessionName: sessionName, id: newSessionId});
+    }).catch(error=>{
+      error.statusCode = error.statusCode || 500;
+      next(error);
     });
-
-
-    //zapisuje sesje w DB
-    session.save()
-      .then(createdSession => {
-
-        //odnajduje projet w DB i dodaje id tej sesji do niego
-        ProjectEntry.findByIdAndUpdate(projectId,{$push: {sessionIds: createdSession._id}})
-          .then(updatedProject=> {
-
-            //tworze folder na dysku dla tej sesji
-            const repoPath = appRoot + "/repo/" + userId + "/" + projectId;
-    
-            fs.mkdirs(repoPath + '/' + createdSession._id, function (err) {
-        
-              if (err) {
-                res.status(500).json({ message: 'Problem with session creation!'});
-                return console.error(err);
-              }
-          
-              res.status(200).json({ message: 'New session has been created!', sessionName: createdSession.name, id: createdSession._id})
-              
-            });           
-          })
-          .catch(error => {
-            throw error;
-          })
-      })
-      .catch(error => {
-        throw error;
-      })
 }
 
 

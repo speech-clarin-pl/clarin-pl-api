@@ -44,6 +44,7 @@ const SEGRoutes =  require('./routes/SEGTool');
 //const segmentationRoutes = require('./routes/segmentationTool');
 const repoRoutes = require('./routes/repo'); 
 const authRoutes =  require('./routes/auth');
+const projectEntry = require('./models/projectEntry');
 
 //###############################################
 //###############################################
@@ -63,30 +64,30 @@ app.use((req, res, next) => {
 //multer configuration for storing files. It accepts array of files...
 const fileStorage = multer.diskStorage({
 
-    filename: (req, file, cb) => {
-        const uniqueHash = req.body.uniqueHash;
+    destination: async (req, file, cb) => {
 
-        const nowyHash = uniqueFilename("","",uniqueHash);
-
-       // const audioFileName = utils.getFileNameWithNoExt(file.originalname)+"-"+utils.getFileExtention(file.originalname)+"-"+nowyHash;
-       const audioFileName = utils.getFileNameWithNoExt(file.originalname)+"-"+nowyHash+"_temp."+utils.getFileExtention(file.originalname);
-        
-       cb(null, audioFileName);
-    },
-
-    destination: (req, file, cb) => {
-
-        const userId = req.body.userId;
+       // const userId = req.body.userId;
         const projectId = req.body.projectId;
         const sessionId = req.body.sessionId;
-        const uniqueHash = req.body.uniqueHash;
 
-        const nowyHash = uniqueFilename("","",uniqueHash);
+        //jeżeli ktoś nie podał id sesji, wtedy tworzona jest domyślna
+        if(!sessionId){
+            
+        }
 
+        //const uniqueHash = req.body.uniqueHash;
+        const uniqueHash = uniqueFilename(""); // generuje unikatowy ID dla wgrywanego pliku
+        req.uniqueHash = uniqueHash;
+
+        const {owner} = await projectEntry.findById(projectId);
+        
+        //const nowyHash = uniqueFilename("","",uniqueHash);
+        //console.log(owner)
+        const userId = owner;
         const oryginalFileName = file.originalname;
 
         //tworze folder dla wgranego pliku audio
-        const conainerFolderName = utils.getFileNameWithNoExt(oryginalFileName)+"-"+nowyHash;
+        const conainerFolderName = utils.getFileNameWithNoExt(oryginalFileName)+"-"+uniqueHash;
         //const conainerFolderName = oryginalFileName+"-"+nowyHash;
         const containerFolderPath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + conainerFolderName;
 
@@ -94,7 +95,20 @@ const fileStorage = multer.diskStorage({
         fs.mkdirsSync(containerFolderPath);
 
         cb(null, './repo/'+userId+'/'+projectId+'/'+sessionId+'/' + conainerFolderName);
+      
     },
+
+    filename: (req, file, cb) => {
+        //const uniqueHash = req.body.uniqueHash;
+        const uniqueHash = req.uniqueHash;
+
+        //const nowyHash = uniqueFilename("","",uniqueHash);
+
+       // const audioFileName = utils.getFileNameWithNoExt(file.originalname)+"-"+utils.getFileExtention(file.originalname)+"-"+nowyHash;
+       const audioFileName = utils.getFileNameWithNoExt(file.originalname)+"-"+uniqueHash+"_temp."+utils.getFileExtention(file.originalname);
+        
+       cb(null, audioFileName);
+    }
     
 });
 
@@ -125,7 +139,7 @@ let upload = multer({
     fileFilter: fileFilter,
 }).single('audioFile');
 
-app.use(upload,function (req, res, next) {
+app.use(upload, (req, res, next) => {
      next();
 });
 
