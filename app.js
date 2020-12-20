@@ -10,6 +10,8 @@ const isAuth = require('./middleware/is-auth');
 const utils = require('./utils/utils');
 const uniqueFilename = require('unique-filename');
 const chalk = require('chalk');
+const {createNewSessionHandler} = require('./controllers/repoPanel');
+const Container = require('./models/Container');
 
 
 const log = require('simple-node-logger').createSimpleLogger('projectLogs.log'); //logging
@@ -62,18 +64,14 @@ app.use((req, res, next) => {
 
 
 //multer configuration for storing files. It accepts array of files...
-const fileStorage = multer.diskStorage({
+const fileStorageAudio = multer.diskStorage({
 
     destination: async (req, file, cb) => {
 
        // const userId = req.body.userId;
         const projectId = req.body.projectId;
-        const sessionId = req.body.sessionId;
-
-        //jeżeli ktoś nie podał id sesji, wtedy tworzona jest domyślna
-        if(!sessionId){
-            
-        }
+        let sessionId = req.body.sessionId;
+        let containerId = req.body.containerId; //tylko w przypadku TXT
 
         //const uniqueHash = req.body.uniqueHash;
         const uniqueHash = uniqueFilename(""); // generuje unikatowy ID dla wgrywanego pliku
@@ -86,23 +84,41 @@ const fileStorage = multer.diskStorage({
         const userId = owner;
         const oryginalFileName = file.originalname;
 
-        //tworze folder dla wgranego pliku audio
-        const conainerFolderName = utils.getFileNameWithNoExt(oryginalFileName)+"-"+uniqueHash;
-        //const conainerFolderName = oryginalFileName+"-"+nowyHash;
-        const containerFolderPath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + conainerFolderName;
+       
+        //w zalęzności czy wgrywam transkrypcje czy plik audio to albo tworze nowy folder albo wgrywam do już istniejącego
+        let type = file.mimetype;
+        let typeArray = type.split("/");
 
-        //tworze folder dla tego contenera
-        fs.mkdirsSync(containerFolderPath);
+        let finalPath = null;
 
-        cb(null, './repo/'+userId+'/'+projectId+'/'+sessionId+'/' + conainerFolderName);
-      
+        if (typeArray[0] == "audio") {
+
+            const conainerFolderName = utils.getFileNameWithNoExt(oryginalFileName)+"-"+uniqueHash;
+            const containerFolderPath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + conainerFolderName;
+
+            //tworze folder dla tego contenera
+            fs.mkdirsSync(containerFolderPath);
+            finalPath = './repo/'+userId+'/'+projectId+'/'+sessionId+'/' + conainerFolderName;
+           
+
+        } else if (typeArray[0] == "text") {
+
+            let conainerFolderName = null;
+   
+            if(containerId){
+                const foundContainer = await Container.findById(containerId);
+                conainerFolderName = utils.getFileNameWithNoExt(foundContainer.fileName);
+                finalPath = './repo/'+userId+'/'+projectId+'/'+sessionId+'/' + conainerFolderName;
+            }
+        }
+
+
+        cb(null, finalPath);
     },
 
     filename: (req, file, cb) => {
         //const uniqueHash = req.body.uniqueHash;
         const uniqueHash = req.uniqueHash;
-
-        //const nowyHash = uniqueFilename("","",uniqueHash);
 
        // const audioFileName = utils.getFileNameWithNoExt(file.originalname)+"-"+utils.getFileExtention(file.originalname)+"-"+nowyHash;
        const audioFileName = utils.getFileNameWithNoExt(file.originalname)+"-"+uniqueHash+"_temp."+utils.getFileExtention(file.originalname);
@@ -114,19 +130,16 @@ const fileStorage = multer.diskStorage({
 
 
 
-const fileFilter = (req, file, cb) => {
+const fileFilterAudio = (req, file, cb) => {
     var type = file.mimetype;
-//    if (file.mimetype === 'audio/mpeg' ||
-//         file.mimetype === 'audio/mp3' ||
-//         file.mimetype === 'audio/vnd.wav'
-//     )
     var typeArray = type.split("/");
-    if (typeArray[0] == "audio") {
+    if (typeArray[0] == "audio" ||
+        typeArray[0] == "text") {
       cb(null, true);
     }else {
       cb(null, false);
     }
-  }
+}
 
  // fileFilter: fileFilter
 // let upload = multer({
@@ -134,12 +147,14 @@ const fileFilter = (req, file, cb) => {
     
 // }).array('audioFiles');
 
-let upload = multer({
-    storage: fileStorage,
-    fileFilter: fileFilter,
-}).single('audioFile');
+let uploadAudio = multer({
+    storage: fileStorageAudio,
+    fileFilter: fileFilterAudio,
+}).single('myFile');
 
-app.use(upload, (req, res, next) => {
+
+
+app.use(uploadAudio, (req, res, next) => {
      next();
 });
 

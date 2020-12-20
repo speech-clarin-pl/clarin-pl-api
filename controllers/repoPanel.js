@@ -52,14 +52,10 @@ exports.zipDirectory = (source, out) => {
 exports.createKorpus = (projectId, userId) => {
   return new Promise((resolve, reject) => {
   
-
-    // creating archives
-   // var zip = new AdmZip();
-  
     // tutaj robie export do EMU tylko tych plików które mają wszystkie narzędzia wykonane
-  
     //przeglądam kontenery tego użytkownika i wybieram tylko te które mogą być zapisane
-    Container.find({owner: userId, project: projectId, ifVAD: true, ifDIA: true, ifREC: true, ifSEG: true },{VADUserSegments:0, DIAUserSegments:0,RECUserSegments:0,SEGUserSegments:0})
+    Container.find({owner: userId, project: projectId, ifVAD: true, ifDIA: true, ifREC: true, ifSEG: true },
+                    {VADUserSegments:0, DIAUserSegments:0,RECUserSegments:0,SEGUserSegments:0})
       .then(containers => {
 
         const nazwaKorpusu = 'KORPUS';
@@ -70,7 +66,7 @@ exports.createKorpus = (projectId, userId) => {
         emu.containers2EMU(containers)
           .then(correctContainers=>{
   
-            console.log("Folder do CORPUSU: " +  pathToCorpus);
+            //console.log("Folder do CORPUSU: " +  pathToCorpus);
   
             //teraz tworze folder w katalogu projektu danego usera z gotowym korpusem
             if(!fs.existsSync(pathToCorpus)){
@@ -137,17 +133,12 @@ exports.createKorpus = (projectId, userId) => {
                   } catch(error) {
                     reject();
                   }
-
   
                 }).catch(error=>{
                   console.error(error)
                 })
               });
-
-
               promises.push(promis);
-              
-  
             }
 
 
@@ -165,20 +156,6 @@ exports.createKorpus = (projectId, userId) => {
             .catch(err=>{
               resolve(pathToZIP);
             })
-
-          
-
-             // add local file
-            //zip.addLocalFolder(pathToCorpus);
-
-           // zip.writeZip(pathToZIP)
-            //  .then(result=>{
-            //    fs.removeSync(pathToCorpus);
-            //    resolve(pathToZIP);
-            //  })
-            //  .catch(error=>{
-            //    reject(error);
-            //  })
           })
           .catch(error=>{   
             console.error(error)
@@ -186,8 +163,6 @@ exports.createKorpus = (projectId, userId) => {
             reject(error);
           })     
       })
-  
-  
   })
 }
 
@@ -199,7 +174,7 @@ exports.createKorpus = (projectId, userId) => {
  * @apiGroup Pliki
  *
  * @apiParam {String} projectId Identyfikator projektu dla którego tworzony jest korpus. Możesz go odnaleźć w interfejsie użytkownika bądź skorzystać z domyślnego projektu którego ID jest zwracane podczas rejestracji.
- * @apiParam {String} Authorization Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.
+ * @apiHeader {String} Authorization Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.
  * @apiSuccess {String} message wiadomość że korpus został utworzony i możesz go ściągnąć.
  * 
  *
@@ -214,7 +189,6 @@ exports.createKorpus = (projectId, userId) => {
  * 
  */
 exports.exportToEmu = (req, res, next) => {
-
 
   //kiedy projectId jest podawany w parametrze URL
   if(req.params.projectId){
@@ -248,14 +222,12 @@ exports.exportToEmu = (req, res, next) => {
  * @apiGroup Pliki
  *
  * @apiParam {String} projectId Identyfikator projektu dla którego chcesz pobrać korpus. Znajdziesz go również w interfejsie użytkownika.
- * @apiParam {String} Authorization Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.
+ * @apiHeader {String} Authorization Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.
  *
  * @apiSuccess {Object} korpus w formacie ZIP
  * 
  * @apiError (404) NotFound nie znaleziono projektu o danym ID 
  * @apiError (500) ServerError 
- * 
- * 
  */
 
 // ###################################################
@@ -291,24 +263,61 @@ exports.getReadyKorpus = (req,res,next) => {
 
 
 
+/**
+ * @api {put} /repoFiles/changeContainerName/:containerId' Zmiana nazwy kontenera
+ * @apiDescription Zmienia nazwę kontenera 
+ * @apiName ChangeContainerName
+ * @apiGroup Pliki
+ *
+ * @apiParam {String} containerId Identyfikator kontenera
+ * @apiParam {String} newName Nowa nazwa
+ * @apiHeader {String} Authorization Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.
+ *
+ * @apiSuccess {containerId} Identyfikator kontenera
+ * @apiSuccess {newName} Nowa nazwa
+ * 
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "message": 'Zmiana nazwy zakończona sukcesem!',
+ *       "containerId": "5f58a92dfa006c8aed96f846",
+ *       "newName": "Nowa Nazwa",
+ *     }
+ *
+ * 
+ * @apiError (500) ServerError 
+ */
 
 //##########################################
 //#### zmieniam nazwe contenera ######
 //#######################################
 
 exports.changeContainerName = (req, res, next) => {
-  const projectId = req.params.projectId;
+  //const projectId = req.params.projectId;
   const containerId = req.params.containerId;
   const newName = req.body.newName;
 
-  //console.log("ZMIENIAM NAZWE NA " + newName);
+  let owner = null;
+  Container.findById(containerId).then(foundContainer=>{
 
-  Container.findByIdAndUpdate(containerId,{containerName: newName}).then(container => {
-    res.status(200).json({containerId: container._id})
-  }).catch(error =>{
-    console.log(chalk.red("Something went wrong with the update of the container name"))
-    res.status(500).json({message: 'Something went wrong with the update of the container name'})
-  })
+    owner = foundContainer.owner;
+    return owner;
+  }).then(owner => {
+    return User.findById(owner);
+  }).then(user=>{
+    //zabezpieczenie....
+    if((user._id+"") == (owner+"")){
+      Container.findByIdAndUpdate(containerId,{containerName: newName}).then(container => {
+        res.status(200).json({message: 'Zmiana nazwy zakończona sukcesem!', containerId: container._id, newName: newName});
+      }).catch(error =>{
+        throw error;
+      })
+    }
+  }).catch(error=>{
+    console.log(chalk.red(error.message));
+    error.statusCode = error.statusCode || 500;
+    next(error)
+  });
 }
 
 
@@ -321,7 +330,7 @@ exports.changeContainerName = (req, res, next) => {
  * @apiGroup Narzędzia
  *
   * @apiParam {String} containerId Identyfikator zasobu. Możesz go również znaleźć w graficznym interfejsie użytkownika
- * @apiParam {String} Authorization Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.
+ * @apiHeader {String} Authorization Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.
  *
  * @apiSuccess {String} message informacja o zakończeniu działania
  * @apiSuccess {String} containerId  Identyfikator zasobu
@@ -391,7 +400,7 @@ exports.runSpeechVAD = (req, res, next) => {
  * @apiGroup Narzędzia
  *
  * @apiParam {String} containerId Identyfikator zasobu. Możesz go również znaleźć w graficznym interfejsie użytkownika
- * @apiParam {String} Authorization Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.
+ * @apiHeader {String} Authorization Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.
  *
  * @apiSuccess {String} message informacja o zakończeniu działania
  * @apiSuccess {String} containerId  Identyfikator zasobu
@@ -459,7 +468,7 @@ exports.runSpeechDiarization = (req, res, next) => {
  * @apiGroup Narzędzia
  *
  * @apiParam {String} containerId Identyfikator zasobu. Możesz go również znaleźć w graficznym interfejsie użytkownika
- * @apiParam {String} Authorization Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.
+ * @apiHeader {String} Authorization Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.
  *
  * @apiSuccess {String} message informacja o zakończeniu działania
  * @apiSuccess {String} containerId  Identyfikator kontenera
@@ -507,7 +516,7 @@ exports.runSpeechSegmentation = (req, res, next) => {
   })
 }
 
-//TO DO: dorobić wgrywanie polikow txt
+
 
 /**
  * @api {put} /runSpeechRecognition/:containerId Rozpoznawanie mowy
@@ -516,7 +525,7 @@ exports.runSpeechSegmentation = (req, res, next) => {
  * @apiGroup Narzędzia
  *
  * @apiParam {String} containerId Identyfikator zasobu. Możesz go również znaleźć w graficznym interfejsie użytkownika
- * @apiParam {String} Authorization Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.
+ * @apiHeader {String} Authorization Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.
  *
  * @apiSuccess {String} message that this tool finished working
  * @apiSuccess {String} containerId  Identyfikator kontenera
@@ -575,7 +584,7 @@ exports.runSpeechRecognition = (req, res, next) => {
  *
  * @apiParam {String} containerId   Identyfikator kontenera dla którego chcesz pobrać wynik. Możesz go również znaleźć w interfejsie użytkownika
  * @apiParam {String} fileType  Wskazanie formatu w jakim chcesz pobrać wynik. <h3>Pliki audio</h3><ul><li>"oryginalAudio": Pobranie pliku który został wysłany na serwer.</li><li>"audio" : pobranie pliku przekonwertowanego do PCM 16000Hz 8bits</li></ul><h3>Detekcja mowy (VAD) </h3><ul><li>"VADctm": Wynik działania VAD w formacie CTM</li><li>"VADtextGrid": Wynik działania VAD w formacie TextGrid</li><li>"VADJSON": Wynik działania VAD w formacie JSON</li></ul><h3>Diaryzacja (DIA)</h3><ul><li>"DIActm": Wynik działania DIA w formacie CTM</li><li>"DIAtextGrid": Wynik działania DIA w formacie TextGrid.</li><li>"DIAJSON": Wynik działania DIA w formacie JSON.</li></ul><h3>Rozpoznawanie mowy (REC)</h3><ul><li>"JSONTranscript": Wynik działania REC w formacie JSCON</li><li>"TXTTranscript": Wynik działania REC w formacie TXT.</li></ul><h3>Segmentacja (SEG)</h3><ul><li>"SEGctm": Wynik działania SEG w formacie CTM</li><li>"SEGtextGrid": Wynik działania SEG w formacie TextGrid.</li><li>"EMUJSON": Wynik działania SEG w formacie EMU-SDMS.</li></ul> 
- * @apiParam {String} Authorization Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.
+ * @apiHeader {String} Authorization Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.
  *
  * @apiSuccess {Object} zwraca dany żądany plik
  * 
@@ -764,7 +773,7 @@ exports.removeSession = (req,res,next) => {
  * @apiGroup Pliki
  *
  * @apiParam {String} containerId Identyfikator kontenera który chcesz usunąć
- * @apiParam {String} Authorization Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.
+ * @apiHeader {String} Authorization Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.
  *
  * @apiSuccess {String} message Kontener został usunięty!
  * @apiSuccess {String} containerId  ID kontenera który został usunięty
@@ -844,132 +853,204 @@ exports.removeContainer = (req,res,next) => {
 }
 
 
+
+
+/**
+ * @api {post} /repoFiles/uploadFile Wgrywanie pliku
+ * @apiDescription Wgranie pliku audio lub transkrypcji na serwer. W przypadku pliku audio należy podać id projektu oraz sesji do której wgrany będzie plik. W przypadku pliku transkrypcji (txt) należy podać dodatkowo id kontenera którego dotyczy.
+ * @apiName UPLOADfile
+ * @apiGroup Pliki
+ *
+ * @apiParam {String} projectId Identyfikator projektu
+ * @apiParam {String} sessionId Identyfikator sesji
+ * @apiParam {String} containerId Identyfikator kontenera
+ * @apiParam {String} myFile Plik audio lub txt
+ * @apiHeader {String} Authorization Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.
+ *
+ * @apiSuccess {String} message Informacja o powodzeniu
+ * @apiSuccess {String} containerId  ID kontenera który został został stworzony bądź do którego wgrano transkrypcje
+ * @apiSuccess {String} sessionId  ID sesji do której należy kontener
+ * @apiSuccess {String} oryginalName  nazwa wgranego pliku
+ * 
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "message": 'Wgranie pliku zakończone powodzeniem!',
+ *       "sessionId": "5f58a92dfa006c8aed96f846",
+ *       "oryginalName": "sampleAudio.mp3"
+ *       "containerId": "5f58a92dfa006c8aed96f847",
+ *     }
+ * 
+ * @apiError (500) ServerError 
+ * 
+ */
+
+
 //##########################################
-//#### upload pojedynczego pliku do repo ######
+//#### upload pojedynczego pliku do repo ###
 //#######################################
 
-exports.uploadFile = (req, res, next) => {
+exports.uploadFile = async (req, res, next) => {
 
   const savedFile = req.file.filename; // już z unikatowym id
   const oryginalFileName = req.file.originalname; //nazwa oryginalnego pliku
 
-  const userId = req.body.userId;
+  let type = req.file.mimetype;
+  let typeArray = type.split("/");
+
+  //const userId = req.body.userId;
   const projectId = req.body.projectId;
   const sessionId = req.body.sessionId;
 
-  const uniqueHash = req.body.uniqueHash;
+  //tylko w przypadku innych plików niż audio
+  const containerId = req.body.containerId; 
 
-  const nowyHash = uniqueFilename("","",uniqueHash);
+  const {owner} = await ProjectEntry.findById(projectId);
+  const userId = owner;
 
   let fileWithNoExt = utils.getFileNameWithNoExt(savedFile);
   let fileWithNoSufix = fileWithNoExt.substring(0, fileWithNoExt.length - 5);
 
   const conainerFolderName = fileWithNoSufix;
-  //const conainerFolderName = savedFile+"-"+nowyHash;
   const containerFolderPath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + conainerFolderName;
-
   const fullFilePath = containerFolderPath + "/" + savedFile;
 
-  // ROBIE KONWERSJE FFMPEG
 
-  try {
+  //jeżeli wgrywany plik to audio
+  if(typeArray[0] == 'audio'){
 
-      let process = new ffmpeg(fullFilePath);
-      process.then(audio => {
-        audio.setAudioFrequency(16000)
-              .setAudioChannels(1)
-              .setAudioBitRate(256);
+      // ROBIE KONWERSJE FFMPEG
+      try {
 
-        audio.addCommand('-y', '');
-        audio.addCommand('-sample_fmt', 's16');
+        let process = new ffmpeg(fullFilePath);
+        process.then(audio => {
+          audio.setAudioFrequency(16000)
+                .setAudioChannels(1)
+                .setAudioBitRate(256);
 
-        //teraz robie konwersje na WAV i usuwam sufix _temp w docelowym pliku
-        // musze tak robic bo zapisywanie w miejscu nie dziala przy dlugich plikach....
+          audio.addCommand('-y', '');
+          audio.addCommand('-sample_fmt', 's16');
 
-        const finalAudioFileName = conainerFolderName + ".wav";
-        const fillCorrectAudioPath = containerFolderPath + "/" + finalAudioFileName;
+          //teraz robie konwersje na WAV i usuwam sufix _temp w docelowym pliku
+          // musze tak robic bo zapisywanie w miejscu nie dziala przy dlugich plikach....
 
-        //tworze odpowiednia nazwe kontenera - bez unikatowego ID oraz bez rozszerzenia
-        const finalContainerName = oryginalFileName;
+          const finalAudioFileName = conainerFolderName + ".wav";
+          const fillCorrectAudioPath = containerFolderPath + "/" + finalAudioFileName;
 
-        audio.save(fillCorrectAudioPath)
-              .then(convertedFile=>{
-                //console.log('SUCCESS: przekonwertowałem plik' + convertedFile)
-                
-                //teraz zmieniam nazwe pliku na taki jaki był przesłany oryginalnie - usuwając unikatowe id i _temp.
-                //Czyli przywracam plikowi oryginalna nazwe
+          //tworze odpowiednia nazwe kontenera - bez unikatowego ID oraz bez rozszerzenia
+          //const finalContainerName = oryginalFileName;
 
-                let tooryginal = utils.bringOryginalFileName(fullFilePath);
-                fs.renameSync(fullFilePath, tooryginal);
-                
-               // fs.remove(fullFilePath)
-               // .then(() => {
-                    //console.log('Oryginalny plik został usunięty - pozostawiony tylko poprawnie przekonwertowany')
+          audio.save(fillCorrectAudioPath)
+                .then(convertedFile=>{
 
-                    //zapisuje tą informaje do DB
-                    let newContainer = new Container({
-                      fileName: finalAudioFileName,
-                      containerName: utils.getFileNameWithNoExt(oryginalFileName),
-                      oryginalFileName: utils.getFileNameFromPath(tooryginal),
-                      size: fs.statSync(fillCorrectAudioPath).size,
-                      owner: userId,
-                      project: projectId,
-                      session: sessionId,
-                      ifVAD: false,
-                      ifDIA: false,
-                      ifREC: false,
-                      ifSEG: false,
-                      statusVAD: 'ready',
-                      statusDIA: 'ready',
-                      statusREC: 'ready',
-                      statusSEG: 'ready',
-                    });
+                  //teraz zmieniam nazwe pliku na taki jaki był przesłany oryginalnie - usuwając unikatowe id i _temp.
+                  //Czyli przywracam plikowi oryginalna nazwe
 
-                    let ext = utils.getFileExtention(finalAudioFileName);
-                    ext = (ext[0]+'').toLowerCase();
+                  let tooryginal = utils.bringOryginalFileName(fullFilePath);
+                  fs.renameSync(fullFilePath, tooryginal);
 
-                    const finalDATFileName = conainerFolderName + ".dat";
-                    const fillCorrectDATPath = containerFolderPath + "/" + finalDATFileName;
+                  //zapisuje tą informaje do DB
+                  let newContainer = new Container({
+                    fileName: finalAudioFileName,
+                    containerName: utils.getFileNameWithNoExt(oryginalFileName),
+                    oryginalFileName: utils.getFileNameFromPath(tooryginal),
+                    size: fs.statSync(fillCorrectAudioPath).size,
+                    owner: userId,
+                    project: projectId,
+                    session: sessionId,
+                    ifVAD: false,
+                    ifDIA: false,
+                    ifREC: false,
+                    ifSEG: false,
+                    statusVAD: 'ready',
+                    statusDIA: 'ready',
+                    statusREC: 'ready',
+                    statusSEG: 'ready',
+                  });
 
-                    const shellcomm = 'audiowaveform -i '+fillCorrectAudioPath+' -o '+fillCorrectDATPath+' -z 32 -b 8 --input-format ' + ext;
+                  let ext = utils.getFileExtention(finalAudioFileName);
+                  ext = (ext[0]+'').toLowerCase();
 
-                      //obliczam z pliku audio podgląd dat
-                    if (shell.exec(shellcomm).code !== 0) {
-                      shell.echo('Error: Problem with extracting dat for audio file');
-                      shell.exit(1);
-                    } else {
-                      newContainer.save()
-                      .then(createdContainer => {
+                  const finalDATFileName = conainerFolderName + ".dat";
+                  const fillCorrectDATPath = containerFolderPath + "/" + finalDATFileName;
 
-                        //updating the reference in given session
-                        Session.findOneAndUpdate({_id: sessionId},{$push: {containersIds: createdContainer._id }})
-                          .then(updatedSession => {
-                            res.status(200).json({ message: 'New file has been uploaded!', sessionId: sessionId, oryginalName: oryginalFileName, containerId: createdContainer._id})
-                          })
+                  const shellcomm = 'audiowaveform -i '+fillCorrectAudioPath+' -o '+fillCorrectDATPath+' -z 32 -b 8 --input-format ' + ext;
 
-                      })
-                      .catch(error => {
-                        throw error;
-                      })
-                    }
-              }).catch(err =>{
-                //console.log(chalk.red('ERROR SAVE FFMPEG: coś poszło nie tak'))
-                throw err;
-              })
-      }).catch(error=>{
-        //console.log('Error FFMPEG: ' + err)
-        throw error;
-      })
+                  //obliczam z pliku audio podgląd dat
+                  if (shell.exec(shellcomm).code !== 0) {
+                    shell.echo('Error: Problem with extracting dat for audio file');
+                    console.log(chalk.red('Error: Problem with extracting dat for audio file'));
+                    //shell.exit(1);
+                    const err = new Error('Error: Problem with extracting dat for audio file');
+                    throw err;
+                  } else {
+                    newContainer.save()
+                    .then(createdContainer => {
+                      //updating the reference in given session
+                      Session.findOneAndUpdate({_id: sessionId},{$push: {containersIds: createdContainer._id }})
+                        .then(updatedSession => {
+                          res.status(200).json({ message: 'Wgranie pliku zakończone powodzeniem!', sessionId: sessionId, oryginalName: oryginalFileName, containerId: createdContainer._id})
+                        })
+                    })
+                    .catch(error => {
+                      throw error;
+                    })
+                  }
+                }).catch(err =>{
+                  throw err;
+                })
+        }).catch(error=>{
+          throw error;
+        })
 
 
-  } catch (error) {
-    console.log(chalk.red(error.message));
-    error.statusCode = error.statusCode || 500;
+      } catch (error) {
+        console.log(chalk.red(error.message));
+        error.statusCode = error.statusCode || 500;
+        next(error);
+      }
+  } else if(typeArray[0] == 'text'){
+    try {
+
+      //wyszukuje czy taki kontener istnieje
+
+      const updatedContainer = await Container.findByIdAndUpdate(containerId,{ifREC: true, statusREC:'done'});
+
+      const oryginalFolderName = utils.getFileNameWithNoExt(updatedContainer.fileName);
+      const sciezkaOryginalna = appRoot + '/repo/'+userId+'/'+projectId+'/'+sessionId+'/' + oryginalFolderName + '/' + savedFile ;
+
+      let fileWithNoExt = utils.getFileNameWithNoExt(savedFile);
+      let fileWithNoSufix = fileWithNoExt.substring(0, fileWithNoExt.length - 5);
+
+      //console.log(updatedContainer)
+      const docelowaSciezka = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' +oryginalFolderName + '/' + utils.getFileNameWithNoExt(updatedContainer.fileName)+ '_TXT.txt';
+      fs.moveSync(sciezkaOryginalna,docelowaSciezka,{ overwrite: true });
+
+      //zapisuje transkrypcje do pliku JSON
+      const JSONtranscription = utils.convertTxtFileIntoJSON(docelowaSciezka);
+
+      //zapisuje tego JSONA w katalogu containera
+      const JSONTransPath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + oryginalFolderName + '/' + utils.getFileNameWithNoExt(updatedContainer.fileName) + '.json';
+
+      await fs.writeJson(JSONTransPath, JSONtranscription);
+
+      //TO DO przerobienie tego na plik JSON - aby dało się podglądać
+
+      res.status(200).json({ message: 'Wgranie pliku zakończone powodzeniem!', sessionId: sessionId, oryginalName: oryginalFileName, containerId: updatedContainer._id});
+
+
+    } catch (error) {
+      throw error;
+    }
+  } else {
+    const error = new Error("Zły typ pliku");
+    error.statusCode = 406;
     next(error);
-
   }
 
 }
+
+
 
 //##########################################
 //#### tworzenie nowej sesji ######
@@ -1012,13 +1093,37 @@ exports.createNewSessionHandler = (sesName, projId) => {
         error.statusCode = error.statusCode || 500;
         reject(error)
       });
-     
   });
-   
 }
 
-exports.createNewSession = (req, res, next) => {
 
+/**
+ * @api {put} /repoFiles/createNewSession  Tworzenie sesji
+ * @apiDescription Tworzy nową sesje (folder) w zdanym istniejącym projekcie
+ * @apiName CREATESession
+ * @apiGroup Pliki
+ *
+ * @apiParam {String} sessionName Nazwa nowo tworzonej sesji
+ * @apiParam {String} projectId Identyfikator projektu w którym ma być stworzona sesja
+ * @apiHeader {String} Authorization Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.
+ *
+ * @apiSuccess {String} message 'Nowa sesja została utworzona!'
+ * @apiSuccess {String} sessionName  Nazwa nowo stworzonej sesji
+ * @apiSuccess {String} id  ID nowo stworzonej sesji
+ * 
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "message": 'Nowa sesja została utworzona!',
+ *       "sessionName": "Nowa sesja",
+ *       "id": "5f58a92dfa006c8aed96f846",
+ *     }
+ * 
+ * @apiError (500) ServerError 
+ * 
+ */
+
+exports.createNewSession = (req, res, next) => {
     const sessionName = req.body.sessionName;
     const projectId = req.body.projectId;
 
@@ -1031,27 +1136,194 @@ exports.createNewSession = (req, res, next) => {
 }
 
 
+/**
+ * @api {get} /repoFiles/:projectId Zawartość projektu
+ * @apiDescription Zapytanie zwraca zawartość danego projektu w postaci listy sesji oraz kontenerów
+ * @apiName GETrepoassets
+ * @apiGroup Pliki
+ *
+ * @apiParam {String} projectId Identyfikator projektu 
+ * @apiHeader {String} Authorization Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.
+ *
+ * @apiSuccess {String} message Pliki dla tego projektu zostały pobrane!
+ * @apiSuccess {String} sessions  Lista sesji
+ * @apiSuccess {String} containers  Lista kontenerów
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "message": 'Nowa sesja została utworzona!',
+ *       "sessions": [
+ *        {
+ *            "id": "5fdce8d1673bf111427d73ba",
+ *            "sessionName": "demo",
+ *            "ifSelected": false,
+ *            "containers": [
+ *                "5fdce8d1673bf111427d73bb",
+ *                "5fdce8d1673bf111427d73bc",
+ *                "5fdce8d1673bf111427d73bd",
+ *                "5fdce8d1673bf111427d73be",
+ *                "5fdce8d1673bf111427d73bf"
+ *            ]
+ *        },
+ *        {
+ *            "id": "5fdd0af7673bf111427d73c0",
+ *            "sessionName": "\"nowaSesjaAPI\"",
+ *            "ifSelected": false,
+ *            "containers": []
+ *        }],
+ *       "containers": [
+ *        {
+ *            "ifVAD": true,
+ *            "ifDIA": true,
+ *            "ifREC": true,
+ *            "ifSEG": true,
+ *            "errorMessage": "",
+ *            "_id": "5fdce8d1673bf111427d73bb",
+ *            "fileName": "celnik-1189e21a.wav",
+ *            "containerName": "celnik",
+ *            "oryginalFileName": "celnik.wav",
+ *            "size": "214078",
+ *            "owner": "5fc4d01a9045bb531c0b01a4",
+ *            "project": "5fdce8d1673bf111427d73b8",
+ *            "session": "5fdce8d1673bf111427d73ba",
+ *            "statusVAD": "done",
+ *            "statusDIA": "done",
+ *            "statusREC": "done",
+ *            "statusSEG": "done",
+ *            "VADUserSegments": [
+ *                {
+ *                    "startTime": 0.68,
+ *                    "endTime": 2.74,
+ *                    "editable": true,
+ *                    "color": "#394b55",
+ *                    "labelText": "speech"
+ *                },
+ *                {
+ *                    "startTime": 2.74,
+ *                    "endTime": 5.97,
+ *                    "editable": true,
+ *                    "color": "#394b55",
+ *                    "labelText": "speech"
+ *                }
+ *            ],
+ *            "DIAUserSegments": [
+ *                {
+ *                    "startTime": 0.68,
+ *                    "endTime": 2.74,
+ *                    "editable": true,
+ *                    "color": "#394b55",
+ *                    "labelText": "1"
+ *                },
+ *                {
+ *                    "startTime": 2.74,
+ *                    "endTime": 4.62,
+ *                    "editable": true,
+ *                    "color": "#394b55",
+ *                    "labelText": "2"
+ *                },
+ *                {
+ *                    "startTime": 4.62,
+ *                    "endTime": 5.97,
+ *                    "editable": true,
+ *                    "color": "#394b55",
+ *                    "labelText": "3"
+ *                }
+ *            ],
+ *            "RECUserSegments": [],
+ *            "SEGUserSegments": [],
+ *            "__v": 0,
+ *            "createdAt": "2020-12-18T17:37:21.828Z",
+ *            "updatedAt": "2020-12-18T17:37:21.828Z"
+ *        },
+ *        {
+ *            "ifVAD": true,
+ *            "ifDIA": true,
+ *            "ifREC": false,
+ *            "ifSEG": false,
+ *            "errorMessage": "",
+ *            "_id": "5fdce8d1673bf111427d73bc",
+ *            "fileName": "kleska-29d61ce0.wav",
+ *            "containerName": "kleska",
+ *            "oryginalFileName": "kleska.wav",
+ *            "size": "274078",
+ *            "owner": "5fc4d01a9045bb531c0b01a4",
+ *            "project": "5fdce8d1673bf111427d73b8",
+ *            "session": "5fdce8d1673bf111427d73ba",
+ *            "statusVAD": "done",
+ *            "statusDIA": "done",
+ *            "statusREC": "ready",
+ *            "statusSEG": "ready",
+ *            "VADUserSegments": [
+ *                {
+ *                    "startTime": 1.31,
+ *                    "endTime": 7.81,
+ *                    "editable": true,
+ *                    "color": "#394b55",
+ *                    "labelText": "speech"
+ *                }
+ *            ],
+ *            "DIAUserSegments": [
+ *                {
+ *                    "startTime": 1.31,
+ *                    "endTime": 4.69,
+ *                    "editable": true,
+ *                    "color": "#394b55",
+ *                    "labelText": "3"
+ *                },
+ *                {
+ *                    "startTime": 4.68,
+ *                    "endTime": 6.18,
+ *                    "editable": true,
+ *                    "color": "#394b55",
+ *                    "labelText": "1"
+ *                },
+ *                {
+ *                    "startTime": 6.18,
+ *                    "endTime": 7.81,
+ *                    "editable": true,
+ *                    "color": "#394b55",
+ *                    "labelText": "2"
+ *                }
+ *            ],
+ *            "RECUserSegments": [],
+ *            "SEGUserSegments": [],
+ *            "__v": 0,
+ *            "createdAt": "2020-12-18T17:37:21.828Z",
+ *            "updatedAt": "2020-12-18T17:37:21.828Z"
+ *        }]
+ *     }
+ * 
+ * @apiError (500) ServerError 
+ * 
+ */
 //#######################################################
 //################ pobieram assety użytkownika ##########
 //#########################################################
 
 exports.getRepoAssets = (req,res,next) => {
 
+ 
   //wydobywam dane z urla
-  const userId = req.params.userId;
+ // const userId = req.params.userId;
   const projectId = req.params.projectId;
 
+ // console.log("test");
+ // console.log(projectId);
+  
   //szukam plików w bazie danych dla danego usera
   let znalezionyProjekt = null;
+  let userId = null;
   ProjectEntry.findById(projectId)
     .then(foundPE => {
       znalezionyProjekt = foundPE;
+      userId = znalezionyProjekt.owner;
+      
       return User.findById(userId);
     })
     .then(user => {
 
-      if (user._id == userId) {
-
+      
+      if((user._id + "")== (userId+"")) {
         //wydobywam liste sesji
         let sessionIds = znalezionyProjekt.sessionIds;
 
@@ -1079,7 +1351,7 @@ exports.getRepoAssets = (req,res,next) => {
 
                 containerList = containers;
 
-                res.status(200).json({ message: 'Files for this project and user featched!', sessions: sessionList, containers: containerList })
+                res.status(200).json({ message: 'Pliki dla tego projektu zostały pobrane!', sessions: sessionList, containers: containerList })
               })
           })
           .catch(error => {

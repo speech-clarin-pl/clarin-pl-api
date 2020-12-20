@@ -15,9 +15,15 @@ define({ "api": [
             "optional": false,
             "field": "containerId",
             "description": "<p>Identyfikator zasobu. Możesz go również znaleźć w graficznym interfejsie użytkownika</p>"
-          },
+          }
+        ]
+      }
+    },
+    "header": {
+      "fields": {
+        "Header": [
           {
-            "group": "Parameter",
+            "group": "Header",
             "type": "String",
             "optional": false,
             "field": "Authorization",
@@ -107,9 +113,15 @@ define({ "api": [
             "optional": false,
             "field": "containerId",
             "description": "<p>Identyfikator zasobu. Możesz go również znaleźć w graficznym interfejsie użytkownika</p>"
-          },
+          }
+        ]
+      }
+    },
+    "header": {
+      "fields": {
+        "Header": [
           {
-            "group": "Parameter",
+            "group": "Header",
             "type": "String",
             "optional": false,
             "field": "Authorization",
@@ -192,9 +204,15 @@ define({ "api": [
             "optional": false,
             "field": "containerId",
             "description": "<p>Identyfikator zasobu. Możesz go również znaleźć w graficznym interfejsie użytkownika</p>"
-          },
+          }
+        ]
+      }
+    },
+    "header": {
+      "fields": {
+        "Header": [
           {
-            "group": "Parameter",
+            "group": "Header",
             "type": "String",
             "optional": false,
             "field": "Authorization",
@@ -284,9 +302,15 @@ define({ "api": [
             "optional": false,
             "field": "containerId",
             "description": "<p>Identyfikator zasobu. Możesz go również znaleźć w graficznym interfejsie użytkownika</p>"
-          },
+          }
+        ]
+      }
+    },
+    "header": {
+      "fields": {
+        "Header": [
           {
-            "group": "Parameter",
+            "group": "Header",
             "type": "String",
             "optional": false,
             "field": "Authorization",
@@ -361,6 +385,179 @@ define({ "api": [
     "groupTitle": "Narzędzia"
   },
   {
+    "type": "put",
+    "url": "/repoFiles/createNewSession",
+    "title": "Tworzenie sesji",
+    "description": "<p>Tworzy nową sesje (folder) w zdanym istniejącym projekcie</p>",
+    "name": "CREATESession",
+    "group": "Pliki",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "sessionName",
+            "description": "<p>Nazwa nowo tworzonej sesji</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "projectId",
+            "description": "<p>Identyfikator projektu w którym ma być stworzona sesja</p>"
+          }
+        ]
+      }
+    },
+    "header": {
+      "fields": {
+        "Header": [
+          {
+            "group": "Header",
+            "type": "String",
+            "optional": false,
+            "field": "Authorization",
+            "description": "<p>Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "fields": {
+        "Success 200": [
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "message",
+            "description": "<p>'Nowa sesja została utworzona!'</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "sessionName",
+            "description": "<p>Nazwa nowo stworzonej sesji</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "id",
+            "description": "<p>ID nowo stworzonej sesji</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\n  \"message\": 'Nowa sesja została utworzona!',\n  \"sessionName\": \"Nowa sesja\",\n  \"id\": \"5f58a92dfa006c8aed96f846\",\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "error": {
+      "fields": {
+        "500": [
+          {
+            "group": "500",
+            "optional": false,
+            "field": "ServerError",
+            "description": ""
+          }
+        ]
+      }
+    },
+    "version": "0.0.0",
+    "filename": "controllers/repoPanel.js",
+    "groupTitle": "Pliki"
+  },
+  {
+    "type": "put",
+    "url": "/repoFiles/changeContainerName/:containerId'",
+    "title": "Zmiana nazwy kontenera",
+    "description": "<p>Zmienia nazwę kontenera</p>",
+    "name": "ChangeContainerName",
+    "group": "Pliki",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "containerId",
+            "description": "<p>Identyfikator kontenera</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "newName",
+            "description": "<p>Nowa nazwa</p>"
+          }
+        ]
+      }
+    },
+    "header": {
+      "fields": {
+        "Header": [
+          {
+            "group": "Header",
+            "type": "String",
+            "optional": false,
+            "field": "Authorization",
+            "description": "<p>Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "fields": {
+        "Success 200": [
+          {
+            "group": "Success 200",
+            "type": "containerId",
+            "optional": false,
+            "field": "Identyfikator",
+            "description": "<p>kontenera</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "newName",
+            "optional": false,
+            "field": "Nowa",
+            "description": "<p>nazwa</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\n  \"message\": 'Zmiana nazwy zakończona sukcesem!',\n  \"containerId\": \"5f58a92dfa006c8aed96f846\",\n  \"newName\": \"Nowa Nazwa\",\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "error": {
+      "fields": {
+        "500": [
+          {
+            "group": "500",
+            "optional": false,
+            "field": "ServerError",
+            "description": ""
+          }
+        ]
+      }
+    },
+    "version": "0.0.0",
+    "filename": "controllers/repoPanel.js",
+    "groupTitle": "Pliki"
+  },
+  {
     "type": "get",
     "url": "/repoFiles/createCorpus/:projectId",
     "title": "Tworzenie korpusu",
@@ -376,9 +573,15 @@ define({ "api": [
             "optional": false,
             "field": "projectId",
             "description": "<p>Identyfikator projektu dla którego tworzony jest korpus. Możesz go odnaleźć w interfejsie użytkownika bądź skorzystać z domyślnego projektu którego ID jest zwracane podczas rejestracji.</p>"
-          },
+          }
+        ]
+      }
+    },
+    "header": {
+      "fields": {
+        "Header": [
           {
-            "group": "Parameter",
+            "group": "Header",
             "type": "String",
             "optional": false,
             "field": "Authorization",
@@ -439,9 +642,15 @@ define({ "api": [
             "optional": false,
             "field": "containerId",
             "description": "<p>Identyfikator kontenera który chcesz usunąć</p>"
-          },
+          }
+        ]
+      }
+    },
+    "header": {
+      "fields": {
+        "Header": [
           {
-            "group": "Parameter",
+            "group": "Header",
             "type": "String",
             "optional": false,
             "field": "Authorization",
@@ -524,9 +733,15 @@ define({ "api": [
             "optional": false,
             "field": "projectId",
             "description": "<p>Identyfikator projektu dla którego chcesz pobrać korpus. Znajdziesz go również w interfejsie użytkownika.</p>"
-          },
+          }
+        ]
+      }
+    },
+    "header": {
+      "fields": {
+        "Header": [
           {
-            "group": "Parameter",
+            "group": "Header",
             "type": "String",
             "optional": false,
             "field": "Authorization",
@@ -595,9 +810,15 @@ define({ "api": [
             "optional": false,
             "field": "fileType",
             "description": "<p>Wskazanie formatu w jakim chcesz pobrać wynik. <h3>Pliki audio</h3><ul><li>&quot;oryginalAudio&quot;: Pobranie pliku który został wysłany na serwer.</li><li>&quot;audio&quot; : pobranie pliku przekonwertowanego do PCM 16000Hz 8bits</li></ul><h3>Detekcja mowy (VAD) </h3><ul><li>&quot;VADctm&quot;: Wynik działania VAD w formacie CTM</li><li>&quot;VADtextGrid&quot;: Wynik działania VAD w formacie TextGrid</li><li>&quot;VADJSON&quot;: Wynik działania VAD w formacie JSON</li></ul><h3>Diaryzacja (DIA)</h3><ul><li>&quot;DIActm&quot;: Wynik działania DIA w formacie CTM</li><li>&quot;DIAtextGrid&quot;: Wynik działania DIA w formacie TextGrid.</li><li>&quot;DIAJSON&quot;: Wynik działania DIA w formacie JSON.</li></ul><h3>Rozpoznawanie mowy (REC)</h3><ul><li>&quot;JSONTranscript&quot;: Wynik działania REC w formacie JSCON</li><li>&quot;TXTTranscript&quot;: Wynik działania REC w formacie TXT.</li></ul><h3>Segmentacja (SEG)</h3><ul><li>&quot;SEGctm&quot;: Wynik działania SEG w formacie CTM</li><li>&quot;SEGtextGrid&quot;: Wynik działania SEG w formacie TextGrid.</li><li>&quot;EMUJSON&quot;: Wynik działania SEG w formacie EMU-SDMS.</li></ul></p>"
-          },
+          }
+        ]
+      }
+    },
+    "header": {
+      "fields": {
+        "Header": [
           {
-            "group": "Parameter",
+            "group": "Header",
             "type": "String",
             "optional": false,
             "field": "Authorization",
@@ -642,6 +863,200 @@ define({ "api": [
             "optional": false,
             "field": "ServerError",
             "description": "<p>Coś poszło nie tak na serwerze</p>"
+          }
+        ]
+      }
+    },
+    "version": "0.0.0",
+    "filename": "controllers/repoPanel.js",
+    "groupTitle": "Pliki"
+  },
+  {
+    "type": "get",
+    "url": "/repoFiles/:projectId",
+    "title": "Zawartość projektu",
+    "description": "<p>Zapytanie zwraca zawartość danego projektu w postaci listy sesji oraz kontenerów</p>",
+    "name": "GETrepoassets",
+    "group": "Pliki",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "projectId",
+            "description": "<p>Identyfikator projektu</p>"
+          }
+        ]
+      }
+    },
+    "header": {
+      "fields": {
+        "Header": [
+          {
+            "group": "Header",
+            "type": "String",
+            "optional": false,
+            "field": "Authorization",
+            "description": "<p>Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "fields": {
+        "Success 200": [
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "message",
+            "description": "<p>Pliki dla tego projektu zostały pobrane!</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "sessions",
+            "description": "<p>Lista sesji</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "containers",
+            "description": "<p>Lista kontenerów</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\n  \"message\": 'Nowa sesja została utworzona!',\n  \"sessions\": [\n   {\n       \"id\": \"5fdce8d1673bf111427d73ba\",\n       \"sessionName\": \"demo\",\n       \"ifSelected\": false,\n       \"containers\": [\n           \"5fdce8d1673bf111427d73bb\",\n           \"5fdce8d1673bf111427d73bc\",\n           \"5fdce8d1673bf111427d73bd\",\n           \"5fdce8d1673bf111427d73be\",\n           \"5fdce8d1673bf111427d73bf\"\n       ]\n   },\n   {\n       \"id\": \"5fdd0af7673bf111427d73c0\",\n       \"sessionName\": \"\\\"nowaSesjaAPI\\\"\",\n       \"ifSelected\": false,\n       \"containers\": []\n   }],\n  \"containers\": [\n   {\n       \"ifVAD\": true,\n       \"ifDIA\": true,\n       \"ifREC\": true,\n       \"ifSEG\": true,\n       \"errorMessage\": \"\",\n       \"_id\": \"5fdce8d1673bf111427d73bb\",\n       \"fileName\": \"celnik-1189e21a.wav\",\n       \"containerName\": \"celnik\",\n       \"oryginalFileName\": \"celnik.wav\",\n       \"size\": \"214078\",\n       \"owner\": \"5fc4d01a9045bb531c0b01a4\",\n       \"project\": \"5fdce8d1673bf111427d73b8\",\n       \"session\": \"5fdce8d1673bf111427d73ba\",\n       \"statusVAD\": \"done\",\n       \"statusDIA\": \"done\",\n       \"statusREC\": \"done\",\n       \"statusSEG\": \"done\",\n       \"VADUserSegments\": [\n           {\n               \"startTime\": 0.68,\n               \"endTime\": 2.74,\n               \"editable\": true,\n               \"color\": \"#394b55\",\n               \"labelText\": \"speech\"\n           },\n           {\n               \"startTime\": 2.74,\n               \"endTime\": 5.97,\n               \"editable\": true,\n               \"color\": \"#394b55\",\n               \"labelText\": \"speech\"\n           }\n       ],\n       \"DIAUserSegments\": [\n           {\n               \"startTime\": 0.68,\n               \"endTime\": 2.74,\n               \"editable\": true,\n               \"color\": \"#394b55\",\n               \"labelText\": \"1\"\n           },\n           {\n               \"startTime\": 2.74,\n               \"endTime\": 4.62,\n               \"editable\": true,\n               \"color\": \"#394b55\",\n               \"labelText\": \"2\"\n           },\n           {\n               \"startTime\": 4.62,\n               \"endTime\": 5.97,\n               \"editable\": true,\n               \"color\": \"#394b55\",\n               \"labelText\": \"3\"\n           }\n       ],\n       \"RECUserSegments\": [],\n       \"SEGUserSegments\": [],\n       \"__v\": 0,\n       \"createdAt\": \"2020-12-18T17:37:21.828Z\",\n       \"updatedAt\": \"2020-12-18T17:37:21.828Z\"\n   },\n   {\n       \"ifVAD\": true,\n       \"ifDIA\": true,\n       \"ifREC\": false,\n       \"ifSEG\": false,\n       \"errorMessage\": \"\",\n       \"_id\": \"5fdce8d1673bf111427d73bc\",\n       \"fileName\": \"kleska-29d61ce0.wav\",\n       \"containerName\": \"kleska\",\n       \"oryginalFileName\": \"kleska.wav\",\n       \"size\": \"274078\",\n       \"owner\": \"5fc4d01a9045bb531c0b01a4\",\n       \"project\": \"5fdce8d1673bf111427d73b8\",\n       \"session\": \"5fdce8d1673bf111427d73ba\",\n       \"statusVAD\": \"done\",\n       \"statusDIA\": \"done\",\n       \"statusREC\": \"ready\",\n       \"statusSEG\": \"ready\",\n       \"VADUserSegments\": [\n           {\n               \"startTime\": 1.31,\n               \"endTime\": 7.81,\n               \"editable\": true,\n               \"color\": \"#394b55\",\n               \"labelText\": \"speech\"\n           }\n       ],\n       \"DIAUserSegments\": [\n           {\n               \"startTime\": 1.31,\n               \"endTime\": 4.69,\n               \"editable\": true,\n               \"color\": \"#394b55\",\n               \"labelText\": \"3\"\n           },\n           {\n               \"startTime\": 4.68,\n               \"endTime\": 6.18,\n               \"editable\": true,\n               \"color\": \"#394b55\",\n               \"labelText\": \"1\"\n           },\n           {\n               \"startTime\": 6.18,\n               \"endTime\": 7.81,\n               \"editable\": true,\n               \"color\": \"#394b55\",\n               \"labelText\": \"2\"\n           }\n       ],\n       \"RECUserSegments\": [],\n       \"SEGUserSegments\": [],\n       \"__v\": 0,\n       \"createdAt\": \"2020-12-18T17:37:21.828Z\",\n       \"updatedAt\": \"2020-12-18T17:37:21.828Z\"\n   }]\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "error": {
+      "fields": {
+        "500": [
+          {
+            "group": "500",
+            "optional": false,
+            "field": "ServerError",
+            "description": ""
+          }
+        ]
+      }
+    },
+    "version": "0.0.0",
+    "filename": "controllers/repoPanel.js",
+    "groupTitle": "Pliki"
+  },
+  {
+    "type": "post",
+    "url": "/repoFiles/uploadFile",
+    "title": "Wgrywanie pliku",
+    "description": "<p>Wgranie pliku audio lub transkrypcji na serwer. W przypadku pliku audio należy podać id projektu oraz sesji do której wgrany będzie plik. W przypadku pliku transkrypcji (txt) należy podać dodatkowo id kontenera którego dotyczy.</p>",
+    "name": "UPLOADfile",
+    "group": "Pliki",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "projectId",
+            "description": "<p>Identyfikator projektu</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "sessionId",
+            "description": "<p>Identyfikator sesji</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "containerId",
+            "description": "<p>Identyfikator kontenera</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "myFile",
+            "description": "<p>Plik audio lub txt</p>"
+          }
+        ]
+      }
+    },
+    "header": {
+      "fields": {
+        "Header": [
+          {
+            "group": "Header",
+            "type": "String",
+            "optional": false,
+            "field": "Authorization",
+            "description": "<p>Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "fields": {
+        "Success 200": [
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "message",
+            "description": "<p>Informacja o powodzeniu</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "containerId",
+            "description": "<p>ID kontenera który został został stworzony bądź do którego wgrano transkrypcje</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "sessionId",
+            "description": "<p>ID sesji do której należy kontener</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "oryginalName",
+            "description": "<p>nazwa wgranego pliku</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\n  \"message\": 'Wgranie pliku zakończone powodzeniem!',\n  \"sessionId\": \"5f58a92dfa006c8aed96f846\",\n  \"oryginalName\": \"sampleAudio.mp3\"\n  \"containerId\": \"5f58a92dfa006c8aed96f847\",\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "error": {
+      "fields": {
+        "500": [
+          {
+            "group": "500",
+            "optional": false,
+            "field": "ServerError",
+            "description": ""
           }
         ]
       }

@@ -20,13 +20,11 @@ router.post('/uploadFile', isAuth, repoController.uploadFile);
 //PUT /repoFiles/createNewSession  - tworze nową sesję
 router.put('/createNewSession', isAuth, repoController.createNewSession);
 
-//PUT /repoFiles/changeContainerName/:projectId/:containerId
-router.put('/changeContainerName/:projectId/:containerId', isAuth, repoController.changeContainerName);
+//PUT /repoFiles/changeContainerName/:containerId
+router.put('/changeContainerName/:containerId', isAuth, repoController.changeContainerName);
 
-// GET /repoFiles/projectId/userId - do pobierania listy plikow
-router.get('/:projectId/:userId', isAuth, repoController.getRepoAssets);
-
-
+// GET /repoFiles/projectId - do pobierania listy plikow
+router.get('/getProjectAssets/:projectId', isAuth, repoController.getRepoAssets);
 
  //DELETE /repoFiles/delete/:containerId - usuwa container
 router.delete('/delete/:containerId', isAuth, repoController.removeContainer);
