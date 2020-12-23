@@ -325,7 +325,7 @@ exports.changeContainerName = (req, res, next) => {
 
 /**
  * @api {put} /repoFiles/runSpeechVAD/:containerId Detekcja mowy
- * @apiDescription Narzędzie detekcji mowy. Po wykonaniu zapytania należy poczekać na zakończenie pracy. Po zakończeniu serwer zapisze rezultaty w kontenerze o danym ID. Aby ściągnąć rezultaty działania narzędzia należy skorzystać z osobnego zapytania API. W międzyczasie możesz odpytywać serwer na temat statusu wykonania tego narzędzia korzystając z containerId w osobnym zapytaniu API.
+ * @apiDescription Narzędzie detekcji mowy. Po wykonaniu zapytania należy poczekać na zakończenie pracy. Po zakończeniu serwer zapisze rezultaty w kontenerze. Aby ściągnąć rezultaty działania narzędzia należy skorzystać z osobnego zapytania API. W międzyczasie możesz odpytywać serwer na temat statusu wykonania tego narzędzia korzystając z containerId w osobnym zapytaniu API.
  * @apiName VADTool
  * @apiGroup Narzędzia
  *
@@ -369,7 +369,6 @@ exports.changeContainerName = (req, res, next) => {
  */
 
 exports.runSpeechVAD = (req, res, next) => {
-
   let containerId = req.params.containerId;
   //const toolType = req.body.toolType;
 
@@ -461,7 +460,7 @@ exports.runSpeechDiarization = (req, res, next) => {
 
 
 /**
- * @api {put} /runSpeechSegmentation/:containerId Segmentacja
+ * @api {put} /repoFiles/runSpeechSegmentation/:containerId Segmentacja
  * @apiDescription Narzędzie segmentacji. Dla krótkich nagrań (poniżej 0.5MB) uruchamiany jest algorytm forcealign. Dla dłuższych plików segmentalign. Usługa wymaga uruchomienia najpierw usługi rozpoznawania. Po wykonaniu zapytania należy poczekać na zakończenie pracy. Po zakończeniu serwer zapisze rezultaty w kontenerze o danym ID. Aby ściągnąć rezultaty działania narzędzia należy skorzystać z osobnego zapytania API. W międzyczasie możesz odpytywać serwer na temat statusu wykonania tego narzędzia korzystając z osobnego zapytania API.
  * 
  * @apiName SEGTool
@@ -519,7 +518,7 @@ exports.runSpeechSegmentation = (req, res, next) => {
 
 
 /**
- * @api {put} /runSpeechRecognition/:containerId Rozpoznawanie mowy
+ * @api {put} /repoFiles/runSpeechRecognition/:containerId Rozpoznawanie mowy
  * @apiDescription Narzędzie rozpoznaje automatycznie mowę z wgranego pliku. Po wykonaniu zapytania należy poczekać na zakończenie pracy. Po zakończeniu serwer zapisze rezultaty w kontenerze o danym ID. Aby ściągnąć rezultaty działania narzędzia należy skorzystać z osobnego zapytania API. W międzyczasie możesz odpytywać serwer na temat statusu wykonania tego narzędzia korzystając z osobnego zapytania API.
  * @apiName RECTool
  * @apiGroup Narzędzia
@@ -583,10 +582,10 @@ exports.runSpeechRecognition = (req, res, next) => {
  * @apiGroup Pliki
  *
  * @apiParam {String} containerId   Identyfikator kontenera dla którego chcesz pobrać wynik. Możesz go również znaleźć w interfejsie użytkownika
- * @apiParam {String} fileType  Wskazanie formatu w jakim chcesz pobrać wynik. <h3>Pliki audio</h3><ul><li>"oryginalAudio": Pobranie pliku który został wysłany na serwer.</li><li>"audio" : pobranie pliku przekonwertowanego do PCM 16000Hz 8bits</li></ul><h3>Detekcja mowy (VAD) </h3><ul><li>"VADctm": Wynik działania VAD w formacie CTM</li><li>"VADtextGrid": Wynik działania VAD w formacie TextGrid</li><li>"VADJSON": Wynik działania VAD w formacie JSON</li></ul><h3>Diaryzacja (DIA)</h3><ul><li>"DIActm": Wynik działania DIA w formacie CTM</li><li>"DIAtextGrid": Wynik działania DIA w formacie TextGrid.</li><li>"DIAJSON": Wynik działania DIA w formacie JSON.</li></ul><h3>Rozpoznawanie mowy (REC)</h3><ul><li>"JSONTranscript": Wynik działania REC w formacie JSCON</li><li>"TXTTranscript": Wynik działania REC w formacie TXT.</li></ul><h3>Segmentacja (SEG)</h3><ul><li>"SEGctm": Wynik działania SEG w formacie CTM</li><li>"SEGtextGrid": Wynik działania SEG w formacie TextGrid.</li><li>"EMUJSON": Wynik działania SEG w formacie EMU-SDMS.</li></ul> 
+ * @apiParam {String} fileType  Wskazanie formatu w jakim chcesz pobrać wynik. <h3>Pliki audio</h3><ul><li>"oryginalAudio": Pobranie pliku który został wysłany na serwer.</li><li>"audio" : pobranie pliku przekonwertowanego do PCM 16000Hz 8bits</li></ul><h3>Detekcja mowy (VAD) </h3><ul><li>"VADctm": Wynik działania VAD w formacie CTM</li><li>"VADtextGrid": Wynik działania VAD w formacie TextGrid</li><li>"VADJSON": Wynik działania VAD w formacie JSON</li></ul><h3>Diaryzacja (DIA)</h3><ul><li>"DIActm": Wynik działania DIA w formacie CTM</li><li>"DIAtextGrid": Wynik działania DIA w formacie TextGrid.</li><li>"DIAJSON": Wynik działania DIA w formacie JSON.</li></ul><h3>Rozpoznawanie mowy (REC)</h3><ul><li>"JSONTranscript": Wynik działania REC w formacie JSCON</li><li>"TXTTranscript": Wynik działania REC w formacie TXT.</li></ul><h3>Segmentacja (SEG)</h3><ul><li>"SEGctm": Wynik działania SEG w formacie CTM</li><li>"SEGtextGrid": Wynik działania SEG w formacie TextGrid.</li><li>"EMUJSON": Wynik działania SEG w formacie EMU-SDMS. Plik tego typu jest tworzony tylko podczas tworzenia korpusu z projektu.</li></ul> 
  * @apiHeader {String} Authorization Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.
  *
- * @apiSuccess {Object} zwraca dany żądany plik
+ * @apiSuccess {Object} File zwraca żądany plik
  * 
  *
  * @apiSuccessExample Success-Response:
@@ -705,9 +704,11 @@ exports.getFileFromContainer = (req,res,next) => {
             filename = EMUJSON;
             break;
           default:
-            filePath = '';
-            filename = 'default';
-            console.log("wrong file type!!")
+            const error = new Error("Nie rozpoznano typu wyjścia");
+            throw error;
+            //filePath = '';
+            //filename = 'default';
+            //console.log("wrong file type!!")
         }
 
         //res.status(200).({ message: 'The data for previewing has been sent!', containerData: filePath});        
@@ -716,7 +717,18 @@ exports.getFileFromContainer = (req,res,next) => {
        // res.status(200).json({toolType: toolType});
        // res.append("toolType", toolType);
        // fs.createReadStream(filePath).pipe(res);
-        res.download(filePath,filename);
+
+       try {
+          if(fs.existsSync(filePath)) {
+              res.download(filePath,filename);
+          } else {
+              const err = new Error("Plik tego typu nie został stworzony!")
+              throw err;
+          }
+        } catch (err) {
+            throw err;
+        }
+
 
     }).catch(error=>{
       console.log(chalk.red(error.message));
@@ -823,26 +835,19 @@ exports.removeContainer = (req,res,next) => {
           //usuwam wpis w kolekcji Containers
           Container.findByIdAndRemove(containerId)
           .then(removedContainer => {
-            
               //usuwam odniesienie w kolekcji Sessions
               Session.findByIdAndUpdate(sessionId,{$pull: {containersIds: containerId}})
               .then(updatedSession =>{
                 res.status(200).json({ message: 'Kontener został usunięty!', sessionId: sessionId, containerId: containerId});
               })
               .catch(error => {
-                //res.status(500).json({ message: 'Something went wrong with removing the container!', sessionId: sessionId, containerId: containerId});
-                //console.log(error);
                 throw error;
               })
           })
           .catch(error => {
-            //res.status(500).json({ message: 'Something went wrong with removing the container!', sessionId: sessionId, containerId: containerId});
-            //console.log(error);
             throw error;
           })
         }).catch(error=>{
-          //res.status(500).json({ message: 'Something went wrong with removing the container!', sessionId: sessionId, containerId: containerId});
-          //console.log(chalk.red(error.message));
           throw error;
         });
     }).catch(error=>{

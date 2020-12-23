@@ -91,13 +91,12 @@ exports.applyNewPass = (req,res,next) => {
 }
 
 /**
- * @api {post} /auth/forgotPass/:emailAddress Odzyskanie hasła
- * @apiDescription Pozwala użytkownikowi wygenerować nowe hasło. Wywołanie tego api powoduje wysłąnie wiadomości email na adres użytkownika z linkiem do strony gdzie użytkownik może wprowadzić nowe hasło.
+ * @api {post} /auth/forgotPass/ Odzyskanie hasła
+ * @apiDescription Pozwala użytkownikowi wygenerować nowe hasło. Wywołanie tego API powoduje wysłąnie wiadomości email na adres użytkownika z linkiem do strony gdzie można wprowadzić nowe hasło.
  * @apiName ForgotPassword
  * @apiGroup Użytkownik
  *
  * @apiParam {String} email Email
- *
  * @apiSuccess {String} message Wiadomość potwierdzająca wysłanie maila
  *
  * @apiSuccessExample Success-Response:
@@ -112,7 +111,8 @@ exports.applyNewPass = (req,res,next) => {
  * 
  */
 exports.forgotPass = (req,res,next) => {
-    const {emailAddress} = req.params;
+    const emailAddress = req.body.email;
+    console.log(emailAddress)
 
     //znajduje login ktory zawiera dany email
      User.findOne({email: emailAddress})
@@ -167,7 +167,7 @@ exports.forgotPass = (req,res,next) => {
 
 /**
  * @api {put} /auth/registration Rejestracja użytkownika
- * @apiDescription Rejestracja nowego użytkownika. Po zalogowaniu uzyskasz token na potrzeby uruchamiania narzędzi mowy z uwzględnieniem bezpieczeństwa Twoich danych. 
+ * @apiDescription Rejestracja nowego użytkownika. Tylko zarejestrowani użytkownicy mogą wykonywać zapytania do API. W ten sposób chronimy dostęp do Twoich danych.
  * @apiName RegisterUser
  * @apiGroup Użytkownik
  *
@@ -176,15 +176,15 @@ exports.forgotPass = (req,res,next) => {
  * @apiParam {String} password Hasło
  *
  * @apiSuccess {String} message wiadomość potwierdzająca
- * @apiSuccess {String} userId  Identyfikator użytkownika
- * @apiSuccess {String} firstProjectId Identyfikator pierwszego stworzonego projektu do którego domyślnie będą wgrywane pliki oraz rezultaty działania narzędzi (o ile nie stworzysz osobnego projektu).
+ * @apiSuccess {String} defaultProjectId Identyfikator pierwszego stworzonego projektu do którego domyślnie będą wgrywane pliki oraz rezultaty działania narzędzi (o ile nie zostanie utworzony osobny projekt).
+* @apiSuccess {String} defaultSessionId Identyfikator pierwszej stworzonej sesji (o ile nie zostanie utworzona odrębna sesja)
  *
  * @apiSuccessExample Success-Response:
  *     HTTP/1.1 201 CREATED
  *     {
  *       "message": 'Użytkownik został stworzony',
- *       "userId": "5f58a92dfa006c8aed96f846",
- *       "firstProjectId": "5fd33950667fa7255da2dfa9"
+ *       "defaultProjectId": "5f58a92dfa006c8aed96f846",
+ *       "defaultSessionId": "5fd33950667fa7255da2dfa9"
  *     }
  *
  * @apiError (422) UnprocesssableEntity Błędy walidacji
@@ -227,8 +227,8 @@ exports.registration = (req, res, next) => {
                 console.log(chalk.red(err));
                 return err;
             } else {
-                projectsList.createProjectHandler("DEMO",user._id).then((results)=>{        
-                    res.status(201).json({message: 'Użytkownik został stworzony', userId: user._id});
+                projectsList.createProjectHandler("DOMYŚLNY PROJEKT",user._id, true).then((results)=>{  
+                    res.status(201).json({message: 'Użytkownik został stworzony', defaultProjectId: results.project._id, defaultSessionId: results.session._id });
                 }).catch((err)=>{
                     return err;
                 })
@@ -245,25 +245,25 @@ exports.registration = (req, res, next) => {
 
 /**
  * @api {post} /auth/login Logowanie
- * @apiDescription Pozwala na zalogowanie się już zarejestrowanym użytkownikom i uzyskanie tokenu JWT do przeprowadzania dzalszych zapytań
+ * @apiDescription Pozwala na zalogowanie się zarejestrowanym użytkownikom i uzyskanie tokenu JWT do przeprowadzania dzalszych zapytań API. Token należy podawać w nagłówku zapytań w polu 'Authorization'. Token jest ważny przez 192h (8 dni). Po tym czasie należy zalogować się ponownie.
  * @apiName LoginUser
  * @apiGroup Użytkownik
  *
  * @apiParam {String} email Email użytkownika
  * @apiParam {String} password Hasło użytkownika
  *
- * @apiSuccess {String} token Token który należy podać w nagłówku zapytania do API w polu "Authorization" jako 'Bearer <token>'. Token jest ważny przez 192h (8 dni). Po tym czasie należy zalogować się ponownie.
- * @apiSuccess {String} userId Identyfikator użytkownika
+ * @apiSuccess {String} message Potwierdzenie logowania
+ * @apiSuccess {String} token Token który należy podać w nagłówku zapytania do API w polu "Authorization" jako 'Bearer token' gdzie zamiast słowa token podajemy rzeczywisty token uzyskany po zalogowaniu.
  * @apiSuccess {String} userName Nazwa użytkownika
- * @apiSuccess {String} firstProjectId Identyfikator pierwszego stworzonego projektu do którego domyślnie będą wgrywane pliki oraz rezultaty działania narzędzi (o ile nie stworzysz osobnego projektu)
+ * @apiSuccess {String} email Email użytkownika
  *
  * @apiSuccessExample Success-Response:
  *     HTTP/1.1 200 OK
  *     {
+ *       "message" : 'Jesteś zalogowany',
  *       "token": eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1rbGVjQHBqd3N0ay5lZHUucGwiLCJ1c2VySWQiOiI1ZjU4YTkyZGZhMDA2YzhhZWQ5NmY4NDYiLCJpYXQiOjE2MDYzMDc1NzEsImV9cXI6MPYwNjY1MzEeMX0.-ABd2a0F3lcuI0yDV7eymq4ey5_J__xGdyYAk56icO4,
- *       "userId": "5f58a92dfa006c8aed96f846",
  *       "userName": Kowalski,
- *       "firstProjectId": "5fd33950667fa7255da2dfa9"
+ *       "email": "kowalski@gmail.com"
  *     }
  *
  * @apiError (401) Unathorized Błędne hasło
@@ -309,14 +309,8 @@ exports.login = (req, res, next) => {
             }, config.tokenKey,
             {expiresIn: '192h'});
 
-          
-            Project.findOne({owner: loadedUser._id, name: 'DEMO'}).then(firstProject => {
-                let fpid = undefined;
-                if(firstProject){
-                    fpid = firstProject._id
-                }
-                res.status(200).json({token: token, userId: loadedUser._id.toString(), userName:loadedUser.name, firstProjectId: fpid});
-            });
+            res.status(200).json({message: 'Jesteś zalogowany poprawnie.', token: token, userName:loadedUser.name, email: loadedUser.email});
+
             
         })
         .catch((err) => {
@@ -326,21 +320,3 @@ exports.login = (req, res, next) => {
         });
 }
 
-
-
-/*
-sendEmailToResetPass = (emailAddr, user) => {
-
-    User.findByIdAndUpdate(user._id,{password: newpassword })
-    .then(updatedUser => {
-        sendEmail('mklec@pjwstk.edu.pl','CLARIN-PL: reset hasła', '<b>Testowa wiadomość</b>')
-        .then(message => {
-            console.log(chalk.green('Email wysłany!'))
-        })
-        .catch(console.error);
-    })
-    .catch(err => {
-
-    })
-}
-*/

@@ -9,7 +9,7 @@ const authController = require('../controllers/auth');
 
 
 router.put('/registration',[
-    body('email').isEmail().withMessage('Please write a valid email')
+    body('email').isEmail().withMessage('Wpisz poprawny adres email')
         .custom((value, {req}) => {
             //sprawdzam czy juz istnieje w bazie
             return User.findOne({email: value}).then(userDoc => {
@@ -18,7 +18,7 @@ router.put('/registration',[
                 }
             })
         }),
-    body('password').trim().isLength({min: 6}),
+    body('password').trim().isLength({min: 7}),
     body('name').trim().not().isEmpty()
 ], authController.registration);
 
@@ -28,7 +28,7 @@ router.put('/registration',[
 //router.get('/enterNewPass/:token',authController.enterNewPass);
 
 //############## przypomnienie hasła - wysłanie linka na email ############
-router.post('/forgotPass/:emailAddress',authController.forgotPass);
+router.post('/forgotPass/',authController.forgotPass);
 
 //############## przypomnienie hasła - wpisanie nowego hasła przez uzytkownika ############
 router.post('/enterNewPass/:userId/:token',authController.applyNewPass);
