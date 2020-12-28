@@ -77,11 +77,31 @@ const fileStorageAudio = multer.diskStorage({
         const uniqueHash = uniqueFilename(""); // generuje unikatowy ID dla wgrywanego pliku
         req.uniqueHash = uniqueHash;
 
-        const {owner} = await projectEntry.findById(projectId);
+        let errorParams = new Error("Złe ID sesji lub projektu");
+
+        let fp;
+
+        try {
+            fp = await projectEntry.findById(projectId);
+            if(fp) {
+                //teraz sprawdzam czy ten projekt zawiera daną sesje
+                const foundses = fp.sessionIds.indexOf(sessionId);
+                if(foundses<0){
+                    cb(errorParams, null);
+                } 
+            } else {
+                cb(errorParams, null);
+            }
+        } catch (error) {
+            error.message = "Coś poszło nie tak!"
+            console.log(chalk.red(error.message))
+            cb(error, null);
+        }
+
         
         //const nowyHash = uniqueFilename("","",uniqueHash);
         //console.log(owner)
-        const userId = owner;
+        const userId = fp.owner;
         const oryginalFileName = file.originalname;
 
        
@@ -104,12 +124,24 @@ const fileStorageAudio = multer.diskStorage({
         } else if (typeArray[0] == "text") {
 
             let conainerFolderName = null;
+
+            //sprawdzam czy podany został container ID
+
+            let errorParams = new Error("Złe ID kontenera dla pliku tekstowego");
    
             if(containerId){
                 const foundContainer = await Container.findById(containerId);
+                if(!foundContainer){
+                    cb(errorParams, null);
+                }
                 conainerFolderName = utils.getFileNameWithNoExt(foundContainer.fileName);
                 finalPath = './repo/'+userId+'/'+projectId+'/'+sessionId+'/' + conainerFolderName;
+            } else {
+               cb(errorParams, null);
             }
+        } else {
+            let mimeError = new Error("Nieakceptowalny typ pliku");
+            cb(mimeError, null);
         }
 
 
@@ -136,7 +168,7 @@ const fileFilterAudio = (req, file, cb) => {
     if (typeArray[0] == "audio" ||
         typeArray[0] == "text") {
       cb(null, true);
-    }else {
+    } else {
       cb(null, false);
     }
 }

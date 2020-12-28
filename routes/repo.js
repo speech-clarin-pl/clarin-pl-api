@@ -30,7 +30,7 @@ router.get('/getProjectAssets/:projectId', isAuth, repoController.getRepoAssets)
 router.delete('/delete/:containerId', isAuth, repoController.removeContainer);
 
  //DELETE /repoFiles/deleteFile/userId - usuwa sesje
- router.delete('/:userId/:projectId/:sessionId/', isAuth, repoController.removeSession);
+ router.delete('/deleteSession/:sessionId', isAuth, repoController.removeSession);
 
  //PUT /repoFiles/runSpeechReco/containerId - wykonuje daną usługę na określonym kontenerze
  router.put('/runSpeechRecognition/:containerId', isAuth, repoController.runSpeechRecognition);

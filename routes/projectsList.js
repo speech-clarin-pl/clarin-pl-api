@@ -11,24 +11,21 @@ const router = express.Router();
 router.get('', isAuth, projectsListController.getProjectsList);
 
 //usuwanie projektu
-router.delete('/:projectId',isAuth,projectsListController.deleteProject);
+router.delete('/removeProject/:projectId',isAuth,projectsListController.deleteProject);
 
 // tworzenie nowego projektu POST projects/
 //z prosciutka validacja
-router.post('', isAuth ,[
+router.post('/addProject', isAuth ,[
     body('projectName')
         .trim()
-        .isLength({min: 3 }),
+        .isLength({min: 1, max: 100 }),
 ], projectsListController.createProject);
 
 //update projektu PUT
-router.put('/:projectId', isAuth, [
+router.put('/updateProjectName/:projectId', isAuth, [
     body('newProjectName')
         .trim()
-        .isLength({ min: 3 }),
-    body('projectId')
-        .trim()
-        .isLength({ min: 2 })
+        .isLength({ min: 1, max: 100 })
 ],projectsListController.updateProjectName);
 
 

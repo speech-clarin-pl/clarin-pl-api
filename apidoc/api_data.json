@@ -99,7 +99,7 @@
   },
   {
     "type": "put",
-    "url": "/runSpeechRecognition/:containerId",
+    "url": "/repoFiles/runSpeechRecognition/:containerId",
     "title": "Rozpoznawanie mowy",
     "description": "<p>Narzędzie rozpoznaje automatycznie mowę z wgranego pliku. Po wykonaniu zapytania należy poczekać na zakończenie pracy. Po zakończeniu serwer zapisze rezultaty w kontenerze o danym ID. Aby ściągnąć rezultaty działania narzędzia należy skorzystać z osobnego zapytania API. W międzyczasie możesz odpytywać serwer na temat statusu wykonania tego narzędzia korzystając z osobnego zapytania API.</p>",
     "name": "RECTool",
@@ -190,7 +190,7 @@
   },
   {
     "type": "put",
-    "url": "/runSpeechSegmentation/:containerId",
+    "url": "/repoFiles/runSpeechSegmentation/:containerId",
     "title": "Segmentacja",
     "description": "<p>Narzędzie segmentacji. Dla krótkich nagrań (poniżej 0.5MB) uruchamiany jest algorytm forcealign. Dla dłuższych plików segmentalign. Usługa wymaga uruchomienia najpierw usługi rozpoznawania. Po wykonaniu zapytania należy poczekać na zakończenie pracy. Po zakończeniu serwer zapisze rezultaty w kontenerze o danym ID. Aby ściągnąć rezultaty działania narzędzia należy skorzystać z osobnego zapytania API. W międzyczasie możesz odpytywać serwer na temat statusu wykonania tego narzędzia korzystając z osobnego zapytania API.</p>",
     "name": "SEGTool",
@@ -290,7 +290,7 @@
     "type": "put",
     "url": "/repoFiles/runSpeechVAD/:containerId",
     "title": "Detekcja mowy",
-    "description": "<p>Narzędzie detekcji mowy. Po wykonaniu zapytania należy poczekać na zakończenie pracy. Po zakończeniu serwer zapisze rezultaty w kontenerze o danym ID. Aby ściągnąć rezultaty działania narzędzia należy skorzystać z osobnego zapytania API. W międzyczasie możesz odpytywać serwer na temat statusu wykonania tego narzędzia korzystając z containerId w osobnym zapytaniu API.</p>",
+    "description": "<p>Narzędzie detekcji mowy. Po wykonaniu zapytania należy poczekać na zakończenie pracy. Po zakończeniu serwer zapisze rezultaty w kontenerze. Aby ściągnąć rezultaty działania narzędzia należy skorzystać z osobnego zapytania API. W międzyczasie możesz odpytywać serwer na temat statusu wykonania tego narzędzia korzystając z containerId w osobnym zapytaniu API.</p>",
     "name": "VADTool",
     "group": "Narzędzia",
     "parameter": {
@@ -388,7 +388,7 @@
     "type": "put",
     "url": "/repoFiles/createNewSession",
     "title": "Tworzenie sesji",
-    "description": "<p>Tworzy nową sesje (folder) w zdanym istniejącym projekcie</p>",
+    "description": "<p>Tworzy nową sesje (folder) w istniejącym projekcie</p>",
     "name": "CREATESession",
     "group": "Pliki",
     "parameter": {
@@ -627,6 +627,158 @@
     "groupTitle": "Pliki"
   },
   {
+    "type": "post",
+    "url": "/projectsList/addProject",
+    "title": "Nowy Projekt",
+    "description": "<p>Tworzenie nowego projektu na potrzeby budowy nowego korpusu. Pliki w projekcie zorganizowane są w sesje. Podczas tworzenia projektu, tworzona jest domyślna sesja demo którą można usunąć.</p>",
+    "name": "CreateProject",
+    "group": "Pliki",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "projectName",
+            "description": "<p>Nazwa projektu</p>"
+          }
+        ]
+      }
+    },
+    "header": {
+      "fields": {
+        "Header": [
+          {
+            "group": "Header",
+            "type": "String",
+            "optional": false,
+            "field": "Authorization",
+            "description": "<p>Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "fields": {
+        "Success 200": [
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "message",
+            "description": "<p>wiadomość że projekt został utworzony.</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "Object",
+            "optional": false,
+            "field": "project",
+            "description": "<p>Informacje o nowym projekcie w postaci JSON.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\n  \"message\": 'Projekt został utworzony!',\n  \"project\": { accessToRead: [],\n                    accessToEdit: [],\n                    sessionIds: [],\n                    _id: 5fe99be5d831b7c009e36fbb,\n                    name: 'sampleProject',\n                    owner: 5fe39a36daa13f1fa38e1e06,\n                    projectCreated: 'December 28th 2020, 9:48:37 am',\n                    createdAt: 2020-12-28T08:48:37.558Z,\n                    updatedAt: 2020-12-28T08:48:37.558Z,\n                    __v: 0 }\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "error": {
+      "fields": {
+        "422": [
+          {
+            "group": "422",
+            "optional": false,
+            "field": "ValidationFailed",
+            "description": "<p>Błędna nazwa projektu</p>"
+          }
+        ]
+      }
+    },
+    "version": "0.0.0",
+    "filename": "controllers/projectsList.js",
+    "groupTitle": "Pliki"
+  },
+  {
+    "type": "delete",
+    "url": "/repoFiles/deleteSession/:sessionId",
+    "title": "Usuwanie sesji",
+    "description": "<p>Usuwa sesje wraz z jej zawartością</p>",
+    "name": "DELETESession",
+    "group": "Pliki",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "sessionId",
+            "description": "<p>ID usuwanej sesji</p>"
+          }
+        ]
+      }
+    },
+    "header": {
+      "fields": {
+        "Header": [
+          {
+            "group": "Header",
+            "type": "String",
+            "optional": false,
+            "field": "Authorization",
+            "description": "<p>Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "fields": {
+        "Success 200": [
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "message",
+            "description": "<p>'Sesja wraz z awartością została usunięta!'</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "sessionId",
+            "description": "<p>Id usuniętej sesji</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\n  \"message\": 'Sesja wraz z awartością została usunięta!',\n  \"sessionId\": \"5f58a92dfa006c8aed96f846\",\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "error": {
+      "fields": {
+        "500": [
+          {
+            "group": "500",
+            "optional": false,
+            "field": "ServerError",
+            "description": ""
+          }
+        ]
+      }
+    },
+    "version": "0.0.0",
+    "filename": "controllers/repoPanel.js",
+    "groupTitle": "Pliki"
+  },
+  {
     "type": "delete",
     "url": "/repoFiles/delete/:containerId",
     "title": "Usuwanie kontenera",
@@ -809,7 +961,7 @@
             "type": "String",
             "optional": false,
             "field": "fileType",
-            "description": "<p>Wskazanie formatu w jakim chcesz pobrać wynik. <h3>Pliki audio</h3><ul><li>&quot;oryginalAudio&quot;: Pobranie pliku który został wysłany na serwer.</li><li>&quot;audio&quot; : pobranie pliku przekonwertowanego do PCM 16000Hz 8bits</li></ul><h3>Detekcja mowy (VAD) </h3><ul><li>&quot;VADctm&quot;: Wynik działania VAD w formacie CTM</li><li>&quot;VADtextGrid&quot;: Wynik działania VAD w formacie TextGrid</li><li>&quot;VADJSON&quot;: Wynik działania VAD w formacie JSON</li></ul><h3>Diaryzacja (DIA)</h3><ul><li>&quot;DIActm&quot;: Wynik działania DIA w formacie CTM</li><li>&quot;DIAtextGrid&quot;: Wynik działania DIA w formacie TextGrid.</li><li>&quot;DIAJSON&quot;: Wynik działania DIA w formacie JSON.</li></ul><h3>Rozpoznawanie mowy (REC)</h3><ul><li>&quot;JSONTranscript&quot;: Wynik działania REC w formacie JSCON</li><li>&quot;TXTTranscript&quot;: Wynik działania REC w formacie TXT.</li></ul><h3>Segmentacja (SEG)</h3><ul><li>&quot;SEGctm&quot;: Wynik działania SEG w formacie CTM</li><li>&quot;SEGtextGrid&quot;: Wynik działania SEG w formacie TextGrid.</li><li>&quot;EMUJSON&quot;: Wynik działania SEG w formacie EMU-SDMS.</li></ul></p>"
+            "description": "<p>Wskazanie formatu w jakim chcesz pobrać wynik. <h3>Pliki audio</h3><ul><li>&quot;oryginalAudio&quot;: Pobranie pliku który został wysłany na serwer.</li><li>&quot;audio&quot; : pobranie pliku przekonwertowanego do PCM 16000Hz 8bits</li></ul><h3>Detekcja mowy (VAD) </h3><ul><li>&quot;VADctm&quot;: Wynik działania VAD w formacie CTM</li><li>&quot;VADtextGrid&quot;: Wynik działania VAD w formacie TextGrid</li><li>&quot;VADJSON&quot;: Wynik działania VAD w formacie JSON</li></ul><h3>Diaryzacja (DIA)</h3><ul><li>&quot;DIActm&quot;: Wynik działania DIA w formacie CTM</li><li>&quot;DIAtextGrid&quot;: Wynik działania DIA w formacie TextGrid.</li><li>&quot;DIAJSON&quot;: Wynik działania DIA w formacie JSON.</li></ul><h3>Rozpoznawanie mowy (REC)</h3><ul><li>&quot;JSONTranscript&quot;: Wynik działania REC w formacie JSCON</li><li>&quot;TXTTranscript&quot;: Wynik działania REC w formacie TXT.</li></ul><h3>Segmentacja (SEG)</h3><ul><li>&quot;SEGctm&quot;: Wynik działania SEG w formacie CTM</li><li>&quot;SEGtextGrid&quot;: Wynik działania SEG w formacie TextGrid.</li><li>&quot;EMUJSON&quot;: Wynik działania SEG w formacie EMU-SDMS. Plik tego typu jest tworzony tylko podczas tworzenia korpusu z projektu.</li></ul></p>"
           }
         ]
       }
@@ -834,8 +986,8 @@
             "group": "Success 200",
             "type": "Object",
             "optional": false,
-            "field": "zwraca",
-            "description": "<p>dany żądany plik</p>"
+            "field": "File",
+            "description": "<p>zwraca żądany plik</p>"
           }
         ]
       },
@@ -955,6 +1107,82 @@
     "groupTitle": "Pliki"
   },
   {
+    "type": "delete",
+    "url": "/projectsList/removeProject/:projectId",
+    "title": "Usuwanie Projektu",
+    "description": "<p>Wywołanie powoduje skasowanie projektu wraz z jego zawartością. Używaj z rozwagą gdyż po usunięciu nie ma możliwości odzyskania danych.</p>",
+    "name": "RemoveProject",
+    "group": "Pliki",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "projectId",
+            "description": "<p>Id projektu do usunięcia</p>"
+          }
+        ]
+      }
+    },
+    "header": {
+      "fields": {
+        "Header": [
+          {
+            "group": "Header",
+            "type": "String",
+            "optional": false,
+            "field": "Authorization",
+            "description": "<p>Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "fields": {
+        "Success 200": [
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "message",
+            "description": "<p>wiadomość że projekt został usunięty.</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "projectId",
+            "description": "<p>Id usuniętego projektu</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\n  \"message\": 'Projekt usunięty!',\n  \"projectId\": 5fe99be5d831b7c009e36fbb\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "error": {
+      "fields": {
+        "403": [
+          {
+            "group": "403",
+            "optional": false,
+            "field": "Not",
+            "description": "<p>authorized Błędna nazwa projektu</p>"
+          }
+        ]
+      }
+    },
+    "version": "0.0.0",
+    "filename": "controllers/projectsList.js",
+    "groupTitle": "Pliki"
+  },
+  {
     "type": "post",
     "url": "/repoFiles/uploadFile",
     "title": "Wgrywanie pliku",
@@ -1066,10 +1294,116 @@
     "groupTitle": "Pliki"
   },
   {
+    "type": "put",
+    "url": "/projectsList/updateProjectName/:projectId",
+    "title": "Zmiana nazwy projektu",
+    "description": "<p>Zmiana nazwy istniejącego projektu</p>",
+    "name": "UpdateNameProject",
+    "group": "Pliki",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "projectId",
+            "description": "<p>Id projektu do usunięcia</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "newProjectName",
+            "description": "<p>Nowa nazwa</p>"
+          }
+        ]
+      }
+    },
+    "header": {
+      "fields": {
+        "Header": [
+          {
+            "group": "Header",
+            "type": "String",
+            "optional": false,
+            "field": "Authorization",
+            "description": "<p>Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "fields": {
+        "Success 200": [
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "message",
+            "description": "<p>wiadomość że projekt został usunięty.</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "projectId",
+            "description": "<p>Id usuniętego projektu</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "newName",
+            "description": "<p>nowa nazwa projektu</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\n  \"message\": 'Nazwa projektu zaktualizowana!',\n  \"projectId\": 5fe99be5d831b7c009e36fbb,\n  \"newName\": newName\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "error": {
+      "fields": {
+        "403": [
+          {
+            "group": "403",
+            "optional": false,
+            "field": "NotAuthorized",
+            "description": "<p>nieautoryzowany dostęp</p>"
+          }
+        ],
+        "404": [
+          {
+            "group": "404",
+            "optional": false,
+            "field": "NotFound",
+            "description": "<p>nie znaleziono projektu</p>"
+          }
+        ],
+        "422": [
+          {
+            "group": "422",
+            "optional": false,
+            "field": "ValidationFailed",
+            "description": "<p>Błędna nazwa projektu</p>"
+          }
+        ]
+      }
+    },
+    "version": "0.0.0",
+    "filename": "controllers/projectsList.js",
+    "groupTitle": "Pliki"
+  },
+  {
     "type": "post",
-    "url": "/auth/forgotPass/:emailAddress",
+    "url": "/auth/forgotPass/",
     "title": "Odzyskanie hasła",
-    "description": "<p>Pozwala użytkownikowi wygenerować nowe hasło. Wywołanie tego api powoduje wysłąnie wiadomości email na adres użytkownika z linkiem do strony gdzie użytkownik może wprowadzić nowe hasło.</p>",
+    "description": "<p>Pozwala użytkownikowi wygenerować nowe hasło. Wywołanie tego API powoduje wysłąnie wiadomości email na adres użytkownika z linkiem do strony gdzie można wprowadzić nowe hasło.</p>",
     "name": "ForgotPassword",
     "group": "Użytkownik",
     "parameter": {
@@ -1141,7 +1475,7 @@
     "type": "post",
     "url": "/auth/login",
     "title": "Logowanie",
-    "description": "<p>Pozwala na zalogowanie się już zarejestrowanym użytkownikom i uzyskanie tokenu JWT do przeprowadzania dzalszych zapytań</p>",
+    "description": "<p>Pozwala na zalogowanie się zarejestrowanym użytkownikom i uzyskanie tokenu JWT do przeprowadzania dzalszych zapytań API. Token należy podawać w nagłówku zapytań w polu 'Authorization'. Token jest ważny przez 192h (8 dni). Po tym czasie należy zalogować się ponownie.</p>",
     "name": "LoginUser",
     "group": "Użytkownik",
     "parameter": {
@@ -1171,15 +1505,15 @@
             "group": "Success 200",
             "type": "String",
             "optional": false,
-            "field": "token",
-            "description": "<p>Token który należy podać w nagłówku zapytania do API w polu &quot;Authorization&quot; jako 'Bearer <token>'. Token jest ważny przez 192h (8 dni). Po tym czasie należy zalogować się ponownie.</p>"
+            "field": "message",
+            "description": "<p>Potwierdzenie logowania</p>"
           },
           {
             "group": "Success 200",
             "type": "String",
             "optional": false,
-            "field": "userId",
-            "description": "<p>Identyfikator użytkownika</p>"
+            "field": "token",
+            "description": "<p>Token który należy podać w nagłówku zapytania do API w polu &quot;Authorization&quot; jako 'Bearer token' gdzie zamiast słowa token podajemy rzeczywisty token uzyskany po zalogowaniu.</p>"
           },
           {
             "group": "Success 200",
@@ -1192,15 +1526,15 @@
             "group": "Success 200",
             "type": "String",
             "optional": false,
-            "field": "firstProjectId",
-            "description": "<p>Identyfikator pierwszego stworzonego projektu do którego domyślnie będą wgrywane pliki oraz rezultaty działania narzędzi (o ile nie stworzysz osobnego projektu)</p>"
+            "field": "email",
+            "description": "<p>Email użytkownika</p>"
           }
         ]
       },
       "examples": [
         {
           "title": "Success-Response:",
-          "content": "HTTP/1.1 200 OK\n{\n  \"token\": eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1rbGVjQHBqd3N0ay5lZHUucGwiLCJ1c2VySWQiOiI1ZjU4YTkyZGZhMDA2YzhhZWQ5NmY4NDYiLCJpYXQiOjE2MDYzMDc1NzEsImV9cXI6MPYwNjY1MzEeMX0.-ABd2a0F3lcuI0yDV7eymq4ey5_J__xGdyYAk56icO4,\n  \"userId\": \"5f58a92dfa006c8aed96f846\",\n  \"userName\": Kowalski,\n  \"firstProjectId\": \"5fd33950667fa7255da2dfa9\"\n}",
+          "content": "HTTP/1.1 200 OK\n{\n  \"message\" : 'Jesteś zalogowany',\n  \"token\": eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1rbGVjQHBqd3N0ay5lZHUucGwiLCJ1c2VySWQiOiI1ZjU4YTkyZGZhMDA2YzhhZWQ5NmY4NDYiLCJpYXQiOjE2MDYzMDc1NzEsImV9cXI6MPYwNjY1MzEeMX0.-ABd2a0F3lcuI0yDV7eymq4ey5_J__xGdyYAk56icO4,\n  \"userName\": Kowalski,\n  \"email\": \"kowalski@gmail.com\"\n}",
           "type": "json"
         }
       ]
@@ -1241,7 +1575,7 @@
     "type": "put",
     "url": "/auth/registration",
     "title": "Rejestracja użytkownika",
-    "description": "<p>Rejestracja nowego użytkownika. Po zalogowaniu uzyskasz token na potrzeby uruchamiania narzędzi mowy z uwzględnieniem bezpieczeństwa Twoich danych.</p>",
+    "description": "<p>Rejestracja nowego użytkownika. Tylko zarejestrowani użytkownicy mogą wykonywać zapytania do API. W ten sposób chronimy dostęp do Twoich danych.</p>",
     "name": "RegisterUser",
     "group": "Użytkownik",
     "parameter": {
@@ -1285,22 +1619,22 @@
             "group": "Success 200",
             "type": "String",
             "optional": false,
-            "field": "userId",
-            "description": "<p>Identyfikator użytkownika</p>"
+            "field": "defaultProjectId",
+            "description": "<p>Identyfikator pierwszego stworzonego projektu do którego domyślnie będą wgrywane pliki oraz rezultaty działania narzędzi (o ile nie zostanie utworzony osobny projekt).</p>"
           },
           {
             "group": "Success 200",
             "type": "String",
             "optional": false,
-            "field": "firstProjectId",
-            "description": "<p>Identyfikator pierwszego stworzonego projektu do którego domyślnie będą wgrywane pliki oraz rezultaty działania narzędzi (o ile nie stworzysz osobnego projektu).</p>"
+            "field": "defaultSessionId",
+            "description": "<p>Identyfikator pierwszej stworzonej sesji (o ile nie zostanie utworzona odrębna sesja)</p>"
           }
         ]
       },
       "examples": [
         {
           "title": "Success-Response:",
-          "content": "HTTP/1.1 201 CREATED\n{\n  \"message\": 'Użytkownik został stworzony',\n  \"userId\": \"5f58a92dfa006c8aed96f846\",\n  \"firstProjectId\": \"5fd33950667fa7255da2dfa9\"\n}",
+          "content": "HTTP/1.1 201 CREATED\n{\n  \"message\": 'Użytkownik został stworzony',\n  \"defaultProjectId\": \"5f58a92dfa006c8aed96f846\",\n  \"defaultSessionId\": \"5fd33950667fa7255da2dfa9\"\n}",
           "type": "json"
         }
       ]

@@ -737,43 +737,80 @@ exports.getFileFromContainer = (req,res,next) => {
     })
 }
 
+
+
+/**
+ * @api {delete} /repoFiles/deleteSession/:sessionId  Usuwanie sesji
+ * @apiDescription Usuwa sesje wraz z jej zawartością
+ * @apiName DELETESession
+ * @apiGroup Pliki
+ *
+ * @apiParam {String} sessionId ID usuwanej sesji
+ * @apiHeader {String} Authorization Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.
+ *
+ * @apiSuccess {String} message 'Sesja wraz z awartością została usunięta!'
+ * @apiSuccess {String} sessionId  Id usuniętej sesji
+ * 
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "message": 'Sesja wraz z awartością została usunięta!',
+ *       "sessionId": "5f58a92dfa006c8aed96f846",
+ *     }
+ * 
+ * @apiError (500) ServerError 
+ * 
+ */
+
 //##########################################
 //#### usuwanie sesji
 //#######################################
 
 exports.removeSession = (req,res,next) => {
 
-  const userId = req.params.userId;
-  const projectId = req.params.projectId;
+  let userId;
+  let projectId;
   const sessionId = req.params.sessionId;
-
+  let sessionPath;
   let containersInThisSession = [];
 
-  Session.findByIdAndRemove({_id:sessionId})
+  //usuwam sesje
+  Session.findByIdAndRemove(sessionId)
     .then(foundSession => {
+        if(!foundSession){
+          const notSessionFoundError = new Error("Błędne ID sesji!");
+          console.log(chalk.red(notSessionFoundError.message));
+          throw notSessionFoundError;
+        }
 
         containersInThisSession = foundSession.containersIds;
+        projectId = foundSession.projectId;
 
-        const sessionPath = appRoot + "/repo/" + userId + "/" + projectId + "/" + sessionId;
+        //usuwam odniesienie do sesji w projekcie
+        return ProjectEntry.findByIdAndUpdate(projectId, {$pull: {sessionIds: sessionId}});
+      })
+      .then(foundProject=>{
+        userId = foundProject.owner;
+        
+        //usuwam kontenery które przynależały do tej sesji
+        sessionPath = appRoot + "/repo/" + userId + "/" + projectId + "/" + sessionId;
 
-        //usuwam folder sesji z dysku fizycznie
-        fs.rmdir(sessionPath,{recursive: true}, function (err) {
-          if (err) throw err;
+        return Container.deleteMany({_id: containersInThisSession});
 
-          //usuwam wpis w kolekcji Containers
-          Container.deleteMany({_id: containersInThisSession})
-          .then(removedContainers => {
-            
-                res.status(200).json({ message: 'The session has been removed!', sessionId: sessionId});
-         
-          })
-          .catch(error => {
-            res.status(500).json({ message: 'Something went wrong with removing the session!', sessionId: sessionId});
-            console.log(error);
+      })
+      .then(foundContainers =>{
+          //usuwam folder sesji z dysku fizycznie
+          try {
+            fs.removeSync(sessionPath);
+            res.status(200).json({ message: 'Sesja została usunięta', sessionId: sessionId});
+          } catch (error) {
             throw error;
-          })
-        });
-    })
+          }
+      })
+      .catch(error => {
+        console.log(chalk.red(error.message));
+        next(error);
+      })
 }
 
 
@@ -909,17 +946,28 @@ exports.uploadFile = async (req, res, next) => {
 
   //tylko w przypadku innych plików niż audio
   const containerId = req.body.containerId; 
+  let userId;
+  let fullFilePath;
+  let conainerFolderName;
+  let containerFolderPath;
 
-  const {owner} = await ProjectEntry.findById(projectId);
-  const userId = owner;
+  try {
 
-  let fileWithNoExt = utils.getFileNameWithNoExt(savedFile);
-  let fileWithNoSufix = fileWithNoExt.substring(0, fileWithNoExt.length - 5);
+    const {owner} = await ProjectEntry.findById(projectId);
+    userId = owner;
+  
+    let fileWithNoExt = utils.getFileNameWithNoExt(savedFile);
+    let fileWithNoSufix = fileWithNoExt.substring(0, fileWithNoExt.length - 5);
+  
+    conainerFolderName = fileWithNoSufix;
+    containerFolderPath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + conainerFolderName;
+    fullFilePath = containerFolderPath + "/" + savedFile;
 
-  const conainerFolderName = fileWithNoSufix;
-  const containerFolderPath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + conainerFolderName;
-  const fullFilePath = containerFolderPath + "/" + savedFile;
-
+  } catch (error) {
+    error.message = "Coś poszło nie tak z przekazanymi parametrami. Sprawdź czy są poprawne!";
+    console.log(chalk.red(error.message))
+    throw error;
+  }
 
   //jeżeli wgrywany plik to audio
   if(typeArray[0] == 'audio'){
@@ -1071,9 +1119,24 @@ exports.createNewSessionHandler = (sesName, projId) => {
       let sessionId = null;
       
       ProjectEntry.findById(projectId).then(foundProject=>{
+        if(!foundProject){
+          const projIDError = new Error("Nie znaleziono projektu o zadanym ID");
+          throw projIDError;
+        }
         return foundProject.owner;
       }).then(owner => {
         userId = owner;
+
+        //walidacja nazwy sesji
+        const sessNameError = new Error("Błędna nazwa sesji lub jej brak!");
+        if(!sessionName){
+          throw sessNameError;
+        } else{
+          if(sessionName.trim().length < 1 || sessionName.trim().length > 100){
+            throw sessNameError;
+          }
+        }
+        
 
         let session = new Session({
           name: sessionName,
@@ -1104,7 +1167,7 @@ exports.createNewSessionHandler = (sesName, projId) => {
 
 /**
  * @api {put} /repoFiles/createNewSession  Tworzenie sesji
- * @apiDescription Tworzy nową sesje (folder) w zdanym istniejącym projekcie
+ * @apiDescription Tworzy nową sesje (folder) w istniejącym projekcie
  * @apiName CREATESession
  * @apiGroup Pliki
  *
