@@ -190,18 +190,19 @@ exports.createKorpus = (projectId, userId) => {
  */
 exports.exportToEmu = (req, res, next) => {
 
-  //kiedy projectId jest podawany w parametrze URL
-  if(req.params.projectId){
-    const projectId = req.params.projectId;
-  } else { //jak nie to jakos to stworzyc - TO DO
-    const projectId = req.params.projectId;
-  }
-  
+  const projectId = req.params.projectId;
   
   //const userId = req.params.userId;
   const userId = req.userId;
 
-  this.createKorpus(projectId, userId)
+  ProjectEntry.findById(projectId).then(foundProject => {
+
+    if(!foundProject){
+      const wrongProjIDErr = new Error("Nie znaleziono projektu o danym ID");
+      throw wrongProjIDErr
+    }
+
+    this.createKorpus(projectId, userId)
     .then((pathToZIP)=>{
       console.log(chalk.green("ZIP stworzony: " + pathToZIP))
      // res.sendFile(pathToZIP)
@@ -210,14 +211,23 @@ exports.exportToEmu = (req, res, next) => {
       //res.status(200).json({ message: 'ZIP created successfuly!'});
     })
     .catch((error)=>{
-      res.status(204).json({ message: 'Twoje pliki nie zawierają wszystkich poziomów anotacji lub coś poszło nie tak na serwerze'});
+      //res.status(204).json({ message: 'Twoje pliki nie zawierają wszystkich poziomów anotacji lub coś poszło nie tak na serwerze'});
+      throw error
     }) 
+
+
+  }).catch(error=>{
+    console.log(chalk.red(error.message))
+    next(error);
+  })
+
+  
 }
 
 
 /**
  * @api {get} /repoFiles/downloadCorpus/:projectId Pobierz korpus EMU
- * @apiDescription After when you create the corpus you can download it. 
+ * @apiDescription Gdy korpus jest stworzony, możesz go pobrać na dysk twardy
  * @apiName DownloadCorpus
  * @apiGroup Pliki
  *
@@ -236,7 +246,7 @@ exports.exportToEmu = (req, res, next) => {
 
 exports.getReadyKorpus = (req,res,next) => {
 
-  const userId = req.params.userId;
+  const userId = req.userId;
   const projectId = req.params.projectId;
 
   ProjectEntry.findById(projectId)
@@ -251,8 +261,19 @@ exports.getReadyKorpus = (req,res,next) => {
       const pathToUserProject = appRoot + '/repo/' + userId + '/' + projectId;
       const pathToCorpus = pathToUserProject + '/' + nazwaKorpusu;
       const pathToZIP = pathToCorpus+'.zip';
+
+      try {
+        if(fs.existsSync(pathToZIP)) {
+          res.download(pathToZIP,(nazwaKorpusu+'.zip'));
+        } else {
+          const corpusNotCreatedErr = new Error("Dla tego projektu nie został wygenerowany korpus");
+          throw corpusNotCreatedErr;
+        }
+      } catch (err) {
+         throw err;
+      }
        
-      res.download(pathToZIP,(nazwaKorpusu+'.zip'));
+      
 
     }).catch(error=>{
       console.log(chalk.red(error.message));
@@ -1383,6 +1404,12 @@ exports.getRepoAssets = (req,res,next) => {
   let userId = null;
   ProjectEntry.findById(projectId)
     .then(foundPE => {
+
+      if(!foundPE){
+        const noProjectErr = new Error("Nie znaleziono tego projektu");
+        throw noProjectErr;
+      }
+
       znalezionyProjekt = foundPE;
       userId = znalezionyProjekt.owner;
       
@@ -1434,9 +1461,8 @@ exports.getRepoAssets = (req,res,next) => {
       }
     })
     .catch(err => {
-      let error = new Error('Error with loading project repo assets');
-      error.statusCode = 500;
-      throw error;
+      console.log(chalk.red(err.message))
+      next(err)
     })
 }
 
