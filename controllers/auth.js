@@ -167,7 +167,7 @@ exports.forgotPass = (req,res,next) => {
 
 /**
  * @api {put} /auth/registration Rejestracja użytkownika
- * @apiDescription Rejestracja nowego użytkownika. Tylko zarejestrowani użytkownicy mogą wykonywać zapytania do API. W ten sposób chronimy dostęp do Twoich danych.
+ * @apiDescription Rejestracja nowego użytkownika. Tylko zarejestrowani użytkownicy mogą wykonywać zapytania do API. W ten sposób chronimy dostęp do Twoich danych. Podczas rejestracji tworzony jest domyślny projekt z dwoma sesjami. Sesja demo z przykładowymi plikami oraz sesja domyślna, gotowa do wgrania własnych plików. Użytkownik może je zostawić, skasować bądź utworzyć własne dodatkowe sesje.
  * @apiName RegisterUser
  * @apiGroup Użytkownik
  *
@@ -177,8 +177,8 @@ exports.forgotPass = (req,res,next) => {
  *
  * @apiSuccess {String} message wiadomość potwierdzająca
  * @apiSuccess {String} defaultProjectId Identyfikator pierwszego stworzonego projektu do którego domyślnie będą wgrywane pliki oraz rezultaty działania narzędzi (o ile nie zostanie utworzony osobny projekt).
-* @apiSuccess {String} defaultSessionId Identyfikator pierwszej stworzonej sesji (o ile nie zostanie utworzona odrębna sesja)
- *
+* @apiSuccess {String} defaultSessionId Identyfikator pierwszej pustej sesji, gotowej do wgrania do niej własnych plików
+* @apiSuccess {String} demoSessionId Identyfikator sesji demo z wgranymi przykładowymi plikami
  * @apiSuccessExample Success-Response:
  *     HTTP/1.1 201 CREATED
  *     {
@@ -228,7 +228,7 @@ exports.registration = (req, res, next) => {
                 return err;
             } else {
                 projectsList.createProjectHandler("DOMYŚLNY PROJEKT",user._id, true).then((results)=>{  
-                    res.status(201).json({message: 'Użytkownik został stworzony', defaultProjectId: results.project._id, defaultSessionId: results.session._id });
+                    res.status(201).json({message: 'Użytkownik został stworzony', defaultProjectId: results.project._id, defaultSessionId: results.defaultSession._id,  demoSessionId: results.demoSession._id });
                 }).catch((err)=>{
                     return err;
                 })
@@ -282,6 +282,7 @@ exports.login = (req, res, next) => {
     //sprawdzam czy istnieje taki email
     User.findOne({email: email})
         .then(user => {
+
             //jezeli nie ma takiego uzera 
             if(!user){
                 const error = new Error('Użytkownik o tym adresie email nie został znaleziony');
@@ -295,6 +296,7 @@ exports.login = (req, res, next) => {
             return bcrypt.compare(password, user.password);
         })
         .then(isEqual => {
+            
             //wtedy uzytkownik wpisal zle haslo
             if(!isEqual){
                 const error = new Error('Błędne hasło');

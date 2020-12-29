@@ -629,7 +629,7 @@ define({ "api": [
   {
     "type": "post",
     "url": "/projectsList/addProject",
-    "title": "Nowy Projekt",
+    "title": "Tworzenie Projektu",
     "description": "<p>Tworzenie nowego projektu na potrzeby budowy nowego korpusu. Pliki w projekcie zorganizowane są w sesje. Podczas tworzenia projektu, tworzona jest domyślna sesja demo którą można usunąć.</p>",
     "name": "CreateProject",
     "group": "Pliki",
@@ -681,7 +681,7 @@ define({ "api": [
       "examples": [
         {
           "title": "Success-Response:",
-          "content": "HTTP/1.1 200 OK\n{\n  \"message\": 'Projekt został utworzony!',\n  \"project\": { accessToRead: [],\n                    accessToEdit: [],\n                    sessionIds: [],\n                    _id: 5fe99be5d831b7c009e36fbb,\n                    name: 'sampleProject',\n                    owner: 5fe39a36daa13f1fa38e1e06,\n                    projectCreated: 'December 28th 2020, 9:48:37 am',\n                    createdAt: 2020-12-28T08:48:37.558Z,\n                    updatedAt: 2020-12-28T08:48:37.558Z,\n                    __v: 0 }\n}",
+          "content": "HTTP/1.1 201 OK\n{\n  \"message\": 'Projekt został utworzony!',\n  \"project\": { accessToRead: [],\n                    accessToEdit: [],\n                    sessionIds: [],\n                    _id: 5fe99be5d831b7c009e36fbb,\n                    name: 'sampleProject',\n                    owner: 5fe39a36daa13f1fa38e1e06,\n                    projectCreated: 'December 28th 2020, 9:48:37 am',\n                    createdAt: 2020-12-28T08:48:37.558Z,\n                    updatedAt: 2020-12-28T08:48:37.558Z,\n                    __v: 0 }\n}",
           "type": "json"
         }
       ]
@@ -873,7 +873,7 @@ define({ "api": [
     "type": "get",
     "url": "/repoFiles/downloadCorpus/:projectId",
     "title": "Pobierz korpus EMU",
-    "description": "<p>After when you create the corpus you can download it.</p>",
+    "description": "<p>Gdy korpus jest stworzony, możesz go pobrać na dysk twardy</p>",
     "name": "DownloadCorpus",
     "group": "Pliki",
     "parameter": {
@@ -1209,9 +1209,9 @@ define({ "api": [
           {
             "group": "Parameter",
             "type": "String",
-            "optional": false,
+            "optional": true,
             "field": "containerId",
-            "description": "<p>Identyfikator kontenera</p>"
+            "description": "<p>Identyfikator kontenera. Potrzebny tylko jeżeli wgrywamy transkrypcje TXT. Jeżeli jest to plik audio, zostanie stworzony nowy kontener i ten parametr nie jest konieczny.</p>"
           },
           {
             "group": "Parameter",
@@ -1575,7 +1575,7 @@ define({ "api": [
     "type": "put",
     "url": "/auth/registration",
     "title": "Rejestracja użytkownika",
-    "description": "<p>Rejestracja nowego użytkownika. Tylko zarejestrowani użytkownicy mogą wykonywać zapytania do API. W ten sposób chronimy dostęp do Twoich danych.</p>",
+    "description": "<p>Rejestracja nowego użytkownika. Tylko zarejestrowani użytkownicy mogą wykonywać zapytania do API. W ten sposób chronimy dostęp do Twoich danych. Podczas rejestracji tworzony jest domyślny projekt z dwoma sesjami. Sesja demo z przykładowymi plikami oraz sesja domyślna, gotowa do wgrania własnych plików. Użytkownik może je zostawić, skasować bądź utworzyć własne dodatkowe sesje.</p>",
     "name": "RegisterUser",
     "group": "Użytkownik",
     "parameter": {
@@ -1627,7 +1627,14 @@ define({ "api": [
             "type": "String",
             "optional": false,
             "field": "defaultSessionId",
-            "description": "<p>Identyfikator pierwszej stworzonej sesji (o ile nie zostanie utworzona odrębna sesja)</p>"
+            "description": "<p>Identyfikator pierwszej pustej sesji, gotowej do wgrania do niej własnych plików</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "demoSessionId",
+            "description": "<p>Identyfikator sesji demo z wgranymi przykładowymi plikami</p>"
           }
         ]
       },

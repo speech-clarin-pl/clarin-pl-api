@@ -9,9 +9,12 @@ node_modules/
 .DS_Store
 .env
 .env.local
-.env_development.local
-.env_test.local
-.env_production.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
+.env.production
+.env.production.local
 
 npm-deug.log*
 

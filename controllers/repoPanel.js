@@ -926,7 +926,7 @@ exports.removeContainer = (req,res,next) => {
  *
  * @apiParam {String} projectId Identyfikator projektu
  * @apiParam {String} sessionId Identyfikator sesji
- * @apiParam {String} containerId Identyfikator kontenera
+ * @apiParam {String} [containerId] Identyfikator kontenera. Potrzebny tylko jeżeli wgrywamy transkrypcje TXT. Jeżeli jest to plik audio, zostanie stworzony nowy kontener i ten parametr nie jest konieczny.
  * @apiParam {String} myFile Plik audio lub txt
  * @apiHeader {String} Authorization Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.
  *

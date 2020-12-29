@@ -435,7 +435,8 @@ exports.createProjectHandler = (projectName, ownerID, ifDefaultSession = false) 
                     
             })
             .then(updatedSession => {
-                resolve({session:updatedSession, 
+                resolve({demoSession:updatedSession, 
+                    defaultSession: defaultSession,
                     project: projectEntry, 
                     owner: owner});
             })
@@ -448,7 +449,7 @@ exports.createProjectHandler = (projectName, ownerID, ifDefaultSession = false) 
 
 
 /**
- * @api {post} /projectsList/addProject Nowy Projekt
+ * @api {post} /projectsList/addProject Tworzenie Projektu
  * @apiDescription Tworzenie nowego projektu na potrzeby budowy nowego korpusu. Pliki w projekcie zorganizowane są w sesje. Podczas tworzenia projektu, tworzona jest domyślna sesja demo którą można usunąć.
  * @apiName CreateProject
  * @apiGroup Pliki
@@ -460,7 +461,7 @@ exports.createProjectHandler = (projectName, ownerID, ifDefaultSession = false) 
  * 
  *
  * @apiSuccessExample Success-Response:
- *     HTTP/1.1 200 OK
+ *     HTTP/1.1 201 OK
  *     {
  *       "message": 'Projekt został utworzony!',
  *       "project": { accessToRead: [],
