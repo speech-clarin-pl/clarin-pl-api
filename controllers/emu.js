@@ -33,9 +33,10 @@ exports.ctmVAD2tg = (container) => {
             //console.log(`child process close all stdio with code ${code}`);
             // 0 cussess, 2 error, 1 cos nie tak z argumentami
             if(code==0){
-                resolve();
+                resolve(true);
             } else {
-                reject();
+                const err = new Error("Coś poszło nie tak z ctmVAD2tg!")
+                reject(err);
             }
         });
     })
@@ -162,7 +163,7 @@ exports.ctms2EMU = (container) => {
             let promis = new Promise((resolve, reject) => {
                 this.ctms2EMU(container)
                     .then((code)=>{
-                        console.log(code)
+                        //console.log(code)
                         correctContainers.push(container);
                         resolve(code);
                     })

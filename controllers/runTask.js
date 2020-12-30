@@ -13,18 +13,17 @@ const emu = require('./emu');
 const chalk = require('chalk');
 
 
-
 exports.runVAD = (container) => {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
         
+        let checkerdb = null; //checker do odpytywania db
+
         const userId = container.owner;
         const projectId = container.project;
         const sessionId = container.session;
     
         const audioFileName = container.fileName;       //np. lektor-fe2e3423.wav - na serwerze
         const containerFolderName = utils.getFileNameWithNoExt(audioFileName);  //np.lektor-fe2e3423 - na serwerze folder
-
-        let checkerdb = null; //checker do odpytywania db
     
         //sciezka do pliku relatywna dla dockera
         let inputAudioFilePath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerFolderName + '/' + audioFileName;
@@ -39,172 +38,120 @@ exports.runVAD = (container) => {
             input: inputAudioFilePath,
         });
 
-        // uruchamiam usługę z dockera
-        dockerTask.save()
-            .then(savedTask => {
-                let block = true;
+        //uruchamiam dockera
+        const savedTask = await dockerTask.save();
+        let block = true;
 
-                checkerdb = setInterval(function () {
-                    Task.findById(savedTask._id)
-                        .then(task=>{
+        checkerdb = setInterval( async () => {
 
-                            if(block) console.log(chalk.green("Znalazłem VAD task i czekam aż się ukończy...."))
-                           
-                            block = false;
-                            //jeżeli zmienił się jego status na ukończony
-                            if (task.done) {
-                                
-                                //i jeżeli nie ma errorów
-                                if (!task.error) {
-                                    const inputFilePath = task.input;
-                                    const resultFile = task.result;
+            const task = await Task.findById(savedTask._id);
+            if(block) console.log(chalk.green("Znalazłem VAD task i czekam aż się ukończy...."))
+            block = false;
 
-                                    // tworze z pliku wynikowego txt odpowiedniego JSONA - na przyszłość
-                                    const pathToResult = appRoot + '/repo/' + resultFile;
+            if (task.done) {
 
-                                    //zapisuje wynik VAD w katalogu containera
-                                    const finalPathToResult = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerFolderName + '/' + containerFolderName + '_VAD.ctm';
-                    
-                                    //przenosze plik z wynikami do katalogu kontenera
-                                    try{
-                                        fs.moveSync(pathToResult, finalPathToResult,{overwrite: true});
-                                    } catch {
-                                        console.log(chalk.red("cos nie tak z przenoszeniem plikow"))
-                                    }
-                                    
+                //i jeżeli nie ma errorów
+                if (!task.error) {
 
-                                    //tutaj konwertuje plik ctm na format jsona aby dal sie czytac przez audio edytor
-                                    //z czegos takiego
-                                    //input 1 0.680 2.060 speech
-                                    //input 1 2.740 3.230 speech
-                                    //robimy
-                                    // segments: [{
-                                    //     startTime: 1,
-                                    //     endTime: 3,
-                                    //     editable: true,
-                                    //     color: "#ff0000",
-                                    //     labelText: "My label"
-                                    //   },
-                                    //   {
-                                    //     startTime: 5,
-                                    //     endTime: 6,
-                                    //     editable: true,
-                                    //     color: "#00ff00",
-                                    //     labelText: "My Second label"
-                                    //   }],
+                    const inputFilePath = task.input;
+                    const resultFile = task.result;
 
-                                    //każdy segment jest w osobnej linii
+                    // tworze z pliku wynikowego txt odpowiedniego JSONA - na przyszłość
+                    const pathToResult = appRoot + '/repo/' + resultFile;
 
-                                    let segments = [];
+                    //zapisuje wynik VAD w katalogu containera
+                    const finalPathToResult = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerFolderName + '/' + containerFolderName + '_VAD.ctm';
+    
+                    //przenosze plik z wynikami do katalogu kontenera
+                    try{
+                        fs.moveSync(pathToResult, finalPathToResult,{overwrite: true});
+                    } catch {
+                        clearInterval(checkerdb);
+                        const err = new Error('Coś poszło nie tak z przenoszeniem plików')
+                        reject(err);
+                    }
 
-                                    var vadSegment = fs.readFileSync(finalPathToResult).toString().split("\n");
+                    let segments = [];
+                    var vadSegment = fs.readFileSync(finalPathToResult).toString().split("\n");
 
-                                    //iteruje po segmentach
-                                    for(i in vadSegment) {
-                                        const line = vadSegment[i];
-                                        //input 1 0.680 2.060 speech
+                    //iteruje po segmentach
+                    for(i in vadSegment) {
+                        const line = vadSegment[i];
+                        //input 1 0.680 2.060 speech
 
-                                        //dziele wg spacji
-                                        const info = line.split(" ");
-                                        if(info.length > 4){
+                        //dziele wg spacji
+                        const info = line.split(" ");
+                        if(info.length > 4){
 
-                                            const co = info[0];
-                                            const kto = info[1];
-                                            const start = info[2];
-                                            const dlugosc = info[3];
-                                            const rodzaj = info[4];
+                            const co = info[0];
+                            const kto = info[1];
+                            const start = info[2];
+                            const dlugosc = info[3];
+                            const rodzaj = info[4];
 
-                                            const segment = {
-                                                startTime: Number(parseFloat(start).toFixed(2)),
-                                                endTime: Number((Number(parseFloat(start)) + Number(parseFloat(dlugosc))).toFixed(2)),
-                                                editable: true,
-                                                color: '#394b55',
-                                                labelText: rodzaj,
-                                            }
-
-                                            segments.push(segment);
-
-                                        }
-                                    }
-
-
-                                    // zapisuje plik jako json
-                                    let gdziedot = finalPathToResult.lastIndexOf('.');
-                                    let finalPathToResultJSON = finalPathToResult.substring(0,gdziedot) + '.json';
-
-                                    //UWAGA!!  te dane wpisuje w baze danych w konener!!
-                                    fs.writeJsonSync(finalPathToResultJSON, segments);
-
-                                    //convertuje na textGrid
-                                    emu.ctmVAD2tg(container)
-                                    .then(()=>{
-                                        //jeżeli wszystko przebiegło pomyślnie
-                                        Container.findOneAndUpdate({_id: container._id},{ifVAD: true, VADUserSegments: segments, statusVAD: 'done',errorMessage:''})
-                                        .then(updatedContainer => {
-                                                    //teraz usuwam z dysku plik  log
-                                                    fs.removeSync(pathToResult+'_log.txt');
-                                                    //i usuwam tymczasowy plik txt
-                                                    fs.removeSync(pathToResult);
-                                                    resolve(segments)
-                                        })
-                                        .catch(error => {
-                                            console.error(chalk.red(error.message))
-                                            clearInterval(checkerdb);
-                                            reject(error)
-                                        })
-                                     })
-                                    .catch(()=>{
-
-                                        //jeżeli był jakiś problem to
-                                        Container.findOneAndUpdate({_id: container._id},{ifVAD: false, VADUserSegments: segments, statusVAD: 'error',errorMessage:'Coś nie tak z konwersją CTM na TextGrid'})
-                                        .then(updatedContainer => {
-                                                    //teraz usuwam z dysku plik  log
-                                                    fs.removeSync(pathToResult+'_log.txt');
-                                                    //i usuwam tymczasowy plik txt
-                                                    fs.removeSync(pathToResult);
-
-                                                    clearInterval(checkerdb);
-
-                                                    const error = new Error('Coś nie tak z konwersją CTM na TextGrid');
-                                                    reject(error)
-                                        })
-                                        .catch(error => {
-                                            console.error(chalk.red(error.message))
-                                            clearInterval(checkerdb);
-                                            reject(error)
-                                        })
-                                        
-                                        const error = new Error('Coś nie tak z konwersją CTM na TextGrid');
-                                        reject(error)
-                                    }) 
-                                    
-                                } else {
-                                    
-                                    const error = new Error('Task zakończył działanie ale zawiera błędy');
-                                    clearInterval(checkerdb);
-                                    reject(error)
-                                }
-
-                                clearInterval(checkerdb);
-                               
+                            const segment = {
+                                startTime: Number(parseFloat(start).toFixed(2)),
+                                endTime: Number((Number(parseFloat(start)) + Number(parseFloat(dlugosc))).toFixed(2)),
+                                editable: true,
+                                color: '#394b55',
+                                labelText: rodzaj,
                             }
-                        })
-                        .catch(error=>{
-                            clearInterval(checkerdb);
-                            reject(error)
-                        })
-                },1000);
-                
-                
-               //jak nie ma odpowiedzi w ciagu 2h to zatrzymuje task
-                setTimeout(() => {
-                    clearInterval(checkerdb);
-                }, 7200000);
-               
 
-            }).catch(error => {
-                reject(error)
-            })
+                            segments.push(segment);
+
+                        }
+                    }
+
+                    // zapisuje plik jako json
+                    let gdziedot = finalPathToResult.lastIndexOf('.');
+                    let finalPathToResultJSON = finalPathToResult.substring(0,gdziedot) + '.json';
+
+                    //UWAGA!!  te dane wpisuje w baze danych w konener!!
+                    fs.writeJsonSync(finalPathToResultJSON, segments);
+
+                    try{
+                        const ctmres = await emu.ctmVAD2tg(container);
+                        const updatedContainer = await Container.findOneAndUpdate(
+                            {_id: container._id},
+                            {ifVAD: true, VADUserSegments: segments, statusVAD: 'done',errorMessage:''},
+                            {new: true}
+                            );
+
+                        //teraz usuwam z dysku plik  log
+                        fs.removeSync(pathToResult+'_log.txt');
+                        //i usuwam tymczasowy plik txt
+                        fs.removeSync(pathToResult);
+                        clearInterval(checkerdb);
+                        resolve(segments);
+                    } catch (err){
+                        const updatedContainer = await Container.findOneAndUpdate(
+                            {_id: container._id},
+                            {ifVAD: false, VADUserSegments: segments, statusVAD: 'error',errorMessage:err.message},
+                            {new: true}
+                            );
+
+                        //teraz usuwam z dysku plik  log
+                        fs.removeSync(pathToResult+'_log.txt');
+                        //i usuwam tymczasowy plik txt
+                        fs.removeSync(pathToResult);
+
+                        clearInterval(checkerdb);
+                        reject(err);
+                    }
+                    
+                } else {
+                    clearInterval(checkerdb);
+                    const err = new Error('Task zwrócił błąd')
+                    reject(err);
+                }
+            }
+        }, 1000);
+
+        //jak nie ma odpowiedzi w ciagu 2h to zatrzymuje task
+        setTimeout(() => {
+            clearInterval(checkerdb);
+        }, 7200000);
+        
     })
 }
 
