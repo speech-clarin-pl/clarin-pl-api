@@ -14,7 +14,7 @@ router.put('/registration',[
             //sprawdzam czy juz istnieje w bazie
             return User.findOne({email: value}).then(userDoc => {
                 if(userDoc){
-                    return Promise.reject('Email address already exists!');
+                    return Promise.reject('Ten email już istnieje!');
                 }
             })
         }),

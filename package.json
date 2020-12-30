@@ -9,7 +9,8 @@
     "debug": "sudo node app.js"
   },
   "jest": {
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "testTimeout": 720000000
   },
   "repository": {
     "type": "git",

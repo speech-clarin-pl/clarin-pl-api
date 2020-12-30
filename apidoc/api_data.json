@@ -244,20 +244,13 @@
             "optional": false,
             "field": "toolType",
             "description": "<p>zawiera flage &quot;REC&quot;</p>"
-          },
-          {
-            "group": "Success 200",
-            "type": "String",
-            "optional": false,
-            "field": "EMUlink",
-            "description": "<p>zawiera link do podglądu segmentacji w aplikacji EMU</p>"
           }
         ]
       },
       "examples": [
         {
           "title": "Success-Response:",
-          "content": "HTTP/1.1 200 OK\n{\n  \"message\": 'Segmentacja została wykonana pomyślnie',\n  \"containerId\": \"5f58a92dfa006c8aed96f846\",\n  \"toolType\": \"SEG\",\n  \"EMUlink\": \"https://ips-lmu.github.io/EMU-webApp/?audioGetUrl=TODO\"\n}",
+          "content": "HTTP/1.1 200 OK\n{\n  \"message\": 'Segmentacja została wykonana pomyślnie',\n  \"containerId\": \"5f58a92dfa006c8aed96f846\",\n  \"toolType\": \"SEG\",\n}",
           "type": "json"
         }
       ]
@@ -385,7 +378,7 @@
     "groupTitle": "Narzędzia"
   },
   {
-    "type": "put",
+    "type": "post",
     "url": "/repoFiles/createNewSession",
     "title": "Tworzenie sesji",
     "description": "<p>Tworzy nową sesje (folder) w istniejącym projekcie</p>",
@@ -453,7 +446,7 @@
       "examples": [
         {
           "title": "Success-Response:",
-          "content": "HTTP/1.1 200 OK\n{\n  \"message\": 'Nowa sesja została utworzona!',\n  \"sessionName\": \"Nowa sesja\",\n  \"id\": \"5f58a92dfa006c8aed96f846\",\n}",
+          "content": "HTTP/1.1 201 OK\n{\n  \"message\": 'Nowa sesja została utworzona!',\n  \"sessionName\": \"Nowa sesja\",\n  \"id\": \"5f58a92dfa006c8aed96f846\",\n}",
           "type": "json"
         }
       ]
@@ -630,7 +623,7 @@
     "type": "post",
     "url": "/projectsList/addProject",
     "title": "Tworzenie Projektu",
-    "description": "<p>Tworzenie nowego projektu na potrzeby budowy nowego korpusu. Pliki w projekcie zorganizowane są w sesje. Podczas tworzenia projektu, tworzona jest domyślna sesja demo którą można usunąć.</p>",
+    "description": "<p>Tworzenie nowego projektu na potrzeby budowy nowego korpusu. Pliki w projekcie zorganizowane są w sesje. Podczas tworzenia projektu, tworzona jest domyślna sesja oraz sesja demo z przykładowymi plikami.</p>",
     "name": "CreateProject",
     "group": "Pliki",
     "parameter": {
@@ -681,7 +674,7 @@
       "examples": [
         {
           "title": "Success-Response:",
-          "content": "HTTP/1.1 201 OK\n{\n  \"message\": 'Projekt został utworzony!',\n  \"project\": { accessToRead: [],\n                    accessToEdit: [],\n                    sessionIds: [],\n                    _id: 5fe99be5d831b7c009e36fbb,\n                    name: 'sampleProject',\n                    owner: 5fe39a36daa13f1fa38e1e06,\n                    projectCreated: 'December 28th 2020, 9:48:37 am',\n                    createdAt: 2020-12-28T08:48:37.558Z,\n                    updatedAt: 2020-12-28T08:48:37.558Z,\n                    __v: 0 }\n}",
+          "content": "HTTP/1.1 201 OK\n{\n  \"message\": 'Projekt został utworzony!',\n  \"project\": { accessToRead: [],\n                    accessToEdit: [],\n                    sessionIds: [\"5fec2f1082a28b3663a90845\", \"5fec2f1082a28b3663a90846\"],\n                    _id: 5fe99be5d831b7c009e36fbb,\n                    name: 'sampleProject',\n                    owner: 5fe39a36daa13f1fa38e1e06,\n                    projectCreated: 'December 28th 2020, 9:48:37 am',\n                    createdAt: 2020-12-28T08:48:37.558Z,\n                    updatedAt: 2020-12-28T08:48:37.558Z,\n                    __v: 0 }\n}",
           "type": "json"
         }
       ]
@@ -1025,7 +1018,7 @@
   },
   {
     "type": "get",
-    "url": "/repoFiles/:projectId",
+    "url": "/repoFiles/getProjectAssets/:projectId",
     "title": "Zawartość projektu",
     "description": "<p>Zapytanie zwraca zawartość danego projektu w postaci listy sesji oraz kontenerów</p>",
     "name": "GETrepoassets",
@@ -1272,7 +1265,7 @@
       "examples": [
         {
           "title": "Success-Response:",
-          "content": "HTTP/1.1 200 OK\n{\n  \"message\": 'Wgranie pliku zakończone powodzeniem!',\n  \"sessionId\": \"5f58a92dfa006c8aed96f846\",\n  \"oryginalName\": \"sampleAudio.mp3\"\n  \"containerId\": \"5f58a92dfa006c8aed96f847\",\n}",
+          "content": "HTTP/1.1 201 Created\n{\n  \"message\": 'Wgranie pliku zakończone powodzeniem!',\n  \"sessionId\": \"5f58a92dfa006c8aed96f846\",\n  \"oryginalName\": \"sampleAudio.mp3\"\n  \"containerId\": \"5f58a92dfa006c8aed96f847\",\n}",
           "type": "json"
         }
       ]

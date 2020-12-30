@@ -194,7 +194,14 @@ exports.forgotPass = (req,res,next) => {
 exports.registration = (req, res, next) => {
     const errors = validationResult(req);
     if(!errors.isEmpty()){
-        const error = new Error('Błąd walidacji');
+
+        //zbieram informacje o błędzie
+        let message = '';
+        errors.array().forEach(element => {
+            message = message + element.msg + "\n";
+        })
+        
+        const error = new Error(message);
         error.statusCode = 422;
         error.data = errors.array();
         throw error;

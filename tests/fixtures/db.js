@@ -10,7 +10,7 @@ const userOneId = new mongoose.Types.ObjectId();
 const userOne = {
     _id: userOneId,
     name: 'Mario',
-    email: 'kontakt@domain.com',
+    email: 'mklec@pjwstk.edu.pl',
     password: '$2a$12$ERIipjT2XZZmV28z.ahdMO9Dw2WwNH/JeuWsa44fwVQTZ3b6ttdbK',
 }
 

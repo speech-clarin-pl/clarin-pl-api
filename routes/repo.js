@@ -17,8 +17,8 @@ const isAuth = require('../middleware/is-auth');
 //POST /repoFiles/uploadFile  - wysyłam pojedynczy plik
 router.post('/uploadFile', isAuth, repoController.uploadFile);
 
-//PUT /repoFiles/createNewSession  - tworze nową sesję
-router.put('/createNewSession', isAuth, repoController.createNewSession);
+//POST /repoFiles/createNewSession  - tworze nową sesję
+router.post('/createNewSession', isAuth, repoController.createNewSession);
 
 //PUT /repoFiles/changeContainerName/:containerId
 router.put('/changeContainerName/:containerId', isAuth, repoController.changeContainerName);

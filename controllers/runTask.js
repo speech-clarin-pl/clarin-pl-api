@@ -543,11 +543,10 @@ exports.runSEG = (container) => {
                                                 //i usuwam tymczasowy plik txt
                                                 fs.removeSync(TXTFilePath);
 
-                                                //console.log(chalk.green("ZROBIONE :)"))
-
+                                               
                                                 let returnData = {
                                                     updatedContainer: updatedContainer,
-                                                    EMUlink: "https://ips-lmu.github.io/EMU-webApp/?audioGetUrl=TODO",
+                                                    //EMUlink: "https://ips-lmu.github.io/EMU-webApp/?audioGetUrl=TODO",
                                                 };
 
                                                 resolve(returnData)
@@ -719,7 +718,6 @@ exports.runREC = (container) => {
             })
     })
 }
-
 
 
 

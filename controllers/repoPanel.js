@@ -493,7 +493,6 @@ exports.runSpeechDiarization = (req, res, next) => {
  * @apiSuccess {String} message informacja o zakończeniu działania
  * @apiSuccess {String} containerId  Identyfikator kontenera
  * @apiSuccess {String} toolType  zawiera flage "REC"
- * @apiSuccess {String} EMUlink  zawiera link do podglądu segmentacji w aplikacji EMU
  * 
  *
  * @apiSuccessExample Success-Response:
@@ -502,7 +501,6 @@ exports.runSpeechDiarization = (req, res, next) => {
  *       "message": 'Segmentacja została wykonana pomyślnie',
  *       "containerId": "5f58a92dfa006c8aed96f846",
  *       "toolType": "SEG",
- *       "EMUlink": "https://ips-lmu.github.io/EMU-webApp/?audioGetUrl=TODO"
  *     }
  *
  * @apiError (503) ServiceUnavailable Gdy coś pójdzie nie tak z usługą segmentacji
@@ -523,7 +521,7 @@ exports.runSpeechSegmentation = (req, res, next) => {
 
 
         console.log(chalk.green("Zakończono Segmentacje dla: " + containerId));
-        res.status(200).json({ message: 'Segmentacja została wykonana pomyślnie', containerId: updatedContainer._id, toolType: "SEG", EMUlink: EMUlink});
+        res.status(200).json({ message: 'Segmentacja została wykonana pomyślnie', containerId: updatedContainer._id, toolType: "SEG"});
       }).catch(error => {
         console.log(chalk.red('TASK ERROR'));
         console.log(chalk.red(error.message))
@@ -936,7 +934,7 @@ exports.removeContainer = (req,res,next) => {
  * @apiSuccess {String} oryginalName  nazwa wgranego pliku
  * 
  * @apiSuccessExample Success-Response:
- *     HTTP/1.1 200 OK
+ *     HTTP/1.1 201 Created
  *     {
  *       "message": 'Wgranie pliku zakończone powodzeniem!',
  *       "sessionId": "5f58a92dfa006c8aed96f846",
@@ -1002,8 +1000,10 @@ exports.uploadFile = async (req, res, next) => {
                 .setAudioChannels(1)
                 .setAudioBitRate(256);
 
+          audio.addCommand('-loglevel', 'repeat+level+warning');
           audio.addCommand('-y', '');
           audio.addCommand('-sample_fmt', 's16');
+          
 
           //teraz robie konwersje na WAV i usuwam sufix _temp w docelowym pliku
           // musze tak robic bo zapisywanie w miejscu nie dziala przy dlugich plikach....
@@ -1051,7 +1051,7 @@ exports.uploadFile = async (req, res, next) => {
                   const shellcomm = 'audiowaveform -i '+fillCorrectAudioPath+' -o '+fillCorrectDATPath+' -z 32 -b 8 --input-format ' + ext;
 
                   //obliczam z pliku audio podgląd dat
-                  if (shell.exec(shellcomm).code !== 0) {
+                  if (shell.exec(shellcomm,{silent: true}).code !== 0) {
                     shell.echo('Error: Problem with extracting dat for audio file');
                     console.log(chalk.red('Error: Problem with extracting dat for audio file'));
                     //shell.exit(1);
@@ -1063,7 +1063,7 @@ exports.uploadFile = async (req, res, next) => {
                       //updating the reference in given session
                       Session.findOneAndUpdate({_id: sessionId},{$push: {containersIds: createdContainer._id }})
                         .then(updatedSession => {
-                          res.status(200).json({ message: 'Wgranie pliku zakończone powodzeniem!', sessionId: sessionId, oryginalName: oryginalFileName, containerId: createdContainer._id})
+                          res.status(201).json({ message: 'Wgranie pliku zakończone powodzeniem!', sessionId: sessionId, oryginalName: oryginalFileName, containerId: createdContainer._id})
                         })
                     })
                     .catch(error => {
@@ -1176,7 +1176,7 @@ exports.createNewSessionHandler = (sesName, projId) => {
         }).catch(error=>{
           throw error;
         }) 
-      }).then((sessionId)=>{
+      }).then(()=>{
         resolve(sessionId);
       }).catch(error=>{
         error.statusCode = error.statusCode || 500;
@@ -1187,7 +1187,7 @@ exports.createNewSessionHandler = (sesName, projId) => {
 
 
 /**
- * @api {put} /repoFiles/createNewSession  Tworzenie sesji
+ * @api {post} /repoFiles/createNewSession  Tworzenie sesji
  * @apiDescription Tworzy nową sesje (folder) w istniejącym projekcie
  * @apiName CREATESession
  * @apiGroup Pliki
@@ -1201,7 +1201,7 @@ exports.createNewSessionHandler = (sesName, projId) => {
  * @apiSuccess {String} id  ID nowo stworzonej sesji
  * 
  * @apiSuccessExample Success-Response:
- *     HTTP/1.1 200 OK
+ *     HTTP/1.1 201 OK
  *     {
  *       "message": 'Nowa sesja została utworzona!',
  *       "sessionName": "Nowa sesja",
@@ -1217,7 +1217,7 @@ exports.createNewSession = (req, res, next) => {
     const projectId = req.body.projectId;
 
     this.createNewSessionHandler(sessionName, projectId).then(newSessionId=>{
-      res.status(200).json({ message: 'Nowa sesja została utworzona!', sessionName: sessionName, id: newSessionId});
+      res.status(201).json({ message: 'Nowa sesja została utworzona!', sessionName: sessionName, id: newSessionId});
     }).catch(error=>{
       error.statusCode = error.statusCode || 500;
       next(error);
@@ -1226,7 +1226,7 @@ exports.createNewSession = (req, res, next) => {
 
 
 /**
- * @api {get} /repoFiles/:projectId Zawartość projektu
+ * @api {get} /repoFiles/getProjectAssets/:projectId Zawartość projektu
  * @apiDescription Zapytanie zwraca zawartość danego projektu w postaci listy sesji oraz kontenerów
  * @apiName GETrepoassets
  * @apiGroup Pliki

@@ -312,7 +312,7 @@ createDemoFiles = (ownerId, projectId, sessionId) => {
 
 
 
-exports.createProjectHandler = (projectName, ownerID, ifDefaultSession = false) => {
+exports.createProjectHandler = (projectName, ownerID, ifDefaultSession = true) => {
     const reqProjectName = projectName;
 
     return new Promise((resolve, reject) => {
@@ -390,13 +390,15 @@ exports.createProjectHandler = (projectName, ownerID, ifDefaultSession = false) 
             .then(createdDefaultSession => {
                 if(ifDefaultSession){
                     //odnajduje projet w DB i dodaje id tej sesji do niego
-                    return ProjectEntry.findByIdAndUpdate(projectEntry._id,{$push: {sessionIds: [demoSession._id, defaultSession._id]}});
+                    return ProjectEntry.findByIdAndUpdate(projectEntry._id,{$push: {sessionIds: [demoSession._id, defaultSession._id]}},{new: true});
                 } else {
                     //odnajduje projet w DB i dodaje id tej sesji do niego
-                    return ProjectEntry.findByIdAndUpdate(projectEntry._id,{$push: {sessionIds: demoSession._id}});
+                    return ProjectEntry.findByIdAndUpdate(projectEntry._id,{$push: {sessionIds: demoSession._id}},{new: true});
                 }
             })
             .then(updatedProject => {
+
+                projectEntry = updatedProject;
                  //tworze folder z demo na dysku dla tej sesji
                  pathToDemoSession = dirpath + '/' + demoSession._id;
                  try {
@@ -450,7 +452,7 @@ exports.createProjectHandler = (projectName, ownerID, ifDefaultSession = false) 
 
 /**
  * @api {post} /projectsList/addProject Tworzenie Projektu
- * @apiDescription Tworzenie nowego projektu na potrzeby budowy nowego korpusu. Pliki w projekcie zorganizowane są w sesje. Podczas tworzenia projektu, tworzona jest domyślna sesja demo którą można usunąć.
+ * @apiDescription Tworzenie nowego projektu na potrzeby budowy nowego korpusu. Pliki w projekcie zorganizowane są w sesje. Podczas tworzenia projektu, tworzona jest domyślna sesja oraz sesja demo z przykładowymi plikami.
  * @apiName CreateProject
  * @apiGroup Pliki
  *
@@ -466,7 +468,7 @@ exports.createProjectHandler = (projectName, ownerID, ifDefaultSession = false) 
  *       "message": 'Projekt został utworzony!',
  *       "project": { accessToRead: [],
  *                         accessToEdit: [],
- *                         sessionIds: [],
+ *                         sessionIds: ["5fec2f1082a28b3663a90845", "5fec2f1082a28b3663a90846"],
  *                         _id: 5fe99be5d831b7c009e36fbb,
  *                         name: 'sampleProject',
  *                         owner: 5fe39a36daa13f1fa38e1e06,
@@ -495,7 +497,7 @@ exports.createProject = (req, res, next) => {
         const error = validationResult(req);
         if(!error.isEmpty()){
             console.log(chalk.red(error.array()))
-            const errortothrow = new Error('Validation failed');
+            const errortothrow = new Error('Błąd walidacji');
             errortothrow.statusCode = 422;
             throw errortothrow;
         }
