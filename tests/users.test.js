@@ -94,7 +94,7 @@ test('Nie powinien zalogować gdy błędne hasło oraz nie powinien zwracać tok
     expect(response.body.token).toBeUndefined();
 })
 
-/*
+
 test('Powinien wysłać mail z linkiem do zresetowania hasła', async () => {
     const response = await request(app).post('/auth/forgotPass').send({
         email: userOne.email,
@@ -106,7 +106,7 @@ test('NIE powinien maila z linkiem do resetu hasła jeżeli email jest błędny'
         email: userOne.email + "blad",
     }).expect(401);
 })
-*/
+
 
 //##############################################################
 //##############################################################
@@ -187,7 +187,7 @@ test('Powinen wgrać testowe pliki w różnych formatach do repozytoriu gdy uży
         .attach('myFile','tests/fixtures/celnik_mp3_160kbps_cbr.mp3')
         .expect(201);
 
-        /*
+      
     const res_dlugie_MP3_160kbpm_cbr = await request(app)
         .post('/repoFiles/uploadFile')
         .set('Authorization', `Bearer ${token}`)
@@ -204,7 +204,7 @@ test('Powinen wgrać testowe pliki w różnych formatach do repozytoriu gdy uży
         .attach('myFile','tests/fixtures/kleska_MP3_64kbps_cbr.mp3')
         .expect(201);
 
-        */
+      
 
 
     const res_mowa = await request(app)
@@ -214,7 +214,7 @@ test('Powinen wgrać testowe pliki w różnych formatach do repozytoriu gdy uży
         .field('sessionId',newSession._id+"")
         .attach('myFile','tests/fixtures/mowa.wav')
         .expect(201);
-    /*
+   
     const res_opowiesci_MP3_vbr = await request(app)
         .post('/repoFiles/uploadFile')
         .set('Authorization', `Bearer ${token}`)
@@ -231,13 +231,13 @@ test('Powinen wgrać testowe pliki w różnych formatach do repozytoriu gdy uży
         .attach('myFile','tests/fixtures/senator_ogg.ogg')
         .expect(201);
 
-        */
+      
 
     newCon_celnik_mp3_160kbps_cbr = await Container.findById(res_celnik_mp3_160kbps_cbr.body.containerId);
     expect(newCon_celnik_mp3_160kbps_cbr).not.toBeNull();
     expect(newCon_celnik_mp3_160kbps_cbr).not.toBeUndefined();
 
-    /*
+   
 
     newCon_dlugie_MP3_160kbpm_cbr = await Container.findById(res_dlugie_MP3_160kbpm_cbr.body.containerId);
     expect(newCon_dlugie_MP3_160kbpm_cbr).not.toBeNull();
@@ -247,13 +247,13 @@ test('Powinen wgrać testowe pliki w różnych formatach do repozytoriu gdy uży
     expect(newCon_kleska_MP3_64kbps_cbr).not.toBeNull();
     expect(newCon_kleska_MP3_64kbps_cbr).not.toBeUndefined();
  
-    */
+    
 
     newCon_mowa = await Container.findById(res_mowa.body.containerId);
     expect(newCon_mowa).not.toBeNull();
     expect(newCon_mowa).not.toBeUndefined();
 
-    /*
+   
     newCon_opowiesci_MP3_vbr = await Container.findById(res_opowiesci_MP3_vbr.body.containerId);
     expect(newCon_opowiesci_MP3_vbr).not.toBeNull();
     expect(newCon_opowiesci_MP3_vbr).not.toBeUndefined();
@@ -261,7 +261,7 @@ test('Powinen wgrać testowe pliki w różnych formatach do repozytoriu gdy uży
     newCon_senator_ogg = await Container.findById(res_senator_ogg.body.containerId);
     expect(newCon_senator_ogg).not.toBeNull();
     expect(newCon_senator_ogg).not.toBeUndefined();
-    */
+    
 });
 
 
@@ -311,12 +311,6 @@ test('NIE Powinien zmienić nazwę kontenera dla nie zalogowanego użytkownika',
 //##############################################################
 //##############################################################
 
-//##############################################################
-// UWAGA: chwilowo zakomentowane ponieważ było testowane 
-// w POSTMANie. Jest jakiś problem z integracją jest z dockerem
-//##############################################################
-
-
 
 
 test('Powinien wykonać VAD nad każdym testowm kontenerze dla zalogowanego użytkownika', async () => {
@@ -326,7 +320,6 @@ test('Powinien wykonać VAD nad każdym testowm kontenerze dla zalogowanego uży
         .send({})
         .expect(200);
 
-        /*
 
     const res_dlugie_MP3_160kbpm_cbr = await request(app)
         .put('/repoFiles/runSpeechVAD/'+newCon_dlugie_MP3_160kbpm_cbr._id)
@@ -357,11 +350,10 @@ test('Powinien wykonać VAD nad każdym testowm kontenerze dla zalogowanego uży
         .set('Authorization', `Bearer ${token}`)
         .send({})
         .expect(200);
-        */
 
 },720000000);
 
-/*
+
 
 test('NIE Powinien wykonać VAD na kontenerze dla nie zalogowanego użytkownika', async () => {
     const res_celnik_mp3_160kbps_cbr = await request(app)
@@ -517,7 +509,7 @@ test('NIE Powinien wykonać SEG nad każdym testowm kontenerze dla nie zalogowan
 
 },720000000);
 
-*/
+
 
 
 //###############################################################################################
@@ -569,14 +561,6 @@ test('NIE powinien zwrócić zawartość projektu dla nie zalogowanego użytkown
         .expect(401);
 });
 
-/*
-let newCon_celnik_mp3_160kbps_cbr;
-let newCon_dlugie_MP3_160kbpm_cbr;
-let newCon_kleska_MP3_64kbps_cbr;
-let newCon_mowa;
-let newCon_opowiesci_MP3_vbr;
-let newCon_senator_ogg;
-*/
 
 test('Powininen zwrócić pliki wgrane przez zalogowanego użytkownika', async () => {
     const res_newCon_celnik_mp3_160kbps_cbr = await request(app)
@@ -771,7 +755,7 @@ test('Powininen zwrócić wynik działania narzędzi w formacie CTM przez zalogo
         .send()
         .expect(200);
 
-    const res_newCon_senator_ogg2 = await request(app)
+    const res_newCon_senator_ogg3 = await request(app)
         .get('/repoFiles/download/' + newCon_senator_ogg._id + '/SEGctm')
         .set('Authorization', `Bearer ${token}`)
         .send()
@@ -882,7 +866,7 @@ test('Powininen zwrócić wynik działania narzędzi w formacie TextGrid przez z
         .send()
         .expect(200);
 
-    const res_newCon_senator_ogg2 = await request(app)
+    const res_newCon_senator_ogg3 = await request(app)
         .get('/repoFiles/download/' + newCon_senator_ogg._id + '/SEGtextGrid')
         .set('Authorization', `Bearer ${token}`)
         .send()
@@ -993,7 +977,7 @@ test('Powininen zwrócić wynik działania narzędzi w formacie JSON przez zalog
         .send()
         .expect(200);
 
-    const res_newCon_senator_ogg2 = await request(app)
+    const res_newCon_senator_ogg3 = await request(app)
         .get('/repoFiles/download/' + newCon_senator_ogg._id + '/JSONTranscript')
         .set('Authorization', `Bearer ${token}`)
         .send()

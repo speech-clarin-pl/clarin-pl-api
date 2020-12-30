@@ -45,6 +45,7 @@ exports.runVAD = (container) => {
         checkerdb = setInterval( async () => {
 
             const task = await Task.findById(savedTask._id);
+
             if(block) console.log(chalk.green("Znalazłem VAD task i czekam aż się ukończy...."))
             block = false;
 
