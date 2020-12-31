@@ -367,19 +367,18 @@ exports.runDIA = (container) => {
 
 
 exports.runSEG = (container) => {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
 
         //container musi mieć najpierw wgraną transkrypcje
         if(container.ifREC == false){
 
             //aktualizuje flage w kontenrze
-            Container.findOneAndUpdate({_id: container._id},{ifSEG: true, statusSEG: 'error',errorMessage:'Musisz mieć najpier wykonane rozpoznawanie mowy aby użyć segmentacji'})
-            .then(updatedContainer => {
-                console.log(chalk.red("You have to have the transcription first before aligment."));
-            })
-            .catch(error => {
-                console.error(chalk.red(error.message));
-            })
+            try{
+                const updatedContainer = await Container.findOneAndUpdate({_id: container._id},
+                    {ifSEG: true, statusSEG: 'error',errorMessage:'Musisz mieć najpier wykonane rozpoznawanie mowy aby użyć segmentacji'})
+            } catch(error) {
+                reject(error);
+            }
 
             const error = new Error("Brak wgranej transkrypcji");
             reject(error);
@@ -395,7 +394,6 @@ exports.runSEG = (container) => {
         const containerFolderName = utils.getFileNameWithNoExt(audioFileName);  //np.lektor-fe2e3423 - na serwerze folder
 
         const pathToContainer = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerFolderName;
-    
         
         //to juz mam
          const JSONTransPath = pathToContainer + '/' + containerFolderName + '.json';
@@ -404,14 +402,8 @@ exports.runSEG = (container) => {
         const AudioFilePath = pathToContainer + '/' + audioFileName;
         
         // to musze stworzyc - tymczasowo aby obliczyc a pózniej usuwam... bo przetrzymuje dane w jsonie
-         const TXTFilePath = pathToContainer + '/' + containerFolderName + '.txt';
-
-        // musze stworzyć tymczasowo plik txt którego zawartość wyciągam z jsona
-        let txtContent = utils.convertJSONFileIntoTXT(JSONTransPath);
-
-        // zapisuje ten plik jako surowy txt aby docker mial do niego dostep
-        fs.writeFileSync(TXTFilePath, txtContent);
-
+         const TXTFilePath = pathToContainer + '/' + containerFolderName + '_TXT.txt';
+        
         // decyduje czy odpalic forcealign czy segmentalign w zaleznosci od dlugosci pliku
         // dla krotkich plików < 500kB uruchamiam forcealign, dla długich > 500kB uruchamiam segmentalign
         let inputAudioFileSize = fs.statSync(AudioFilePath).size;
@@ -442,116 +434,75 @@ exports.runSEG = (container) => {
         });
 
         // uruchamiam usługę z dockera
-        dockerTask.save()
-            .then(savedTask => {
-
-                //uruchamiam odpytywanie bazy co sekunde 
-                //console.log(chalk.green("waiting for SEGMENTATION to finish...."))
+        const savedTask = await dockerTask.save();
                 
-                let block = true;
+        let block = true;
                 
-                checkerdb = setInterval(function () {
-                    Task.findById(savedTask._id)
-                        .then(task=>{
+        checkerdb = setInterval(async () => {
 
-                            if(block) console.log(chalk.green("Znalazłem SEG task i czekam aż się ukończy...."))
-                            block = false;
-                            
-                            
-                            //jeżeli zmienił się jego status na ukończony
-                            if (task.done) {
-                                //console.log("TASK DONE")
-                                //i jeżeli nie ma errorów
-                                if (!task.error) {
+                const task = await Task.findById(savedTask._id);
+                if(block) console.log(chalk.green("Znalazłem SEG task i czekam aż się ukończy...."))
+                block = false;
+                                 
+                //jeżeli zmienił się jego status na ukończony
+                if (task.done) {
+                    //i jeżeli nie ma errorów
+                    if (!task.error) {
 
-                                    const resultFile = task.result;
-                                    const pathToResult = appRoot + '/repo/' + resultFile;
+                        const resultFile = task.result;
+                        const pathToResult = appRoot + '/repo/' + resultFile;
 
-                                    const pathToDestResult = pathToContainer + '/' + resultFile;
+                        const pathToDestResult = pathToContainer + '/' + resultFile;
 
-                                    //zapisuje wynik DIA w katalogu containera
-                                    const finalPathToResult = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerFolderName + '/' + containerFolderName + '_SEG.ctm';
-                    
-                                    //przenosze plik z wynikami do katalogu kontenera
-                                    fs.moveSync(pathToResult, finalPathToResult,{overwrite: true});
+                        //zapisuje wynik DIA w katalogu containera
+                        const finalPathToResult = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerFolderName + '/' + containerFolderName + '_SEG.ctm';
+        
+                        try{
+                            //przenosze plik z wynikami do katalogu kontenera
+                            fs.moveSync(pathToResult, finalPathToResult,{overwrite: true});
+                            //convertuje na textGrid
+                            await emu.ctmSEG2tg(container);
 
+                            const updatedContainer = await Container.findOneAndUpdate({_id: container._id},{ifSEG: true, statusSEG: 'done',errorMessage:''},{new:true});
+                            //teraz usuwam z dysku plik  log
+                            fs.removeSync(pathToResult+'_log.txt');
 
-                                    //convertuje na textGrid
-                                    emu.ctmSEG2tg(container)
-                                    .then(()=>{
-                                            //aktualizuje flage w kontenrze
-                                            Container.findOneAndUpdate({_id: container._id},{ifSEG: true, statusSEG: 'done',errorMessage:''})
-                                            .then(updatedContainer => {
-                                                //console.log("Zrobiłem update containera")
-                                                //console.log("Zabieram się za czyszczenie katalogu repo z pozostalosci")
+                            //i usuwam tymczasowy plik txt
+                            fs.removeSync(TXTFilePath);
 
-                                                //teraz usuwam z dysku plik  log
-                                                fs.removeSync(pathToResult+'_log.txt');
+                            let returnData = {
+                                updatedContainer: updatedContainer,
+                            };
 
-                                                //i usuwam tymczasowy plik txt
-                                                fs.removeSync(TXTFilePath);
+                            clearInterval(checkerdb);
+                            resolve(returnData)
 
-                                               
-                                                let returnData = {
-                                                    updatedContainer: updatedContainer,
-                                                    //EMUlink: "https://ips-lmu.github.io/EMU-webApp/?audioGetUrl=TODO",
-                                                };
+                        } catch (error){
 
-                                                resolve(returnData)
-                                                
-                                            })
-                                            .catch(error => {
-                                                console.log(chalk.red(error.message));
-                                                clearInterval(checkerdb);
-                                                reject(error)
-                                            })
-                                    })
-                                    .catch(()=>{
-
-                                        //aktualizuje flage w kontenrze
-                                        Container.findOneAndUpdate({_id: container._id},{ifSEG: true, statusSEG: 'error',errorMessage:'Coś poszło nie tak z konwersją CTM na TextGrid'})
-                                        .then(updatedContainer => {
-                                            //teraz usuwam z dysku plik  log
-                                            fs.removeSync(pathToResult+'_log.txt');
-                                            //i usuwam tymczasowy plik txt
-                                            fs.removeSync(TXTFilePath);
-                                            clearInterval(checkerdb);
-
-                                            const error = new Error("Coś poszło nie tak z konwersją CTM na TextGrid");
-                                            reject(error)
-                                        })
-                                        .catch(error => {
-                                            clearInterval(checkerdb);
-                                            reject(error)
-                                        })
-
-                                        clearInterval(checkerdb);
-                                        reject(error)
-                                    })
-                                } else {
-                                    const error = new Error(task.error);
-                                    clearInterval(checkerdb);
-                                    reject(error);
-                                }
-
-                                clearInterval(checkerdb);
-                            }
-                        })
-                        .catch(error=>{
+                            const updatedContainer = Container.findOneAndUpdate({_id: container._id},{ifSEG: true, statusSEG: 'error',errorMessage:'Coś poszło nie tak'},{new:true})
+                            console.log(chalk.red(error.message));
                             clearInterval(checkerdb);
                             reject(error)
-                        })
-                },1000);
-                
-                
-                //jak nie ma odpowiedzi w ciagu 2h to zatrzymuje task
-                setTimeout(() => {
+                        }
+
+                    } else {
+                        const error = new Error(task.error);
+                        clearInterval(checkerdb);
+                        reject(error);
+                    }
+
                     clearInterval(checkerdb);
-                }, 7200000);
+                }
+                        
+        },1000);
+                
+                
+        //jak nie ma odpowiedzi w ciagu 2h to zatrzymuje task
+        setTimeout(() => {
+            clearInterval(checkerdb);
+        }, 7200000);
                
-            }).catch(error => {
-                reject(error)
-            })
+           
     })
 }
 
@@ -559,7 +510,7 @@ exports.runSEG = (container) => {
 
 
 exports.runREC = (container) => {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
 
         const userId = container.owner;
         const projectId = container.project;
@@ -584,86 +535,80 @@ exports.runREC = (container) => {
         });
 
         // uruchamiam usługę z dockera
-        dockerTask.save()
-            .then(savedTask => {
+        const savedTask = await dockerTask.save();
+        let block = true;
 
-                let block = true;
-
-                //uruchamiam odpytywanie bazy co sekunde 
-                checkerdb = setInterval(function () {
-                    Task.findById(savedTask._id)
-                        .then(task=>{
-
-                            if(block) console.log(chalk.cyan("Znalazłem task REC w DB i czekam aż się ukończy...."));
-
-                            block = false;
-                            
-                            //jeżeli zmienił się jego status na ukończony
-                            if (task.done) {
-                                if (!task.error) {
-                                    const inputFilePath = task.input;
-                                    const resultFile = task.result;
-
-                                    // tworze z pliku wynikowego txt odpowiedniego JSONA - na przyszłość
-                                    const pathToResult = appRoot + '/repo/' + resultFile;
-                                    const JSONtranscription = utils.convertTxtFileIntoJSON(pathToResult);
-
-                                    //zapisuje tego JSONA w katalogu containera
-                                    const JSONTransPath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerFolderName + '/' + containerFolderName + '.json';
+        //uruchamiam odpytywanie bazy co sekunde 
+        checkerdb = setInterval(async () =>{
+            const task = await Task.findById(savedTask._id);
+            if(block) console.log(chalk.green("Znalazłem task REC w DB i czekam aż się ukończy...."));
+            block = false;
                     
-                                    fs.writeJson(JSONTransPath, JSONtranscription).then(() => {
-                                        //console.log("ZAPISAŁEM TRANSKRYPCJE W JSONIE")
-                                        //aktualizuje flage w kontenrze
-                                        Container.findOneAndUpdate({_id: container._id},{ifREC: true, statusREC: 'done',errorMessage:''})
-                                            .then(updatedContainer => {
-                                                //teraz przenosze plik txt do katalogu usera i usuwam logi
-                                                //fs.removeSync(pathToResult);
-                                                const TXTTransPath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerFolderName + '/' + containerFolderName + '_TXT.txt';
-                    
-                                                fs.renameSync(pathToResult, TXTTransPath);
+            //jeżeli zmienił się jego status na ukończony
+            if (task.done) {
+                if (!task.error) {
 
-                                                fs.removeSync(pathToResult+'_log.txt');
-                                                //console.log(chalk.green("ZROBIONY REC :)"))
-                                                resolve(updatedContainer)
-                                                
-                                            })
-                                            .catch(error => {
-                                                console.error(chalk.red(error.message))
-                                                clearInterval(checkerdb);
-                                                reject(error)
-                                            })
-                                    })
-                                    .catch(error => {
-                                        console.error(chalk.red(error))
-                                        clearInterval(checkerdb);
-                                        reject(error)
-                                    })
-                                       
-                                } else {
-                                    const error = new Error('Task REC został wykonany lecz zawiera błędy');
-                                    clearInterval(checkerdb);
-                                    reject(error)
-                                }
+                    try{
+                        const inputFilePath = task.input;
+                        const resultFile = task.result;
 
-                                clearInterval(checkerdb);
-                            }
-                        })
-                        .catch(error=>{
-                            clearInterval(checkerdb);
-                            reject(error)
-                        })
-                },1000);
-                
-                
-                //jak nie ma odpowiedzi w ciagu 2h to zatrzymuje task
-                setTimeout(() => {
+                        // tworze z pliku wynikowego txt odpowiedniego JSONA - na przyszłość
+                        const pathToResult = appRoot + '/repo/' + resultFile;
+                        const JSONtranscription = utils.convertTxtFileIntoJSON(pathToResult);
+
+                        //zapisuje tego JSONA w katalogu containera
+                        const JSONTransPath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerFolderName + '/' + containerFolderName + '.json';
+        
+                        await fs.writeJson(JSONTransPath, JSONtranscription);
+
+                            //aktualizuje flage w kontenrze
+                        const updatedContainer = await Container.findOneAndUpdate({_id: container._id},
+                            {ifREC: true, statusREC: 'done',errorMessage:''},{new:true});
+
+                        const TXTTransPath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerFolderName + '/' + containerFolderName + '_TXT.txt';
+
+                        // musze stworzyć tymczasowo plik txt którego zawartość wyciągam z jsona
+                        let txtContent = utils.convertJSONFileIntoTXT(JSONTransPath);
+
+                        console.log(chalk.bgRedBright(txtContent))
+
+                        // zapisuje ten plik jako surowy txt aby docker mial do niego dostep
+                        fs.writeFileSync(TXTTransPath, txtContent);
+
+                        //console.log(chalk.bgGreenBright(pathToResult))
+                        //console.log(chalk.bgGreenBright(TXTTransPath))
+                        //fs.renameSync(pathToResult, TXTTransPath);
+                        //fs.moveSync(pathToResult, TXTTransPath,{overwrite: true});
+                        //fs.copySync(pathToResult, TXTTransPath,{overwrite: true});
+                        
+                        fs.removeSync(pathToResult);
+                        fs.removeSync(pathToResult+'_log.txt');
+                        clearInterval(checkerdb);
+                        resolve(updatedContainer);
+
+                    } catch (error) {
+                        console.error(chalk.red(error.message))
+                        clearInterval(checkerdb);
+                        reject(error)
+                    }
+                        
+                } else {
+                    const error = new Error(task.error);
                     clearInterval(checkerdb);
-                }, 7200000);
-               
+                    reject(error)
+                }
 
-            }).catch(error => {
-                reject(error)
-            })
+                clearInterval(checkerdb);
+            }
+
+        },1000);
+        
+        
+        //jak nie ma odpowiedzi w ciagu 2h to zatrzymuje task
+        setTimeout(() => {
+            clearInterval(checkerdb);
+        }, 7200000);
+               
     })
 }
 

@@ -237,8 +237,6 @@ test('Powinen wgrać testowe pliki w różnych formatach do repozytoriu gdy uży
     expect(newCon_celnik_mp3_160kbps_cbr).not.toBeNull();
     expect(newCon_celnik_mp3_160kbps_cbr).not.toBeUndefined();
 
-   
-
     newCon_dlugie_MP3_160kbpm_cbr = await Container.findById(res_dlugie_MP3_160kbpm_cbr.body.containerId);
     expect(newCon_dlugie_MP3_160kbpm_cbr).not.toBeNull();
     expect(newCon_dlugie_MP3_160kbpm_cbr).not.toBeUndefined();
@@ -262,6 +260,19 @@ test('Powinen wgrać testowe pliki w różnych formatach do repozytoriu gdy uży
     expect(newCon_senator_ogg).not.toBeNull();
     expect(newCon_senator_ogg).not.toBeUndefined();
     
+});
+
+
+test('Nie Powinen pozwolić wgrywać plików gdy użytkownik nie jest zalogowany', async () => {
+
+    const res_celnik_mp3_160kbps_cbr = await request(app)
+        .post('/repoFiles/uploadFile')
+        //.set('Authorization', `Bearer ${token}`)
+        .field('projectId',newProject._id+"")
+        .field('sessionId',newSession._id+"")
+        .attach('myFile','tests/fixtures/celnik_mp3_160kbps_cbr.mp3')
+        .expect(401);
+
 });
 
 
@@ -320,12 +331,13 @@ test('Powinien wykonać VAD nad każdym testowm kontenerze dla zalogowanego uży
         .send({})
         .expect(200);
 
-
+    /*
     const res_dlugie_MP3_160kbpm_cbr = await request(app)
         .put('/repoFiles/runSpeechVAD/'+newCon_dlugie_MP3_160kbpm_cbr._id)
         .set('Authorization', `Bearer ${token}`)
         .send({})
         .expect(200);
+    */
 
     const res_kleska_MP3_64kbps_cbr = await request(app)
         .put('/repoFiles/runSpeechVAD/'+newCon_kleska_MP3_64kbps_cbr._id)
@@ -346,7 +358,7 @@ test('Powinien wykonać VAD nad każdym testowm kontenerze dla zalogowanego uży
         .expect(200);
 
     const res_senator_ogg= await request(app)
-        .put('/repoFiles/runSpeechVAD/'+newCon_opowiesci_MP3_vbr._id)
+        .put('/repoFiles/runSpeechVAD/'+newCon_senator_ogg._id)
         .set('Authorization', `Bearer ${token}`)
         .send({})
         .expect(200);
@@ -372,11 +384,14 @@ test('Powinien wykonać DIA nad każdym testowm kontenerze dla zalogowanego uży
         .send({})
         .expect(200);
 
+        /*
     const res_dlugie_MP3_160kbpm_cbr = await request(app)
         .put('/repoFiles/runSpeechDiarization/'+newCon_dlugie_MP3_160kbpm_cbr._id)
         .set('Authorization', `Bearer ${token}`)
         .send({})
         .expect(200);
+
+        */
 
     const res_kleska_MP3_64kbps_cbr = await request(app)
         .put('/repoFiles/runSpeechDiarization/'+newCon_kleska_MP3_64kbps_cbr._id)
@@ -397,7 +412,7 @@ test('Powinien wykonać DIA nad każdym testowm kontenerze dla zalogowanego uży
         .expect(200);
 
     const res_senator_ogg= await request(app)
-        .put('/repoFiles/runSpeechDiarization/'+newCon_opowiesci_MP3_vbr._id)
+        .put('/repoFiles/runSpeechDiarization/'+newCon_senator_ogg._id)
         .set('Authorization', `Bearer ${token}`)
         .send({})
         .expect(200);
@@ -415,37 +430,41 @@ test('NIE Powinien wykonać DIA na kontenerze dla nie zalogowanego użytkownika'
 
 test('Powinien wykonać REC nad każdym testowm kontenerze dla zalogowanego użytkownika', async () => {
     const res_celnik_mp3_160kbps_cbr = await request(app)
-        .put('/repoFiles/runSpeechDiarization/'+newCon_celnik_mp3_160kbps_cbr._id)
+        .put('/repoFiles/runSpeechRecognition/'+newCon_celnik_mp3_160kbps_cbr._id)
         .set('Authorization', `Bearer ${token}`)
         .send({})
         .expect(200);
+
+        /*
 
     const res_dlugie_MP3_160kbpm_cbr = await request(app)
-        .put('/repoFiles/runSpeechDiarization/'+newCon_dlugie_MP3_160kbpm_cbr._id)
+        .put('/repoFiles/runSpeechRecognition/'+newCon_dlugie_MP3_160kbpm_cbr._id)
         .set('Authorization', `Bearer ${token}`)
         .send({})
         .expect(200);
 
+        */
+
     const res_kleska_MP3_64kbps_cbr = await request(app)
-        .put('/repoFiles/runSpeechDiarization/'+newCon_kleska_MP3_64kbps_cbr._id)
+        .put('/repoFiles/runSpeechRecognition/'+newCon_kleska_MP3_64kbps_cbr._id)
         .set('Authorization', `Bearer ${token}`)
         .send({})
         .expect(200);
 
     const res_mowa = await request(app)
-        .put('/repoFiles/runSpeechDiarization/'+newCon_mowa._id)
+        .put('/repoFiles/runSpeechRecognition/'+newCon_mowa._id)
         .set('Authorization', `Bearer ${token}`)
         .send({})
         .expect(200);
 
     const res_opowiesci_MP3_vbr= await request(app)
-        .put('/repoFiles/runSpeechDiarization/'+newCon_opowiesci_MP3_vbr._id)
+        .put('/repoFiles/runSpeechRecognition/'+newCon_opowiesci_MP3_vbr._id)
         .set('Authorization', `Bearer ${token}`)
         .send({})
         .expect(200);
 
     const res_senator_ogg= await request(app)
-        .put('/repoFiles/runSpeechDiarization/'+newCon_opowiesci_MP3_vbr._id)
+        .put('/repoFiles/runSpeechRecognition/'+newCon_senator_ogg._id)
         .set('Authorization', `Bearer ${token}`)
         .send({})
         .expect(200);
@@ -454,7 +473,7 @@ test('Powinien wykonać REC nad każdym testowm kontenerze dla zalogowanego uży
 
 test('NIE Powinien wykonać REC na kontenerze dla nie zalogowanego użytkownika', async () => {
     const res_celnik_mp3_160kbps_cbr = await request(app)
-        .put('/repoFiles/runSpeechDiarization/'+newCon_celnik_mp3_160kbps_cbr._id)
+        .put('/repoFiles/runSpeechRecognition/'+newCon_celnik_mp3_160kbps_cbr._id)
         //.set('Authorization', `Bearer ${token}`)
         .send({})
         .expect(401);
@@ -462,17 +481,22 @@ test('NIE Powinien wykonać REC na kontenerze dla nie zalogowanego użytkownika'
 },720000000);
 
 test('Powinien wykonać SEG nad każdym testowm kontenerze dla zalogowanego użytkownika', async () => {
+
     const res_celnik_mp3_160kbps_cbr = await request(app)
         .put('/repoFiles/runSpeechSegmentation/'+newCon_celnik_mp3_160kbps_cbr._id)
         .set('Authorization', `Bearer ${token}`)
         .send({})
         .expect(200);
 
+    /*
     const res_dlugie_MP3_160kbpm_cbr = await request(app)
         .put('/repoFiles/runSpeechSegmentation/'+newCon_dlugie_MP3_160kbpm_cbr._id)
         .set('Authorization', `Bearer ${token}`)
         .send({})
         .expect(200);
+
+        */
+   
 
     const res_kleska_MP3_64kbps_cbr = await request(app)
         .put('/repoFiles/runSpeechSegmentation/'+newCon_kleska_MP3_64kbps_cbr._id)
@@ -480,23 +504,27 @@ test('Powinien wykonać SEG nad każdym testowm kontenerze dla zalogowanego uży
         .send({})
         .expect(200);
 
+       
     const res_mowa = await request(app)
         .put('/repoFiles/runSpeechSegmentation/'+newCon_mowa._id)
         .set('Authorization', `Bearer ${token}`)
         .send({})
         .expect(200);
 
+        
     const res_opowiesci_MP3_vbr= await request(app)
         .put('/repoFiles/runSpeechSegmentation/'+newCon_opowiesci_MP3_vbr._id)
         .set('Authorization', `Bearer ${token}`)
         .send({})
         .expect(200);
-
+ 
     const res_senator_ogg= await request(app)
-        .put('/repoFiles/runSpeechSegmentation/'+newCon_opowiesci_MP3_vbr._id)
+        .put('/repoFiles/runSpeechSegmentation/'+newCon_senator_ogg._id)
         .set('Authorization', `Bearer ${token}`)
         .send({})
         .expect(200);
+        
+      
 },720000000);
 
 
@@ -521,13 +549,11 @@ test('Powinine wygenerować korpus dla zalogowanego użytkownika i móc go ści�
     const result = await request(app)
         .get('/repoFiles/createCorpus/' + newProject._id)
         .set('Authorization', `Bearer ${token}`)
-        //.send()
         .expect(200);
 
     const result2 = await request(app)
         .get('/repoFiles/downloadCorpus/' + newProject._id)
         .set('Authorization', `Bearer ${token}`)
-        //.send()
         .expect(200);
 });
 
@@ -535,13 +561,11 @@ test('NIE Powininen wygenerować korpusu dla nie zalogowanego użytkownika', asy
     const result = await request(app)
         .get('/repoFiles/createCorpus/' + newProject._id)
         //.set('Authorization', `Bearer ${token}`)
-        //.send()
         .expect(401);
 
     const result2 = await request(app)
         .get('/repoFiles/downloadCorpus/' + newProject._id)
         //.set('Authorization', `Bearer ${token}`)
-        //.send()
         .expect(401);
 });
 
@@ -549,7 +573,6 @@ test('Powininen zwrócić zawartość projektu dla zalogowanego użytkownika', a
     const result = await request(app)
         .get('/repoFiles/getProjectAssets/' + newProject._id)
         .set('Authorization', `Bearer ${token}`)
-        //.send()
         .expect(200);
 });
 
@@ -557,53 +580,50 @@ test('NIE powinien zwrócić zawartość projektu dla nie zalogowanego użytkown
     const result = await request(app)
         .get('/repoFiles/getProjectAssets/' + newProject._id)
         //.set('Authorization', `Bearer ${token}`)
-        //.send()
         .expect(401);
 });
 
 
 test('Powininen zwrócić pliki wgrane przez zalogowanego użytkownika', async () => {
+
     const res_newCon_celnik_mp3_160kbps_cbr = await request(app)
         .get('/repoFiles/download/' + newCon_celnik_mp3_160kbps_cbr._id + '/oryginalAudio')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 
+        /*
     const res_newCon_dlugie_MP3_160kbpm_cbr = await request(app)
         .get('/repoFiles/download/' + newCon_dlugie_MP3_160kbpm_cbr._id + '/oryginalAudio')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
-
+*/
+/*
     const res_newCon_kleska_MP3_64kbps_cbr = await request(app)
         .get('/repoFiles/download/' + newCon_kleska_MP3_64kbps_cbr._id + '/oryginalAudio')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
     
     const res_newCon_mowa = await request(app)
         .get('/repoFiles/download/' + newCon_mowa._id + '/oryginalAudio')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
         
     const res_newCon_opowiesci_MP3_vbr = await request(app)
         .get('/repoFiles/download/' + newCon_opowiesci_MP3_vbr._id + '/oryginalAudio')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
+
     const res_newCon_senator_ogg = await request(app)
         .get('/repoFiles/download/' + newCon_senator_ogg._id + '/oryginalAudio')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
+*/
 });
 
 test('NIE Powininen zwrócać plików dla niezalogowanego użytkownika', async () => {
     const result = await request(app)
         .get('/repoFiles/download/' + newCon_celnik_mp3_160kbps_cbr._id + '/oryginalAudio')
         //.set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(401);
 });
 
@@ -611,36 +631,34 @@ test('Powininen zwrócić pliki przekonwerowane do 16000Hz 16bits przez zalogowa
     const res_newCon_celnik_mp3_160kbps_cbr = await request(app)
         .get('/repoFiles/download/' + newCon_celnik_mp3_160kbps_cbr._id + '/audio')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 
+        /*
     const res_newCon_dlugie_MP3_160kbpm_cbr = await request(app)
         .get('/repoFiles/download/' + newCon_dlugie_MP3_160kbpm_cbr._id + '/audio')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
+
+        */
+
 
     const res_newCon_kleska_MP3_64kbps_cbr = await request(app)
         .get('/repoFiles/download/' + newCon_kleska_MP3_64kbps_cbr._id + '/audio')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
     
     const res_newCon_mowa = await request(app)
         .get('/repoFiles/download/' + newCon_mowa._id + '/audio')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
         
     const res_newCon_opowiesci_MP3_vbr = await request(app)
         .get('/repoFiles/download/' + newCon_opowiesci_MP3_vbr._id + '/audio')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
     const res_newCon_senator_ogg = await request(app)
         .get('/repoFiles/download/' + newCon_senator_ogg._id + '/audio')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 });
 
@@ -648,7 +666,6 @@ test('NIE Powininen zwrócać plików przekonwertowanych do 16000Hz 16bits dla n
     const result = await request(app)
         .get('/repoFiles/download/' + newCon_celnik_mp3_160kbps_cbr._id + '/audio')
         //.set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(401);
 });
 
@@ -656,109 +673,94 @@ test('Powininen zwrócić wynik działania narzędzi w formacie CTM przez zalogo
     const res_newCon_celnik_mp3_160kbps_cbr1 = await request(app)
         .get('/repoFiles/download/' + newCon_celnik_mp3_160kbps_cbr._id + '/VADctm')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 
+    
     const res_newCon_celnik_mp3_160kbps_cbr2 = await request(app)
         .get('/repoFiles/download/' + newCon_celnik_mp3_160kbps_cbr._id + '/DIActm')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 
     const res_newCon_celnik_mp3_160kbps_cbr3 = await request(app)
         .get('/repoFiles/download/' + newCon_celnik_mp3_160kbps_cbr._id + '/SEGctm')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 
+      /*
     const res_newCon_dlugie_MP3_160kbpm_cbr1 = await request(app)
         .get('/repoFiles/download/' + newCon_dlugie_MP3_160kbpm_cbr._id + '/VADctm')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 
     const res_newCon_dlugie_MP3_160kbpm_cbr2 = await request(app)
         .get('/repoFiles/download/' + newCon_dlugie_MP3_160kbpm_cbr._id + '/DIActm')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
     
     const res_newCon_dlugie_MP3_160kbpm_cbr3 = await request(app)
         .get('/repoFiles/download/' + newCon_dlugie_MP3_160kbpm_cbr._id + '/SEGctm')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
+        */
 
     const res_newCon_kleska_MP3_64kbps_cbr1 = await request(app)
         .get('/repoFiles/download/' + newCon_kleska_MP3_64kbps_cbr._id + '/VADctm')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 
     const res_newCon_kleska_MP3_64kbps_cbr2 = await request(app)
         .get('/repoFiles/download/' + newCon_kleska_MP3_64kbps_cbr._id + '/DIActm')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 
     const res_newCon_kleska_MP3_64kbps_cbr3 = await request(app)
         .get('/repoFiles/download/' + newCon_kleska_MP3_64kbps_cbr._id + '/SEGctm')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
     
     const res_newCon_mowa1 = await request(app)
         .get('/repoFiles/download/' + newCon_mowa._id + '/VADctm')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 
     const res_newCon_mowa2 = await request(app)
         .get('/repoFiles/download/' + newCon_mowa._id + '/DIActm')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 
     const res_newCon_mowa3 = await request(app)
         .get('/repoFiles/download/' + newCon_mowa._id + '/SEGctm')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
         
     const res_newCon_opowiesci_MP3_vbr1 = await request(app)
         .get('/repoFiles/download/' + newCon_opowiesci_MP3_vbr._id + '/VADctm')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 
     const res_newCon_opowiesci_MP3_vbr2 = await request(app)
         .get('/repoFiles/download/' + newCon_opowiesci_MP3_vbr._id + '/DIActm')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 
     const res_newCon_opowiesci_MP3_vbr3 = await request(app)
         .get('/repoFiles/download/' + newCon_opowiesci_MP3_vbr._id + '/SEGctm')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 
     const res_newCon_senator_ogg1 = await request(app)
         .get('/repoFiles/download/' + newCon_senator_ogg._id + '/VADctm')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 
     const res_newCon_senator_ogg2 = await request(app)
         .get('/repoFiles/download/' + newCon_senator_ogg._id + '/DIActm')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 
     const res_newCon_senator_ogg3 = await request(app)
         .get('/repoFiles/download/' + newCon_senator_ogg._id + '/SEGctm')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 });
 
@@ -767,110 +769,96 @@ test('Powininen zwrócić wynik działania narzędzi w formacie TextGrid przez z
     const res_newCon_celnik_mp3_160kbps_cbr1 = await request(app)
         .get('/repoFiles/download/' + newCon_celnik_mp3_160kbps_cbr._id + '/VADtextGrid')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
-
+  
     const res_newCon_celnik_mp3_160kbps_cbr2 = await request(app)
         .get('/repoFiles/download/' + newCon_celnik_mp3_160kbps_cbr._id + '/DIAtextGrid')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 
     const res_newCon_celnik_mp3_160kbps_cbr3 = await request(app)
         .get('/repoFiles/download/' + newCon_celnik_mp3_160kbps_cbr._id + '/SEGtextGrid')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 
+  
+        /*
     const res_newCon_dlugie_MP3_160kbpm_cbr1 = await request(app)
         .get('/repoFiles/download/' + newCon_dlugie_MP3_160kbpm_cbr._id + '/VADtextGrid')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 
     const res_newCon_dlugie_MP3_160kbpm_cbr2 = await request(app)
         .get('/repoFiles/download/' + newCon_dlugie_MP3_160kbpm_cbr._id + '/DIAtextGrid')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
     
     const res_newCon_dlugie_MP3_160kbpm_cbr3 = await request(app)
         .get('/repoFiles/download/' + newCon_dlugie_MP3_160kbpm_cbr._id + '/SEGtextGrid')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
+        */
 
     const res_newCon_kleska_MP3_64kbps_cbr1 = await request(app)
         .get('/repoFiles/download/' + newCon_kleska_MP3_64kbps_cbr._id + '/VADtextGrid')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 
     const res_newCon_kleska_MP3_64kbps_cbr2 = await request(app)
         .get('/repoFiles/download/' + newCon_kleska_MP3_64kbps_cbr._id + '/DIAtextGrid')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 
     const res_newCon_kleska_MP3_64kbps_cbr3 = await request(app)
         .get('/repoFiles/download/' + newCon_kleska_MP3_64kbps_cbr._id + '/SEGtextGrid')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
     
     const res_newCon_mowa1 = await request(app)
         .get('/repoFiles/download/' + newCon_mowa._id + '/VADtextGrid')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 
     const res_newCon_mowa2 = await request(app)
         .get('/repoFiles/download/' + newCon_mowa._id + '/DIAtextGrid')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 
     const res_newCon_mowa3 = await request(app)
         .get('/repoFiles/download/' + newCon_mowa._id + '/SEGtextGrid')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
         
     const res_newCon_opowiesci_MP3_vbr1 = await request(app)
         .get('/repoFiles/download/' + newCon_opowiesci_MP3_vbr._id + '/VADtextGrid')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 
     const res_newCon_opowiesci_MP3_vbr2 = await request(app)
         .get('/repoFiles/download/' + newCon_opowiesci_MP3_vbr._id + '/DIAtextGrid')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 
     const res_newCon_opowiesci_MP3_vbr3 = await request(app)
         .get('/repoFiles/download/' + newCon_opowiesci_MP3_vbr._id + '/SEGtextGrid')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 
     const res_newCon_senator_ogg1 = await request(app)
         .get('/repoFiles/download/' + newCon_senator_ogg._id + '/VADtextGrid')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 
     const res_newCon_senator_ogg2 = await request(app)
         .get('/repoFiles/download/' + newCon_senator_ogg._id + '/DIAtextGrid')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 
     const res_newCon_senator_ogg3 = await request(app)
         .get('/repoFiles/download/' + newCon_senator_ogg._id + '/SEGtextGrid')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
+     
 });
 
 
@@ -878,151 +866,137 @@ test('Powininen zwrócić wynik działania narzędzi w formacie JSON przez zalog
     const res_newCon_celnik_mp3_160kbps_cbr1 = await request(app)
         .get('/repoFiles/download/' + newCon_celnik_mp3_160kbps_cbr._id + '/VADJSON')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 
     const res_newCon_celnik_mp3_160kbps_cbr2 = await request(app)
         .get('/repoFiles/download/' + newCon_celnik_mp3_160kbps_cbr._id + '/DIAJSON')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 
     const res_newCon_celnik_mp3_160kbps_cbr3 = await request(app)
         .get('/repoFiles/download/' + newCon_celnik_mp3_160kbps_cbr._id + '/JSONTranscript')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 
+       /*
     const res_newCon_dlugie_MP3_160kbpm_cbr1 = await request(app)
         .get('/repoFiles/download/' + newCon_dlugie_MP3_160kbpm_cbr._id + '/VADJSON')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 
     const res_newCon_dlugie_MP3_160kbpm_cbr2 = await request(app)
         .get('/repoFiles/download/' + newCon_dlugie_MP3_160kbpm_cbr._id + '/DIAJSON')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
     
     const res_newCon_dlugie_MP3_160kbpm_cbr3 = await request(app)
         .get('/repoFiles/download/' + newCon_dlugie_MP3_160kbpm_cbr._id + '/JSONTranscript')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
+        */
 
     const res_newCon_kleska_MP3_64kbps_cbr1 = await request(app)
         .get('/repoFiles/download/' + newCon_kleska_MP3_64kbps_cbr._id + '/VADJSON')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 
     const res_newCon_kleska_MP3_64kbps_cbr2 = await request(app)
         .get('/repoFiles/download/' + newCon_kleska_MP3_64kbps_cbr._id + '/DIAJSON')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 
     const res_newCon_kleska_MP3_64kbps_cbr3 = await request(app)
         .get('/repoFiles/download/' + newCon_kleska_MP3_64kbps_cbr._id + '/JSONTranscript')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
     
     const res_newCon_mowa1 = await request(app)
         .get('/repoFiles/download/' + newCon_mowa._id + '/VADJSON')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 
     const res_newCon_mowa2 = await request(app)
         .get('/repoFiles/download/' + newCon_mowa._id + '/DIAJSON')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 
     const res_newCon_mowa3 = await request(app)
         .get('/repoFiles/download/' + newCon_mowa._id + '/JSONTranscript')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
         
     const res_newCon_opowiesci_MP3_vbr1 = await request(app)
         .get('/repoFiles/download/' + newCon_opowiesci_MP3_vbr._id + '/VADJSON')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 
     const res_newCon_opowiesci_MP3_vbr2 = await request(app)
         .get('/repoFiles/download/' + newCon_opowiesci_MP3_vbr._id + '/DIAJSON')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 
     const res_newCon_opowiesci_MP3_vbr3 = await request(app)
         .get('/repoFiles/download/' + newCon_opowiesci_MP3_vbr._id + '/JSONTranscript')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 
     const res_newCon_senator_ogg1 = await request(app)
         .get('/repoFiles/download/' + newCon_senator_ogg._id + '/VADJSON')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 
     const res_newCon_senator_ogg2 = await request(app)
         .get('/repoFiles/download/' + newCon_senator_ogg._id + '/DIAJSON')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 
     const res_newCon_senator_ogg3 = await request(app)
         .get('/repoFiles/download/' + newCon_senator_ogg._id + '/JSONTranscript')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
+       
 });
 
 test('Powininen zwrócić wynik rozpoznawania mowy w formacie TXT przez zalogowanego użytkownika', async () => {
+
+    /*
     const res_newCon_celnik_mp3_160kbps_cbr1 = await request(app)
         .get('/repoFiles/download/' + newCon_celnik_mp3_160kbps_cbr._id + '/TXTTranscript')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 
+    
     const res_newCon_dlugie_MP3_160kbpm_cbr1 = await request(app)
         .get('/repoFiles/download/' + newCon_dlugie_MP3_160kbpm_cbr._id + '/TXTTranscript')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
+    */
 
-
+    
     const res_newCon_kleska_MP3_64kbps_cbr1 = await request(app)
         .get('/repoFiles/download/' + newCon_kleska_MP3_64kbps_cbr._id + '/TXTTranscript')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
+        /*
     
     const res_newCon_mowa1 = await request(app)
         .get('/repoFiles/download/' + newCon_mowa._id + '/TXTTranscript')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
         
     const res_newCon_opowiesci_MP3_vbr1 = await request(app)
         .get('/repoFiles/download/' + newCon_opowiesci_MP3_vbr._id + '/TXTTranscript')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
 
     const res_newCon_senator_ogg1 = await request(app)
         .get('/repoFiles/download/' + newCon_senator_ogg._id + '/TXTTranscript')
         .set('Authorization', `Bearer ${token}`)
-        .send()
         .expect(200);
+       */
 });
 
+/*
 test('Powinen wgrać wgrać własną transkrypcje w postaci pliku TXT dla zalogowanego użytkownika', async () => {
 
 
@@ -1031,26 +1005,27 @@ test('Powinen wgrać wgrać własną transkrypcje w postaci pliku TXT dla zalogo
         .set('Authorization', `Bearer ${token}`)
         .field('projectId',newProject._id+"")
         .field('sessionId',newSession._id+"")
-        .field('containerIdoptional',newCon_celnik_mp3_160kbps_cbr._id+"")
+        .field('containerId',newCon_celnik_mp3_160kbps_cbr._id+"")
         .attach('myFile','tests/fixtures/przykladowaTranskrypcja.txt')
         .expect(201);
 
-      
+    
     const res_dlugie_MP3_160kbpm_cbr = await request(app)
         .post('/repoFiles/uploadFile')
         .set('Authorization', `Bearer ${token}`)
         .field('projectId',newProject._id+"")
         .field('sessionId',newSession._id+"")
-        .field('containerIdoptional',newCon_dlugie_MP3_160kbpm_cbr._id+"")
+        .field('containerId',newCon_dlugie_MP3_160kbpm_cbr._id+"")
         .attach('myFile','tests/fixtures/przykladowaTranskrypcja.txt')
         .expect(201);
+     
 
     const res_kleska_MP3_64kbps_cbr = await request(app)
         .post('/repoFiles/uploadFile')
         .set('Authorization', `Bearer ${token}`)
         .field('projectId',newProject._id+"")
         .field('sessionId',newSession._id+"")
-        .field('containerIdoptional',newCon_kleska_MP3_64kbps_cbr._id+"")
+        .field('containerId',newCon_kleska_MP3_64kbps_cbr._id+"")
         .attach('myFile','tests/fixtures/przykladowaTranskrypcja.txt')
         .expect(201);
 
@@ -1059,7 +1034,7 @@ test('Powinen wgrać wgrać własną transkrypcje w postaci pliku TXT dla zalogo
         .set('Authorization', `Bearer ${token}`)
         .field('projectId',newProject._id+"")
         .field('sessionId',newSession._id+"")
-        .field('containerIdoptional',newCon_mowa._id+"")
+        .field('containerId',newCon_mowa._id+"")
         .attach('myFile','tests/fixtures/przykladowaTranskrypcja.txt')
         .expect(201);
     
@@ -1068,7 +1043,7 @@ test('Powinen wgrać wgrać własną transkrypcje w postaci pliku TXT dla zalogo
         .set('Authorization', `Bearer ${token}`)
         .field('projectId',newProject._id+"")
         .field('sessionId',newSession._id+"")
-        .field('containerIdoptional',newCon_opowiesci_MP3_vbr._id+"")
+        .field('containerId',newCon_opowiesci_MP3_vbr._id+"")
         .attach('myFile','tests/fixtures/przykladowaTranskrypcja.txt')
         .expect(201);
 
@@ -1077,12 +1052,18 @@ test('Powinen wgrać wgrać własną transkrypcje w postaci pliku TXT dla zalogo
         .set('Authorization', `Bearer ${token}`)
         .field('projectId',newProject._id+"")
         .field('sessionId',newSession._id+"")
-        .field('containerIdoptional',newCon_senator_ogg._id+"")
+        .field('containerId',newCon_senator_ogg._id+"")
         .attach('myFile','tests/fixtures/przykladowaTranskrypcja.txt')
         .expect(201);
+        
 });
+*/
 
+//######################################################################
+//####################  usuwanie #######################################
+//######################################################################
 
+/*
 test('Powinen usunąć kontener przez zalogowanego użytkownika', async () => {
 
     const res_celnik_mp3_160kbps_cbr = await request(app)
@@ -1090,11 +1071,6 @@ test('Powinen usunąć kontener przez zalogowanego użytkownika', async () => {
         .set('Authorization', `Bearer ${token}`)
         .expect(200);
 
-      
-    const res_dlugie_MP3_160kbpm_cbr = await request(app)
-        .delete('/repoFiles/delete/'+newCon_dlugie_MP3_160kbpm_cbr._id)
-        .set('Authorization', `Bearer ${token}`)
-        .expect(200);
 
 });
 
@@ -1142,6 +1118,4 @@ test('Powinen usunąć projekt przez zalogowanego użytkownika', async () => {
         .expect(200);
 });
 
-
-
-
+*/

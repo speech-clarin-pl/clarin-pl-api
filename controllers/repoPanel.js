@@ -627,6 +627,9 @@ exports.getFileFromContainer = (req,res,next) => {
   
   const fileType = req.params.fileType;
 
+  //console.log(chalk.bgGreen('fileType'))
+  //console.log(chalk.bgRed(fileType))
+
   //pobieram kontener z bazy danych
   Container.findById(containerId)
     .then(container => {
@@ -653,82 +656,123 @@ exports.getFileFromContainer = (req,res,next) => {
         //sprawdzam o jaki typ pliku mi chodzi
         let filePath = '';
 
+        //console.log(chalk.bgCyan('BEFORE SWITCH'))
+        //console.log(chalk.bgCyan(fileType))
+
         switch(fileType){
           case "audio": //audio w 16000Hz 16bit...
             filePath = repoPath + "/" + containerFolderName + "/" + fileAudioName;
             filename = fileAudioName;
+
+            //console.log(chalk.bgCyan('SWITCH'))
+            //console.log(chalk.bgCyan('audio'))
             break;
           case "dat": //audiowaveform dat
             filePath = repoPath + "/" + containerFolderName + "/" + fileDatName;
             filename = fileDatName;
+
+            //console.log(chalk.bgCyan('SWITCH'))
+            //console.log(chalk.bgCyan('dat'))
             break;
           case "oryginalAudio": //audio as it was uploaded
             const oryginalAudioName = container.oryginalFileName;
             filePath = repoPath + "/" + containerFolderName + "/" + oryginalAudioName;
             filename = oryginalAudioName;
+            //console.log(chalk.bgCyan('SWITCH'))
+            //console.log(chalk.bgCyan('oryginalAudio'))
             break;
           case "DIActm": 
             const DIActmFile = utils.getFileNameWithNoExt(container.fileName)+"_DIA.ctm";
             filePath = repoPath + "/" + containerFolderName + "/" + DIActmFile;
             filename = DIActmFile;
+            //console.log(chalk.bgCyan('SWITCH'))
+            //console.log(chalk.bgCyan('DIActm'))
             break;
           case "DIAtextGrid": 
             const DIAtextGrid = utils.getFileNameWithNoExt(container.fileName)+"_DIA.textGrid";
             filePath = repoPath + "/" + containerFolderName + "/" + DIAtextGrid;
             filename = DIAtextGrid;
+            //console.log(chalk.bgCyan('SWITCH'))
+            //console.log(chalk.bgCyan('DIAtextGrid'))
             break;
           case "DIAJSON": 
             const DIAJSON = utils.getFileNameWithNoExt(container.fileName)+"_DIA.json";
             filePath = repoPath + "/" + containerFolderName + "/" + DIAJSON;
             filename = DIAJSON;
+            //console.log(chalk.bgCyan('SWITCH'))
+            //console.log(chalk.bgCyan('DIAJSON'))
             break;
           case "VADctm": 
             const VADctmFile = utils.getFileNameWithNoExt(container.fileName)+"_VAD.ctm";
             filePath = repoPath + "/" + containerFolderName + "/" + VADctmFile;
             filename = VADctmFile;
+            //console.log(chalk.bgCyan('SWITCH'))
+            //console.log(chalk.bgCyan('VADctm'))
             break;
           case "VADtextGrid": 
             const VADtextGrid = utils.getFileNameWithNoExt(container.fileName)+"_VAD.textGrid";
             filePath = repoPath + "/" + containerFolderName + "/" + VADtextGrid;
             filename = VADtextGrid;
+            //console.log(chalk.bgCyan('SWITCH'))
+            //console.log(chalk.bgCyan('VADtextGrid'))
             break;
           case "SEGctm": 
             const SEGctmFile = utils.getFileNameWithNoExt(container.fileName)+"_SEG.ctm";
             filePath = repoPath + "/" + containerFolderName + "/" + SEGctmFile;
             filename = SEGctmFile;
+            //console.log(chalk.bgCyan('SWITCH'))
+            //console.log(chalk.bgCyan('SEGctm'))
             break;
           case "SEGtextGrid": 
             const SEGtextGrid = utils.getFileNameWithNoExt(container.fileName)+"_SEG.textGrid";
             filePath = repoPath + "/" + containerFolderName + "/" + SEGtextGrid;
             filename = SEGtextGrid;
+            //console.log(chalk.bgCyan('SWITCH'))
+            //console.log(chalk.bgCyan('SEGtextGrid'))
             break;
           case "VADJSON": 
             const VADJSON = utils.getFileNameWithNoExt(container.fileName)+"_VAD.json";
             filePath = repoPath + "/" + containerFolderName + "/" + VADJSON;
             filename = VADJSON;
+            //console.log(chalk.bgCyan('SWITCH'))
+            //console.log(chalk.bgCyan('VADJSON'))
             break;
           case "JSONTranscript": 
             const JSONTranscript = utils.getFileNameWithNoExt(container.fileName)+".json";
             filePath = repoPath + "/" + containerFolderName + "/" + JSONTranscript;
             filename = JSONTranscript;
+            //console.log(chalk.bgCyan('SWITCH'))
+            //console.log(chalk.bgCyan('JSONTranscript'))
             break;
           case "TXTTranscript": 
             const TXTTranscript = utils.getFileNameWithNoExt(container.fileName)+"_TXT.txt";
             filePath = repoPath + "/" + containerFolderName + "/" + TXTTranscript;
             filename = TXTTranscript;
+            console.log(chalk.bgCyan('SWITCH'))
+            console.log(chalk.bgCyan('TXTTranscript'))
+            console.log(chalk.bgCyan(TXTTranscript))
+            console.log(chalk.bgCyan(filePath))
             break;
           case "EMUJSON": 
             const EMUJSON = utils.getFileNameWithNoExt(container.fileName)+"_annot.json";
             filePath = repoPath + "/" + containerFolderName + "/" + EMUJSON;
             filename = EMUJSON;
+            //console.log(chalk.bgCyan('SWITCH'))
+           // console.log(chalk.bgCyan('EMUJSON'))
             break;
           default:
+           // console.log(chalk.bgCyan('SWITCH'))
+            //console.log(chalk.bgCyan('default'))
             const error = new Error("Nie rozpoznano typu wyjścia");
             throw error;
             //filePath = '';
             //filename = 'default';
             //console.log("wrong file type!!")
         }
+
+        //console.log(chalk.bgCyan('AFTER SWITCH'))
+       //     console.log(chalk.bgCyan(fileType))
+       //     console.log(chalk.bgCyan(filePath))
 
         //res.status(200).({ message: 'The data for previewing has been sent!', containerData: filePath});        
        // res.sendFile(filePath);
@@ -738,6 +782,7 @@ exports.getFileFromContainer = (req,res,next) => {
        // fs.createReadStream(filePath).pipe(res);
 
        try {
+
           if(fs.existsSync(filePath)) {
               res.download(filePath,filename);
           } else {
@@ -1110,7 +1155,7 @@ exports.uploadFile = async (req, res, next) => {
 
       //TO DO przerobienie tego na plik JSON - aby dało się podglądać
 
-      res.status(200).json({ message: 'Wgranie pliku zakończone powodzeniem!', sessionId: sessionId, oryginalName: oryginalFileName, containerId: updatedContainer._id});
+      res.status(201).json({ message: 'Wgranie pliku zakończone powodzeniem!', sessionId: sessionId, oryginalName: oryginalFileName, containerId: updatedContainer._id});
 
 
     } catch (error) {
