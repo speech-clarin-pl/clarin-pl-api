@@ -467,9 +467,6 @@ exports.runSEG = (container) => {
                             //teraz usuwam z dysku plik  log
                             fs.removeSync(pathToResult+'_log.txt');
 
-                            //i usuwam tymczasowy plik txt
-                            fs.removeSync(TXTFilePath);
-
                             let returnData = {
                                 updatedContainer: updatedContainer,
                             };
@@ -570,7 +567,7 @@ exports.runREC = (container) => {
                         // musze stworzyć tymczasowo plik txt którego zawartość wyciągam z jsona
                         let txtContent = utils.convertJSONFileIntoTXT(JSONTransPath);
 
-                        console.log(chalk.bgRedBright(txtContent))
+                       // console.log(chalk.bgRedBright(txtContent))
 
                         // zapisuje ten plik jako surowy txt aby docker mial do niego dostep
                         fs.writeFileSync(TXTTransPath, txtContent);

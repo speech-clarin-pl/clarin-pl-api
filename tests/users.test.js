@@ -187,7 +187,7 @@ test('Powinen wgrać testowe pliki w różnych formatach do repozytoriu gdy uży
         .attach('myFile','tests/fixtures/celnik_mp3_160kbps_cbr.mp3')
         .expect(201);
 
-      
+    
     const res_dlugie_MP3_160kbpm_cbr = await request(app)
         .post('/repoFiles/uploadFile')
         .set('Authorization', `Bearer ${token}`)
@@ -195,6 +195,8 @@ test('Powinen wgrać testowe pliki w różnych formatach do repozytoriu gdy uży
         .field('sessionId',newSession._id+"")
         .attach('myFile','tests/fixtures/dlugie_MP3_160kbpm_cbr.mp3')
         .expect(201);
+
+    
 
     const res_kleska_MP3_64kbps_cbr = await request(app)
         .post('/repoFiles/uploadFile')
@@ -384,14 +386,14 @@ test('Powinien wykonać DIA nad każdym testowm kontenerze dla zalogowanego uży
         .send({})
         .expect(200);
 
-        /*
+    /*
     const res_dlugie_MP3_160kbpm_cbr = await request(app)
         .put('/repoFiles/runSpeechDiarization/'+newCon_dlugie_MP3_160kbpm_cbr._id)
         .set('Authorization', `Bearer ${token}`)
         .send({})
         .expect(200);
-
-        */
+    */
+        
 
     const res_kleska_MP3_64kbps_cbr = await request(app)
         .put('/repoFiles/runSpeechDiarization/'+newCon_kleska_MP3_64kbps_cbr._id)
@@ -435,15 +437,15 @@ test('Powinien wykonać REC nad każdym testowm kontenerze dla zalogowanego uży
         .send({})
         .expect(200);
 
-        /*
-
+        
+    /*
     const res_dlugie_MP3_160kbpm_cbr = await request(app)
         .put('/repoFiles/runSpeechRecognition/'+newCon_dlugie_MP3_160kbpm_cbr._id)
         .set('Authorization', `Bearer ${token}`)
         .send({})
         .expect(200);
-
-        */
+    */
+    
 
     const res_kleska_MP3_64kbps_cbr = await request(app)
         .put('/repoFiles/runSpeechRecognition/'+newCon_kleska_MP3_64kbps_cbr._id)
@@ -494,8 +496,8 @@ test('Powinien wykonać SEG nad każdym testowm kontenerze dla zalogowanego uży
         .set('Authorization', `Bearer ${token}`)
         .send({})
         .expect(200);
-
-        */
+    */
+        
    
 
     const res_kleska_MP3_64kbps_cbr = await request(app)
@@ -591,13 +593,15 @@ test('Powininen zwrócić pliki wgrane przez zalogowanego użytkownika', async (
         .set('Authorization', `Bearer ${token}`)
         .expect(200);
 
-        /*
+    
+    /*
     const res_newCon_dlugie_MP3_160kbpm_cbr = await request(app)
         .get('/repoFiles/download/' + newCon_dlugie_MP3_160kbpm_cbr._id + '/oryginalAudio')
         .set('Authorization', `Bearer ${token}`)
         .expect(200);
-*/
-/*
+
+    */
+
     const res_newCon_kleska_MP3_64kbps_cbr = await request(app)
         .get('/repoFiles/download/' + newCon_kleska_MP3_64kbps_cbr._id + '/oryginalAudio')
         .set('Authorization', `Bearer ${token}`)
@@ -617,7 +621,7 @@ test('Powininen zwrócić pliki wgrane przez zalogowanego użytkownika', async (
         .get('/repoFiles/download/' + newCon_senator_ogg._id + '/oryginalAudio')
         .set('Authorization', `Bearer ${token}`)
         .expect(200);
-*/
+
 });
 
 test('NIE Powininen zwrócać plików dla niezalogowanego użytkownika', async () => {
@@ -633,13 +637,14 @@ test('Powininen zwrócić pliki przekonwerowane do 16000Hz 16bits przez zalogowa
         .set('Authorization', `Bearer ${token}`)
         .expect(200);
 
-        /*
+    
+    /*
     const res_newCon_dlugie_MP3_160kbpm_cbr = await request(app)
         .get('/repoFiles/download/' + newCon_dlugie_MP3_160kbpm_cbr._id + '/audio')
         .set('Authorization', `Bearer ${token}`)
         .expect(200);
-
-        */
+    */
+        
 
 
     const res_newCon_kleska_MP3_64kbps_cbr = await request(app)
@@ -701,8 +706,8 @@ test('Powininen zwrócić wynik działania narzędzi w formacie CTM przez zalogo
         .get('/repoFiles/download/' + newCon_dlugie_MP3_160kbpm_cbr._id + '/SEGctm')
         .set('Authorization', `Bearer ${token}`)
         .expect(200);
-        */
-
+        
+    */
     const res_newCon_kleska_MP3_64kbps_cbr1 = await request(app)
         .get('/repoFiles/download/' + newCon_kleska_MP3_64kbps_cbr._id + '/VADctm')
         .set('Authorization', `Bearer ${token}`)
@@ -782,7 +787,7 @@ test('Powininen zwrócić wynik działania narzędzi w formacie TextGrid przez z
         .expect(200);
 
   
-        /*
+    /*
     const res_newCon_dlugie_MP3_160kbpm_cbr1 = await request(app)
         .get('/repoFiles/download/' + newCon_dlugie_MP3_160kbpm_cbr._id + '/VADtextGrid')
         .set('Authorization', `Bearer ${token}`)
@@ -797,7 +802,8 @@ test('Powininen zwrócić wynik działania narzędzi w formacie TextGrid przez z
         .get('/repoFiles/download/' + newCon_dlugie_MP3_160kbpm_cbr._id + '/SEGtextGrid')
         .set('Authorization', `Bearer ${token}`)
         .expect(200);
-        */
+        
+    */
 
     const res_newCon_kleska_MP3_64kbps_cbr1 = await request(app)
         .get('/repoFiles/download/' + newCon_kleska_MP3_64kbps_cbr._id + '/VADtextGrid')
@@ -878,7 +884,8 @@ test('Powininen zwrócić wynik działania narzędzi w formacie JSON przez zalog
         .set('Authorization', `Bearer ${token}`)
         .expect(200);
 
-       /*
+       
+        /*
     const res_newCon_dlugie_MP3_160kbpm_cbr1 = await request(app)
         .get('/repoFiles/download/' + newCon_dlugie_MP3_160kbpm_cbr._id + '/VADJSON')
         .set('Authorization', `Bearer ${token}`)
@@ -959,13 +966,13 @@ test('Powininen zwrócić wynik działania narzędzi w formacie JSON przez zalog
 
 test('Powininen zwrócić wynik rozpoznawania mowy w formacie TXT przez zalogowanego użytkownika', async () => {
 
-    /*
+   
     const res_newCon_celnik_mp3_160kbps_cbr1 = await request(app)
         .get('/repoFiles/download/' + newCon_celnik_mp3_160kbps_cbr._id + '/TXTTranscript')
         .set('Authorization', `Bearer ${token}`)
         .expect(200);
 
-    
+     /*
     const res_newCon_dlugie_MP3_160kbpm_cbr1 = await request(app)
         .get('/repoFiles/download/' + newCon_dlugie_MP3_160kbpm_cbr._id + '/TXTTranscript')
         .set('Authorization', `Bearer ${token}`)
@@ -977,7 +984,7 @@ test('Powininen zwrócić wynik rozpoznawania mowy w formacie TXT przez zalogowa
         .get('/repoFiles/download/' + newCon_kleska_MP3_64kbps_cbr._id + '/TXTTranscript')
         .set('Authorization', `Bearer ${token}`)
         .expect(200);
-        /*
+      
     
     const res_newCon_mowa1 = await request(app)
         .get('/repoFiles/download/' + newCon_mowa._id + '/TXTTranscript')
@@ -993,10 +1000,10 @@ test('Powininen zwrócić wynik rozpoznawania mowy w formacie TXT przez zalogowa
         .get('/repoFiles/download/' + newCon_senator_ogg._id + '/TXTTranscript')
         .set('Authorization', `Bearer ${token}`)
         .expect(200);
-       */
+       
 });
 
-/*
+
 test('Powinen wgrać wgrać własną transkrypcje w postaci pliku TXT dla zalogowanego użytkownika', async () => {
 
 
@@ -1009,7 +1016,7 @@ test('Powinen wgrać wgrać własną transkrypcje w postaci pliku TXT dla zalogo
         .attach('myFile','tests/fixtures/przykladowaTranskrypcja.txt')
         .expect(201);
 
-    
+    /*
     const res_dlugie_MP3_160kbpm_cbr = await request(app)
         .post('/repoFiles/uploadFile')
         .set('Authorization', `Bearer ${token}`)
@@ -1018,7 +1025,7 @@ test('Powinen wgrać wgrać własną transkrypcje w postaci pliku TXT dla zalogo
         .field('containerId',newCon_dlugie_MP3_160kbpm_cbr._id+"")
         .attach('myFile','tests/fixtures/przykladowaTranskrypcja.txt')
         .expect(201);
-     
+     */
 
     const res_kleska_MP3_64kbps_cbr = await request(app)
         .post('/repoFiles/uploadFile')
@@ -1057,13 +1064,13 @@ test('Powinen wgrać wgrać własną transkrypcje w postaci pliku TXT dla zalogo
         .expect(201);
         
 });
-*/
+
 
 //######################################################################
 //####################  usuwanie #######################################
 //######################################################################
 
-/*
+
 test('Powinen usunąć kontener przez zalogowanego użytkownika', async () => {
 
     const res_celnik_mp3_160kbps_cbr = await request(app)
@@ -1118,4 +1125,3 @@ test('Powinen usunąć projekt przez zalogowanego użytkownika', async () => {
         .expect(200);
 });
 
-*/
