@@ -6,6 +6,7 @@
   "scripts": {
     "test": "jest --runInBand",
     "dev": "sudo NODE_ENV=development node app.js",
+    "production": "sudo NODE_ENV=production node app.js",
     "debug": "sudo node app.js"
   },
   "jest": {
