@@ -5,9 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "jest --runInBand",
-    "dev": "sudo NODE_ENV=development node app.js",
-    "production": "sudo NODE_ENV=production node app.js",
-    "debug": "sudo node app.js"
+    "dev": "NODE_ENV=development node app.js",
+    "production": "NODE_ENV=production node app.js",
+    "debug": "node app.js"
   },
   "jest": {
     "testEnvironment": "node",

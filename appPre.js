@@ -13,6 +13,16 @@ const chalk = require('chalk');
 const {createNewSessionHandler} = require('./controllers/repoPanel');
 const Container = require('./models/Container');
 
+//importuje routes
+const projectsListRoutes = require('./routes/projectsList');
+const recognitionRoutes =  require('./routes/recognitionTool');
+const VADRoutes =  require('./routes/VADTool');
+const DIARoutes =  require('./routes/DIATool');
+const SEGRoutes =  require('./routes/SEGTool');
+//const segmentationRoutes = require('./routes/segmentationTool');
+const repoRoutes = require('./routes/repo'); 
+const authRoutes =  require('./routes/auth');
+const projectEntry = require('./models/projectEntry');
 
 const log = require('simple-node-logger').createSimpleLogger('projectLogs.log'); //logging
 var cors = require('cors');
@@ -43,16 +53,7 @@ global.__basedir = __dirname;
 
 const compression = require('compression');
 
-//importuje routes
-const projectsListRoutes = require('./routes/projectsList');
-const recognitionRoutes =  require('./routes/recognitionTool');
-const VADRoutes =  require('./routes/VADTool');
-const DIARoutes =  require('./routes/DIATool');
-const SEGRoutes =  require('./routes/SEGTool');
-//const segmentationRoutes = require('./routes/segmentationTool');
-const repoRoutes = require('./routes/repo'); 
-const authRoutes =  require('./routes/auth');
-const projectEntry = require('./models/projectEntry');
+
 
 //###############################################
 //###############################################
