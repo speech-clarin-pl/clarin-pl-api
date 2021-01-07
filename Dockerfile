@@ -12,4 +12,4 @@ RUN npm install -g
 
 COPY . .
 
-CMD [ "node", "app.js" ]
+CMD [ "npm", "run", "production" ]
