@@ -1045,7 +1045,7 @@ exports.uploadFile = async (req, res, next) => {
                 .setAudioChannels(1)
                 .setAudioBitRate(256);
 
-          audio.addCommand('-loglevel', 'repeat+level+warning');
+          audio.addCommand('-loglevel', 'warning');
           audio.addCommand('-y', '');
           audio.addCommand('-sample_fmt', 's16');
           

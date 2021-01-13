@@ -129,8 +129,17 @@ const fileStorageAudio = multer.diskStorage({
             const containerFolderPath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + conainerFolderName;
 
             //tworze folder dla tego contenera
-            fs.mkdirsSync(containerFolderPath);
-            finalPath = './repo/'+userId+'/'+projectId+'/'+sessionId+'/' + conainerFolderName;
+            try{
+                fs.mkdirsSync(containerFolderPath);
+            } catch (error) {
+                cb(error, null);
+            }
+
+
+            //finalPath = './repo/'+userId+'/'+projectId+'/'+sessionId+'/' + conainerFolderName;
+            finalPath = containerFolderPath;
+            
+            
            
 
         } else if (typeArray[0] == "text") {
@@ -146,8 +155,13 @@ const fileStorageAudio = multer.diskStorage({
                 if(!foundContainer){
                     cb(errorParams, null);
                 }
-                conainerFolderName = utils.getFileNameWithNoExt(foundContainer.fileName);
-                finalPath = './repo/'+userId+'/'+projectId+'/'+sessionId+'/' + conainerFolderName;
+                //conainerFolderName = utils.getFileNameWithNoExt(foundContainer.fileName);
+                //finalPath = './repo/'+userId+'/'+projectId+'/'+sessionId+'/' + conainerFolderName;
+
+                const conainerFolderName = utils.getFileNameWithNoExt(oryginalFileName)+"-"+uniqueHash;
+                const containerFolderPath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + conainerFolderName;
+                finalPath = containerFolderPath;
+                
             } else {
                cb(errorParams, null);
             }
