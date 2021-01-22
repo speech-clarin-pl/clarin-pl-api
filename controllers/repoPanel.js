@@ -50,119 +50,106 @@ exports.zipDirectory = (source, out) => {
 
 
 exports.createKorpus = (projectId, userId) => {
-  return new Promise((resolve, reject) => {
-  
-    // tutaj robie export do EMU tylko tych plików które mają wszystkie narzędzia wykonane
-    //przeglądam kontenery tego użytkownika i wybieram tylko te które mogą być zapisane
-    Container.find({owner: userId, project: projectId, ifVAD: true, ifDIA: true, ifREC: true, ifSEG: true },
-                    {VADUserSegments:0, DIAUserSegments:0,RECUserSegments:0,SEGUserSegments:0})
-      .then(containers => {
+  return new Promise(async (resolve, reject) => {
 
-        const nazwaKorpusu = 'KORPUS';
-        const pathToUserProject = appRoot + '/repo/' + userId + '/' + projectId;
-        const pathToCorpus = pathToUserProject + '/' + nazwaKorpusu;
-        const pathToZIP = pathToCorpus+'.zip';
-  
-        emu.containers2EMU(containers)
-          .then(correctContainers=>{
-  
-            //console.log("Folder do CORPUSU: " +  pathToCorpus);
-  
-            //teraz tworze folder w katalogu projektu danego usera z gotowym korpusem
-            if(!fs.existsSync(pathToCorpus)){
-              fs.mkdirSync(pathToCorpus, { recursive: true })
-            } 
-  
-  
-            let oryginalDBconfigPath = appRoot + '/emu/test_DBconfig.json';
-            let pathToDBconfig = pathToCorpus + '/' + nazwaKorpusu + '_DBconfig.json';
-            //teraz kopiuje do niego plik DBconfig.json
-            //zamieniam parametr name na nazwe korpusu
-  
-            const dbconfig = fs.readJsonSync(oryginalDBconfigPath);
-  
-            dbconfig.name = nazwaKorpusu;
-  
-            fs.writeJsonSync(pathToDBconfig, dbconfig,{spaces: '\t'});
-            //fs.copySync(oryginalDBconfigPath, pathToDBconfig);
+    try{
 
-            let promises = [];
-           
-            //teraz tworze w tym folderze katalogi z sesjami i kopiuje tam foldery z contenerami
-            for (let container of correctContainers){
-              const audioFileName = container.fileName;
-              const containerFolderName = utils.getFileNameWithNoExt(audioFileName);  //np.lektor-fe2e3423 - na serwerze folder
-              const projectId = container.project;
-              const sessionId = container.session;
-              const pathToContainer = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerFolderName;
-              
-              let promis = new Promise((resolve, reject) => {
-                Session.findById(sessionId)
-                .then(session=>{
-  
-                  const sessionName = session.name;
-                  const sessionPath = pathToCorpus + '/' + sessionName + '_ses';
-  
-                  console.log("tworze sesje: " + sessionPath)
-                  //tworze katalog sesji jeżeli nie istnieje
-                  if(!fs.ensureDirSync(sessionPath)){
-                    console.log("stworzyłem sesje: " + sessionPath)
-                    fs.mkdirSync(sessionPath, { recursive: true })
-                  } 
-  
-  
-                  const containerPath = sessionPath + '/' + containerFolderName + '_bndl';
-                  //tworze katalog contenera jeżeli nie istnieje
-                  if(!fs.ensureDirSync(containerPath)){
-                    console.log("stworzyłem container folder: " + containerPath)
-                    fs.mkdirSync(containerPath, { recursive: true })
-                  } 
-  
-                  //kopiuje do niego pliki EMU json oraz wav
-  
-                  let srcpathToWAV = pathToContainer + '/' + audioFileName;
-                  let destpathToWAV = containerPath + '/' + audioFileName;
-  
-                  let srcpathToEMUjson = pathToContainer + '/' + containerFolderName + '_annot.json';
-                  let destpathToEMUjson = containerPath + '/' + containerFolderName + '_annot.json';
-  
-                  try{
-                    fs.copySync(srcpathToWAV, destpathToWAV);
-                    fs.copySync(srcpathToEMUjson, destpathToEMUjson);
-                    resolve();
-                  } catch(error) {
-                    reject();
-                  }
-  
-                }).catch(error=>{
-                  console.error(error)
-                })
-              });
-              promises.push(promis);
-            }
+          // tutaj robie export do EMU tylko tych plików które mają wszystkie narzędzia wykonane
+          //przeglądam kontenery tego użytkownika i wybieram tylko te które mogą być zapisane
+          let containers = await Container.find({owner: userId, project: projectId, ifVAD: true, ifDIA: true, ifREC: true, ifSEG: true },
+                          {VADUserSegments:0, DIAUserSegments:0,RECUserSegments:0,SEGUserSegments:0})
 
+          const nazwaKorpusu = 'KORPUS';
+          const pathToUserProject = appRoot + '/repo/' + userId + '/' + projectId;
+          const pathToCorpus = pathToUserProject + '/' + nazwaKorpusu;
+          const pathToZIP = pathToCorpus+'.zip';
+        
+          let correctContainers = await emu.containers2EMU(containers)
+        
+          //console.log("Folder do CORPUSU: " +  pathToCorpus);
 
-            Promise.all(promises)
-            .then(result => {
-                  this.zipDirectory(pathToCorpus,pathToZIP)
-                  .then(()=>{
-                    fs.removeSync(pathToCorpus);
-                    resolve(pathToZIP);
-                  })
-                  .catch((error)=>{
-                    reject(error);
-                  })
-            })
-            .catch(err=>{
-              resolve(pathToZIP);
-            })
-          })
-          .catch(error=>{   
-            console.error(error)
+          //teraz tworze folder w katalogu projektu danego usera z gotowym korpusem
+          if(!fs.existsSync(pathToCorpus)){
+            fs.mkdirSync(pathToCorpus, { recursive: true })
+          } 
+        
+          let oryginalDBconfigPath = appRoot + '/emu/test_DBconfig.json';
+          let pathToDBconfig = pathToCorpus + '/' + nazwaKorpusu + '_DBconfig.json';
+          //teraz kopiuje do niego plik DBconfig.json
+          //zamieniam parametr name na nazwe korpusu
+        
+          const dbconfig = fs.readJsonSync(oryginalDBconfigPath);
+
+          dbconfig.name = nazwaKorpusu;
+
+          fs.writeJsonSync(pathToDBconfig, dbconfig,{spaces: '\t'});
+          //fs.copySync(oryginalDBconfigPath, pathToDBconfig);
+
+          let promises = [];
+                
+          //teraz tworze w tym folderze katalogi z sesjami i kopiuje tam foldery z contenerami
+          for (let container of correctContainers){
+            const audioFileName = container.fileName;
+            const containerFolderName = utils.getFileNameWithNoExt(audioFileName);  //np.lektor-fe2e3423 - na serwerze folder
+            const projectId = container.project;
+            const sessionId = container.session;
+            const pathToContainer = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerFolderName;
             
-            reject(error);
-          })     
-      })
+            let promis = new Promise((resolve, reject) => {
+              Session.findById(sessionId)
+              .then(session=>{
+
+                const sessionName = session.name;
+                const sessionPath = pathToCorpus + '/' + sessionName + '_ses';
+
+                console.log("tworze sesje: " + sessionPath)
+                //tworze katalog sesji jeżeli nie istnieje
+                if(!fs.ensureDirSync(sessionPath)){
+                  console.log("stworzyłem sesje: " + sessionPath)
+                  fs.mkdirSync(sessionPath, { recursive: true })
+                } 
+
+
+                const containerPath = sessionPath + '/' + containerFolderName + '_bndl';
+                //tworze katalog contenera jeżeli nie istnieje
+                if(!fs.ensureDirSync(containerPath)){
+                  console.log("stworzyłem container folder: " + containerPath)
+                  fs.mkdirSync(containerPath, { recursive: true })
+                } 
+
+                //kopiuje do niego pliki EMU json oraz wav
+
+                let srcpathToWAV = pathToContainer + '/' + audioFileName;
+                let destpathToWAV = containerPath + '/' + audioFileName;
+
+                let srcpathToEMUjson = pathToContainer + '/' + containerFolderName + '_annot.json';
+                let destpathToEMUjson = containerPath + '/' + containerFolderName + '_annot.json';
+
+                try{
+                  fs.copySync(srcpathToWAV, destpathToWAV);
+                  fs.copySync(srcpathToEMUjson, destpathToEMUjson);
+                  resolve();
+                } catch(error) {
+                  reject();
+                }
+
+              }).catch(error=>{
+                console.error(error)
+              })
+            });
+            promises.push(promis);
+          }
+
+
+          await Promise.all(promises)
+          await this.zipDirectory(pathToCorpus,pathToZIP)
+          fs.removeSync(pathToCorpus);   
+          resolve(pathToZIP);     
+    
+  } catch (error) {
+    reject(error)
+  } 
+    
   })
 }
 
