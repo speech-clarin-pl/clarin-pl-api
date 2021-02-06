@@ -52,6 +52,8 @@ exports.zipDirectory = (source, out) => {
 exports.createKorpus = (projectId, userId) => {
   return new Promise(async (resolve, reject) => {
 
+    console.log("Rozpoczynam tworzenie korpusu...")
+
     try{
 
           // tutaj robie export do EMU tylko tych plików które mają wszystkie narzędzia wykonane
@@ -135,6 +137,7 @@ exports.createKorpus = (projectId, userId) => {
 
               }).catch(error=>{
                 console.error(error)
+                reject();
               })
             });
             promises.push(promis);

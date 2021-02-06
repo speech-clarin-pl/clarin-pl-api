@@ -286,9 +286,13 @@ exports.login = (req, res, next) => {
 
     let loadedUser;
 
+    console.log("LOGOWANIE...")
+
     //sprawdzam czy istnieje taki email
     User.findOne({email: email})
         .then(user => {
+
+            console.log("znalazłem usera " + user)
 
             //jezeli nie ma takiego uzera 
             if(!user){
