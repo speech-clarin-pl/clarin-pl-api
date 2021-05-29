@@ -23,9 +23,14 @@ const SEGRoutes =  require('./routes/SEGTool');
 const repoRoutes = require('./routes/repo'); 
 const authRoutes =  require('./routes/auth');
 const projectEntry = require('./models/projectEntry');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
+const hpp = require('hpp');
 
 const log = require('simple-node-logger').createSimpleLogger('projectLogs.log'); //logging
 var cors = require('cors');
+
+const helmet = require("helmet");
 
 var corsOptions = {
     origin: '*',
@@ -53,12 +58,28 @@ global.__basedir = __dirname;
 
 const compression = require('compression');
 
-
-
-//###############################################
-//###############################################
-
 const app = express();
+
+// dla żądań zakodowanych w application/json
+app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.json());
+//do kompresji...
+app.use(compression());
+
+//zabezpieczenia
+app.use(helmet());
+app.use(mongoSanitize());
+app.use(xss());
+app.use(hpp());
+
+app.use(
+    mongoSanitize({
+      onSanitize: ({ req, key }) => {
+        console.log(chalk.redBright(`This request [${req.key}] is sanitized`));
+      },
+    }),
+  );
+
 
 app.use(cors(corsOptions));
 
@@ -69,10 +90,7 @@ app.use((req, res, next) => {
     if(req.method === "OPTIONS"){
         res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
         return res.status(200).json({});
-    }
-
-    console.log("request...")
-    
+    }    
     next();
 });
 
@@ -201,12 +219,6 @@ const fileFilterAudio = (req, file, cb) => {
     }
 }
 
- // fileFilter: fileFilter
-// let upload = multer({
-//     storage: fileStorage,
-    
-// }).array('audioFiles');
-
 let uploadAudio = multer({
     storage: fileStorageAudio,
     fileFilter: fileFilterAudio,
@@ -218,13 +230,6 @@ app.use(uploadAudio, (req, res, next) => {
      next();
 });
 
-
-// dla rzadan zakodowanych w application/json
-//app.use(bodyParser.urlencoded());
-app.use(bodyParser.json());
-
-//do kompresji...
-app.use(compression());
 
 //static files in repo....
 app.use('/repoFiles', isAuth, express.static(path.join(__dirname, '/repo')));
