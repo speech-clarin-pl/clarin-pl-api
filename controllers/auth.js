@@ -211,6 +211,90 @@ exports.registration = (req, res, next) => {
     const name = req.body.name+'';
     const password = req.body.password+'';
 
+    //generuje token do potwierdzenia
+    const token = jwt.sign({
+        email: email, 
+        name: name,
+    }, config.tokenKey);
+
+    const user = new User({
+        email: email,
+        password: bcrypt.hashSync(password,12),
+        name: name,
+        confirmationCode: token,
+    });
+
+    user.save().then(user => {
+
+        // generuje link zawierający wygenerowany token
+        const linkurl = process.env.FRONT_END_ADDRESS + "/confirmRegistration/"+token;
+
+        const messageemail = `<h2>Rejestracja konta w serwisie CLARIN-PL</h2>
+                            <h3>Witaj ${name}</h3>
+                            <p>Potwierdź rejestrację klikając w poniższy link:</p>
+                            <a href="${linkurl}">${linkurl}</a>`
+
+        sendEmail(email,'CLARIN-PL: Rejestracja konta', messageemail)
+        .then(message => {
+            res.status(200).json({message: "Wiadomość z linkiem aktywacyjnym została wysłana na podany adres email"});
+        })
+        .catch(error => {
+            error.statusCode = 502;
+            error.message = 'Coś poszło nie tak z wysłaniem maila';
+            throw error;
+        });
+    })   
+}
+
+// weryfikacja użytkownika po kliknięciu linku wysłanego na maila
+exports.verifyUser = (req, res, next) => {
+
+    User.findOne({
+        confirmationCode: req.params.confirmationCode,
+    }).then(user => {
+        
+        if(!user){
+            const error = new Error('Użytkownik nie został znaleziony');
+            error.statusCode = 404;
+            throw error;
+        }
+
+        user.status = "Active";
+
+        user.save().then(user => {
+            res.status(200).send({message: "Użytkownik potwierdzony"})
+        })
+
+        // TO DO: dorobić tworzenie projektów itp co było wcześniej i jest pod spodem jako kopia....
+
+    })
+    .catch(e => console.log(chalk.red("error", e)))
+}
+
+
+
+//pod spodem kopia działającej rejestracji bez wysyłania maila
+/*
+exports.registration = (req, res, next) => {
+    const errors = validationResult(req);
+    if(!errors.isEmpty()){
+
+        //zbieram informacje o błędzie
+        let message = '';
+        errors.array().forEach(element => {
+            message = message + element.msg + "\n";
+        })
+        
+        const error = new Error(message);
+        error.statusCode = 422;
+        error.data = errors.array();
+        throw error;
+    }
+
+    const email = req.body.email+'';
+    const name = req.body.name+'';
+    const password = req.body.password+'';
+
     bcrypt.hash(password,12)
     .then(hashedPass => {
         const user = new User({
@@ -241,7 +325,6 @@ exports.registration = (req, res, next) => {
                 })
             }
           });
-          
     })
     .catch((error) => {
         console.log(chalk.red(error.message));
@@ -249,6 +332,9 @@ exports.registration = (req, res, next) => {
         next(error);
     });
 }
+*/
+
+
 
 /**
  * @api {post} /auth/login Logowanie
@@ -294,6 +380,13 @@ exports.login = (req, res, next) => {
             if(!user){
                 const error = new Error('Użytkownik o tym adresie email nie został znaleziony');
                 error.statusCode = 404;
+                throw error;
+            }
+
+            //jezeli nie ma statusu "Active" - czyli że nie potwierdził w mailu
+            if(user.status != "Active"){
+                const error = new Error('Konto niepotwierdzone. Sprawdź swój email i potwierdź założenie konta klikając w wysłany link.');
+                error.statusCode = 401;
                 throw error;
             }
 

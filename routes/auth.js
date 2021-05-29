@@ -22,6 +22,10 @@ router.put('/registration',[
     body('name').trim().not().isEmpty()
 ], authController.registration);
 
+//################### weryfikacja po kliknięciu w link w mailu ################
+
+router.get('/confirmUser/:confirmationCode', authController.verifyUser);
+
 
 //############## wyświetlenie strony do wpisania nowego hasła ############
 

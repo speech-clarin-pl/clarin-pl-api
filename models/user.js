@@ -20,7 +20,12 @@ const userSchema = new Schema({
     },
     status: {
         type: String,
-        default: 'new user'
+        enum: ['Pending', 'Active'],
+        default: 'Pending'
+    },
+    confirmationCode: {
+        type: String,
+        unique: true,
     },
     projects: [
         {
