@@ -112,7 +112,6 @@ exports.applyNewPass = (req,res,next) => {
  */
 exports.forgotPass = (req,res,next) => {
     const emailAddress = req.body.email;
-    console.log(emailAddress)
 
     //znajduje login ktory zawiera dany email
      User.findOne({email: emailAddress})
@@ -163,6 +162,36 @@ exports.forgotPass = (req,res,next) => {
         next(error);
      })
 }
+
+
+// wysyła maila do administratora
+exports.sendEmailToAdmin = (req,res,next) => {
+
+    console.log(chalk.greenBright("Wysyłam maila do administratora..."))
+
+    const email = req.body.email;
+    const message = req.body.message;
+    const loggedEmail = req.body.loggedEmail;
+
+    const towhom = "mklec@pjwstk.edu.pl"; // TODO: zamienić na zmienną środowiskową
+    const title = "CLARIN-PL: Zgłoszenie do admina";
+    const htmlContent = `<h2>Zgłoszenie ze strony CLARIN-PL</h2>
+    <p>Wiadomość pochodząca z konta zarejestrowanego na: ${loggedEmail}</p>
+    <p>Użytkownik prosi aby odpowiedzieć na: ${email}</p>
+    <p><b>Wiadomość</b></p>
+    <p>${message}</p>`;
+
+    sendEmail(towhom,title, htmlContent)
+                .then(message => {
+                    res.status(200).json({message: "Wiadomość została wysłana pomyślnie."});
+                })
+                .catch(error => {
+                    error.statusCode = 502;
+                    error.message = 'Coś poszło nie tak z wysłaniem maila';
+                    throw error;
+                });
+}
+
 
 
 /**
@@ -250,25 +279,53 @@ exports.registration = (req, res, next) => {
 exports.verifyUser = (req, res, next) => {
 
     User.findOne({
-        confirmationCode: req.params.confirmationCode,
-    }).then(user => {
-        
-        if(!user){
-            const error = new Error('Użytkownik nie został znaleziony');
-            error.statusCode = 404;
-            throw error;
-        }
+            confirmationCode: req.params.confirmationCode,
+        }).then(user => {
 
-        user.status = "Active";
+            if (!user) {
+                const error = new Error('Użytkownik nie został znaleziony');
+                error.statusCode = 404;
+                throw error;
+            }
 
-        user.save().then(user => {
-            res.status(200).send({message: "Użytkownik potwierdzony"})
+            user.status = "Active";
+
+            user.save().then(user => {
+
+                //tutaj tworzenie folderu z id uzytkownika w repo
+                const dirpath = appRoot + '/repo/' + user._id;
+                mkdirp(dirpath, function (err) {
+                    // if any errors then print the errors to our console
+                    if (err) {
+                        console.log(chalk.red(err));
+                        return err;
+                    } else {
+                        projectsList.createProjectHandler("DOMYŚLNY PROJEKT", user._id, true).then((results) => {
+                            res.status(201).json({
+                                message: 'Konto zostało założone',
+                                defaultProjectId: results.project._id,
+                                defaultSessionId: results.defaultSession._id,
+                                demoSessionId: results.demoSession._id
+                            });
+                        }).catch((err) => {
+                            return err;
+                        })
+                    }
+                });
+
+            }).catch((error) => {
+                console.log(chalk.red(error.message));
+                error.statusCode = error.statusCode || 500;
+                next(error);
+            });
+
+
         })
-
-        // TO DO: dorobić tworzenie projektów itp co było wcześniej i jest pod spodem jako kopia....
-
-    })
-    .catch(e => console.log(chalk.red("error", e)))
+        .catch((error) => {
+            console.log(chalk.red(error.message));
+            error.statusCode = error.statusCode || 500;
+            next(error);
+        });
 }
 
 

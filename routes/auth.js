@@ -1,7 +1,7 @@
 const express = require('express');
 const { body } = require('express-validator/check'); // for validation
 const router = express.Router();
-
+const isAuth = require('../middleware/is-auth');
 const User = require('../models/user');
 const authController = require('../controllers/auth');
 
@@ -26,6 +26,8 @@ router.put('/registration',[
 
 router.get('/confirmUser/:confirmationCode', authController.verifyUser);
 
+//############## wysłanie maila do administrtora ############
+router.post('/sendEmailToAdmin/',isAuth, authController.sendEmailToAdmin);
 
 //############## wyświetlenie strony do wpisania nowego hasła ############
 
