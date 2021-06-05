@@ -26,6 +26,9 @@ router.put('/changeContainerName/:containerId', isAuth, repoController.changeCon
 // GET /repoFiles/projectId - do pobierania listy plikow
 router.get('/getProjectAssets/:projectId', isAuth, repoController.getRepoAssets);
 
+//pobieranie statystyk o załadowanych plikach do repo
+router.get('/getRepoStats/:projectId', isAuth, repoController.getRepoStats);
+
  //DELETE /repoFiles/delete/:containerId - usuwa container
 router.delete('/delete/:containerId', isAuth, repoController.removeContainer);
 

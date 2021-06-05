@@ -1025,7 +1025,6 @@ exports.uploadFile = async (req, res, next) => {
 
   //jeżeli wgrywany plik to audio
   if(typeArray[0] == 'audio'){
-
       // ROBIE KONWERSJE FFMPEG
       try {
 
@@ -1063,7 +1062,8 @@ exports.uploadFile = async (req, res, next) => {
                     fileName: finalAudioFileName,
                     containerName: utils.getFileNameWithNoExt(oryginalFileName),
                     oryginalFileName: utils.getFileNameFromPath(tooryginal),
-                    size: fs.statSync(fillCorrectAudioPath).size,
+                    size: Number(fs.statSync(fillCorrectAudioPath).size), //wielkosc przekonwertowanego pliku
+                    sizeOryginal: Number(fs.statSync(fullFilePath).size), //wielkosc oryginalnego pliku
                     owner: userId,
                     project: projectId,
                     session: sessionId,
@@ -1436,7 +1436,12 @@ exports.getRepoAssets = (req,res,next) => {
   
   //szukam plików w bazie danych dla danego usera
   let znalezionyProjekt = null;
-  let userId = null;
+  //let userId = null;
+
+  let userId = req.userId;
+  
+  let projectUserId = null;
+
   ProjectEntry.findById(projectId)
     .then(foundPE => {
 
@@ -1446,14 +1451,12 @@ exports.getRepoAssets = (req,res,next) => {
       }
 
       znalezionyProjekt = foundPE;
-      userId = znalezionyProjekt.owner;
+      projectUserId = znalezionyProjekt.owner;
       
-      return User.findById(userId);
+      return User.findById(projectUserId);
     })
     .then(user => {
-
-      
-      if((user._id + "")== (userId+"")) {
+      if((user._id + "") === (userId+"")) {
         //wydobywam liste sesji
         let sessionIds = znalezionyProjekt.sessionIds;
 
@@ -1501,3 +1504,63 @@ exports.getRepoAssets = (req,res,next) => {
     })
 }
 
+
+// @api {post} /repoFiles/getRepoStats/:projectId  pobieranie statystyk o kontenerach
+exports.getRepoStats = async (req, res, next) => {
+
+  const projectId = req.params.projectId;
+
+  try {
+    const foundProject = await ProjectEntry.findById(projectId);
+
+    if(!foundProject){
+      const noProjectErr = new Error("Nie znaleziono tego projektu");
+      throw noProjectErr;
+    }
+
+    let userId = req.userId;
+
+    //znajduje kontenery użytkownika i pobieram statystyki
+
+   const foundContainers = await Container.find({owner: userId, project: projectId});
+   
+   const mappedConverted = foundContainers.map(element => {
+     return Number(element.size)
+   });
+
+   const mappedOryginal = foundContainers.map(element => {
+     return Number(element.sizeOryginal)
+   });
+
+
+   const containersNumber = mappedConverted.length;
+   const weightOfOryginal = mappedOryginal.reduce((total, value)=>{
+     return (total + value)
+   });
+   const weightOfConverted = mappedConverted.reduce((total, value)=>{
+    return (total + value)
+  });
+   const totalWeight = weightOfOryginal + weightOfConverted;
+
+
+
+  // console.log(foundContainers)
+
+   const dataToReturn = {
+     containersNumber: containersNumber,   
+     weightOfOryginal: weightOfOryginal,
+     weightOfConverted: weightOfConverted,
+     totalWeight: totalWeight,
+   }
+
+   res.status(200).json({ repoStats: dataToReturn, });
+
+    
+
+  } catch (error){
+    console.log(chalk.red(error.message))
+    next(err)
+  }
+  
+
+}

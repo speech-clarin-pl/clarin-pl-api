@@ -23,8 +23,12 @@ const ContainerSchema = new Schema({
         required: true,
     },
     size: {
-        type: String,
-        required: false
+        type: Number,
+        required: true,
+    },
+    sizeOryginal: {
+        type: Number,
+        required: true,
     },
     session: {
         type: Schema.Types.ObjectId,
