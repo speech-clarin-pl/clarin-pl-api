@@ -68,7 +68,7 @@ exports.createKorpus = (projectId, userId) => {
           const pathToZIP = pathToCorpus+'.zip';
         
           let correctContainers = await emu.containers2EMU(containers);
-          console.log("PO")
+    
         
           //console.log("Folder do CORPUSU: " +  pathToCorpus);
 
@@ -94,7 +94,6 @@ exports.createKorpus = (projectId, userId) => {
           //teraz tworze w tym folderze katalogi z sesjami i kopiuje tam foldery z contenerami
           for (let container of correctContainers){
 
-            console.log("tworze cont")
 
             const audioFileName = container.fileName;
             const containerFolderName = utils.getFileNameWithNoExt(audioFileName);  //np.lektor-fe2e3423 - na serwerze folder
@@ -110,10 +109,10 @@ exports.createKorpus = (projectId, userId) => {
                 const sessionName = session.name;
                 const sessionPath = pathToCorpus + '/' + sessionName + '_ses';
 
-                console.log("tworze sesje: " + sessionPath)
+                //console.log("tworze sesje: " + sessionPath)
                 //tworze katalog sesji jeżeli nie istnieje
                 if(!fs.ensureDirSync(sessionPath)){
-                  console.log("stworzyłem sesje: " + sessionPath)
+                  //console.log("stworzyłem sesje: " + sessionPath)
                   fs.mkdirSync(sessionPath, { recursive: true })
                 } 
 
@@ -121,7 +120,7 @@ exports.createKorpus = (projectId, userId) => {
                 const containerPath = sessionPath + '/' + containerFolderName + '_bndl';
                 //tworze katalog contenera jeżeli nie istnieje
                 if(!fs.ensureDirSync(containerPath)){
-                  console.log("stworzyłem container folder: " + containerPath)
+                 // console.log("stworzyłem container folder: " + containerPath)
                   fs.mkdirSync(containerPath, { recursive: true })
                 } 
 
@@ -147,19 +146,15 @@ exports.createKorpus = (projectId, userId) => {
               })
             });
 
-            console.log("wkladam push")
             promises.push(promis);
 
           }
 
 
-          console.log("inicializuje promises all")
           await Promise.all(promises)
 
-          console.log("Zakonczono promises all")
           await this.zipDirectory(pathToCorpus,pathToZIP)
 
-          console.log("stworzono zip")
           fs.removeSync(pathToCorpus);   
           resolve(pathToZIP);     
     
@@ -1000,56 +995,62 @@ exports.removeContainer = (req,res,next) => {
 
 exports.uploadFile = async (req, res, next) => {
 
-  const savedFile = req.file.filename; // już z unikatowym id
-  const oryginalFileName = req.file.originalname; //nazwa oryginalnego pliku
+ 
+  if (!req.file) {
+    //res.status(400).json({ message: 'Próbujesz przesłać zły typ pliku'})
+    const error = new Error("Zły typ pliku");
+    error.statusCode = 406;
+    next(error);
+  } else {
+    const savedFile = req.file.filename; // już z unikatowym id
+    const oryginalFileName = req.file.originalname; //nazwa oryginalnego pliku
 
-  let type = req.file.mimetype;
-  let typeArray = type.split("/");
+    let type = req.file.mimetype + "";
+    let typeArray = type.split("/");
 
-  //const userId = req.body.userId;
-  const projectId = req.body.projectId;
-  const sessionId = req.body.sessionId;
+    //const userId = req.body.userId;
+    const projectId = req.body.projectId;
+    const sessionId = req.body.sessionId;
 
-  //tylko w przypadku innych plików niż audio
-  const containerId = req.body.containerId; 
-  let userId;
-  let fullFilePath;
-  let conainerFolderName;
-  let containerFolderPath;
+    //tylko w przypadku innych plików niż audio
+    const containerId = req.body.containerId;
+    let userId;
+    let fullFilePath;
+    let conainerFolderName;
+    let containerFolderPath;
 
-  try {
+    try {
+      const { owner } = await ProjectEntry.findById(projectId);
+      userId = owner;
 
-    const {owner} = await ProjectEntry.findById(projectId);
-    userId = owner;
-  
-    let fileWithNoExt = utils.getFileNameWithNoExt(savedFile);
-    let fileWithNoSufix = fileWithNoExt.substring(0, fileWithNoExt.length - 5);
-  
-    conainerFolderName = fileWithNoSufix;
-    containerFolderPath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + conainerFolderName;
-    fullFilePath = containerFolderPath + "/" + savedFile;
+      let fileWithNoExt = utils.getFileNameWithNoExt(savedFile);
+      let fileWithNoSufix = fileWithNoExt.substring(0, fileWithNoExt.length - 5);
 
-  } catch (error) {
-    error.message = "Coś poszło nie tak z przekazanymi parametrami. Sprawdź czy są poprawne!";
-    console.log(chalk.red(error.message))
-    throw error;
-  }
+      conainerFolderName = fileWithNoSufix;
+      containerFolderPath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + conainerFolderName;
+      fullFilePath = containerFolderPath + "/" + savedFile;
 
-  //jeżeli wgrywany plik to audio
-  if(typeArray[0] == 'audio'){
+    } catch (error) {
+      error.message = "Coś poszło nie tak z przekazanymi parametrami. Sprawdź czy są poprawne!";
+      console.log(chalk.red(error.message))
+      throw error;
+    }
+
+    //jeżeli wgrywany plik to audio
+    if (typeArray[0] == 'audio') {
       // ROBIE KONWERSJE FFMPEG
       try {
 
         let process = new ffmpeg(fullFilePath);
         process.then(audio => {
           audio.setAudioFrequency(16000)
-                .setAudioChannels(1)
-                .setAudioBitRate(256);
+            .setAudioChannels(1)
+            .setAudioBitRate(256);
 
           audio.addCommand('-loglevel', 'warning');
           audio.addCommand('-y', '');
           audio.addCommand('-sample_fmt', 's16');
-          
+
 
           //teraz robie konwersje na WAV i usuwam sufix _temp w docelowym pliku
           // musze tak robic bo zapisywanie w miejscu nie dziala przy dlugich plikach....
@@ -1061,66 +1062,76 @@ exports.uploadFile = async (req, res, next) => {
           //const finalContainerName = oryginalFileName;
 
           audio.save(fillCorrectAudioPath)
-                .then(convertedFile=>{
+            .then(convertedFile => {
 
-                  //teraz zmieniam nazwe pliku na taki jaki był przesłany oryginalnie - usuwając unikatowe id i _temp.
-                  //Czyli przywracam plikowi oryginalna nazwe
+              //teraz zmieniam nazwe pliku na taki jaki był przesłany oryginalnie - usuwając unikatowe id i _temp.
+              //Czyli przywracam plikowi oryginalna nazwe
 
-                  let tooryginal = utils.bringOryginalFileName(fullFilePath);
-                  fs.renameSync(fullFilePath, tooryginal);
+              let tooryginal = utils.bringOryginalFileName(fullFilePath);
 
-                  //zapisuje tą informaje do DB
-                  let newContainer = new Container({
-                    fileName: finalAudioFileName,
-                    containerName: utils.getFileNameWithNoExt(oryginalFileName),
-                    oryginalFileName: utils.getFileNameFromPath(tooryginal),
-                    size: Number(fs.statSync(fillCorrectAudioPath).size), //wielkosc przekonwertowanego pliku
-                    sizeOryginal: Number(fs.statSync(fullFilePath).size), //wielkosc oryginalnego pliku
-                    owner: userId,
-                    project: projectId,
-                    session: sessionId,
-                    ifVAD: false,
-                    ifDIA: false,
-                    ifREC: false,
-                    ifSEG: false,
-                    statusVAD: 'ready',
-                    statusDIA: 'ready',
-                    statusREC: 'ready',
-                    statusSEG: 'ready',
-                  });
 
-                  let ext = utils.getFileExtention(finalAudioFileName);
-                  ext = (ext[0]+'').toLowerCase();
+              // const changedOryginalFilePath =  containerFolderPath + "/" + tooryginal;
 
-                  const finalDATFileName = conainerFolderName + ".dat";
-                  const fillCorrectDATPath = containerFolderPath + "/" + finalDATFileName;
+              const sizeConverted = Number(fs.statSync(fillCorrectAudioPath).size);
+              const sizeOryginal = Number(fs.statSync(fullFilePath).size);
+              //const sizeOryginal = 0;
 
-                  const shellcomm = 'audiowaveform -i '+fillCorrectAudioPath+' -o '+fillCorrectDATPath+' -z 32 -b 8 --input-format ' + ext;
 
-                  //obliczam z pliku audio podgląd dat
-                  if (shell.exec(shellcomm,{silent: true}).code !== 0) {
-                    shell.echo('Error: Problem with extracting dat for audio file');
-                    console.log(chalk.red('Error: Problem with extracting dat for audio file'));
-                    //shell.exit(1);
-                    const err = new Error('Error: Problem with extracting dat for audio file');
-                    throw err;
-                  } else {
-                    newContainer.save()
-                    .then(createdContainer => {
-                      //updating the reference in given session
-                      Session.findOneAndUpdate({_id: sessionId},{$push: {containersIds: createdContainer._id }})
-                        .then(updatedSession => {
-                          res.status(201).json({ message: 'Wgranie pliku zakończone powodzeniem!', sessionId: sessionId, oryginalName: oryginalFileName, containerId: createdContainer._id})
-                        })
-                    })
-                    .catch(error => {
-                      throw error;
-                    })
-                  }
-                }).catch(err =>{
-                  throw err;
-                })
-        }).catch(error=>{
+
+              //zapisuje tą informaje do DB
+              let newContainer = new Container({
+                fileName: finalAudioFileName,
+                containerName: utils.getFileNameWithNoExt(oryginalFileName),
+                oryginalFileName: utils.getFileNameFromPath(tooryginal),
+                size: sizeConverted, //wielkosc przekonwertowanego pliku
+                sizeOryginal: sizeOryginal, //wielkosc oryginalnego pliku
+                owner: userId,
+                project: projectId,
+                session: sessionId,
+                ifVAD: false,
+                ifDIA: false,
+                ifREC: false,
+                ifSEG: false,
+                statusVAD: 'ready',
+                statusDIA: 'ready',
+                statusREC: 'ready',
+                statusSEG: 'ready',
+              });
+
+              fs.renameSync(fullFilePath, tooryginal);
+
+              let ext = utils.getFileExtention(finalAudioFileName);
+              ext = (ext[0] + '').toLowerCase();
+
+              const finalDATFileName = conainerFolderName + ".dat";
+              const fillCorrectDATPath = containerFolderPath + "/" + finalDATFileName;
+
+              const shellcomm = 'audiowaveform -i ' + fillCorrectAudioPath + ' -o ' + fillCorrectDATPath + ' -z 32 -b 8 --input-format ' + ext;
+
+              //obliczam z pliku audio podgląd dat
+              if (shell.exec(shellcomm, { silent: true }).code !== 0) {
+                shell.echo('Error: Problem with extracting dat for audio file');
+                console.log(chalk.red('Error: Problem with extracting dat for audio file'));
+                //shell.exit(1);
+                const err = new Error('Error: Problem with extracting dat for audio file');
+                throw err;
+              } else {
+                newContainer.save()
+                  .then(createdContainer => {
+                    //updating the reference in given session
+                    Session.findOneAndUpdate({ _id: sessionId }, { $push: { containersIds: createdContainer._id } })
+                      .then(updatedSession => {
+                        res.status(201).json({ message: 'Wgranie pliku zakończone powodzeniem!', sessionId: sessionId, oryginalName: oryginalFileName, containerId: createdContainer._id })
+                      })
+                  })
+                  .catch(error => {
+                    throw error;
+                  })
+              }
+            }).catch(err => {
+              throw err;
+            })
+        }).catch(error => {
           throw error;
         })
 
@@ -1130,45 +1141,45 @@ exports.uploadFile = async (req, res, next) => {
         error.statusCode = error.statusCode || 500;
         next(error);
       }
-  } else if(typeArray[0] == 'text'){
-    try {
+    } else if (typeArray[0] == 'text') {
+      try {
 
-      //wyszukuje czy taki kontener istnieje
+        //wyszukuje czy taki kontener istnieje
 
-      const updatedContainer = await Container.findByIdAndUpdate(containerId,{ifREC: true, statusREC:'done'});
+        const updatedContainer = await Container.findByIdAndUpdate(containerId, { ifREC: true, statusREC: 'done' });
 
-      const oryginalFolderName = utils.getFileNameWithNoExt(updatedContainer.fileName);
-      const sciezkaOryginalna = appRoot + '/repo/'+userId+'/'+projectId+'/'+sessionId+'/' + oryginalFolderName + '/' + savedFile ;
+        const oryginalFolderName = utils.getFileNameWithNoExt(updatedContainer.fileName);
+        const sciezkaOryginalna = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + oryginalFolderName + '/' + savedFile;
 
-      let fileWithNoExt = utils.getFileNameWithNoExt(savedFile);
-      let fileWithNoSufix = fileWithNoExt.substring(0, fileWithNoExt.length - 5);
+        let fileWithNoExt = utils.getFileNameWithNoExt(savedFile);
+        let fileWithNoSufix = fileWithNoExt.substring(0, fileWithNoExt.length - 5);
 
-      //console.log(updatedContainer)
-      const docelowaSciezka = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' +oryginalFolderName + '/' + utils.getFileNameWithNoExt(updatedContainer.fileName)+ '_TXT.txt';
-      fs.moveSync(sciezkaOryginalna,docelowaSciezka,{ overwrite: true });
+        //console.log(updatedContainer)
+        const docelowaSciezka = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + oryginalFolderName + '/' + utils.getFileNameWithNoExt(updatedContainer.fileName) + '_TXT.txt';
+        fs.moveSync(sciezkaOryginalna, docelowaSciezka, { overwrite: true });
 
-      //zapisuje transkrypcje do pliku JSON
-      const JSONtranscription = utils.convertTxtFileIntoJSON(docelowaSciezka);
+        //zapisuje transkrypcje do pliku JSON
+        const JSONtranscription = utils.convertTxtFileIntoJSON(docelowaSciezka);
 
-      //zapisuje tego JSONA w katalogu containera
-      const JSONTransPath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + oryginalFolderName + '/' + utils.getFileNameWithNoExt(updatedContainer.fileName) + '.json';
+        //zapisuje tego JSONA w katalogu containera
+        const JSONTransPath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + oryginalFolderName + '/' + utils.getFileNameWithNoExt(updatedContainer.fileName) + '.json';
 
-      await fs.writeJson(JSONTransPath, JSONtranscription);
+        await fs.writeJson(JSONTransPath, JSONtranscription);
 
-      //TO DO przerobienie tego na plik JSON - aby dało się podglądać
+        //TO DO przerobienie tego na plik JSON - aby dało się podglądać
 
-      res.status(201).json({ message: 'Wgranie pliku zakończone powodzeniem!', sessionId: sessionId, oryginalName: oryginalFileName, containerId: updatedContainer._id});
+        res.status(201).json({ message: 'Wgranie pliku zakończone powodzeniem!', sessionId: sessionId, oryginalName: oryginalFileName, containerId: updatedContainer._id });
 
 
-    } catch (error) {
-      throw error;
+      } catch (error) {
+        throw error;
+      }
+    } else {
+      const error = new Error("Zły typ pliku");
+      error.statusCode = 406;
+      next(error);
     }
-  } else {
-    const error = new Error("Zły typ pliku");
-    error.statusCode = 406;
-    next(error);
   }
-
 }
 
 
