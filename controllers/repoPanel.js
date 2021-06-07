@@ -19,6 +19,7 @@ const shell = require('shelljs');
 const {spawn} = require('child_process');
 const chalk = require('chalk');
 
+
 //const AdmZip = require('adm-zip');
 
 const emu = require('./emu');
@@ -52,7 +53,7 @@ exports.zipDirectory = (source, out) => {
 exports.createKorpus = (projectId, userId) => {
   return new Promise(async (resolve, reject) => {
 
-    console.log("Rozpoczynam tworzenie korpusu...")
+    console.log(chalk.green("Rozpoczynam tworzenie korpusu..."));
 
     try{
 
@@ -66,7 +67,8 @@ exports.createKorpus = (projectId, userId) => {
           const pathToCorpus = pathToUserProject + '/' + nazwaKorpusu;
           const pathToZIP = pathToCorpus+'.zip';
         
-          let correctContainers = await emu.containers2EMU(containers)
+          let correctContainers = await emu.containers2EMU(containers);
+          console.log("PO")
         
           //console.log("Folder do CORPUSU: " +  pathToCorpus);
 
@@ -91,6 +93,9 @@ exports.createKorpus = (projectId, userId) => {
                 
           //teraz tworze w tym folderze katalogi z sesjami i kopiuje tam foldery z contenerami
           for (let container of correctContainers){
+
+            console.log("tworze cont")
+
             const audioFileName = container.fileName;
             const containerFolderName = utils.getFileNameWithNoExt(audioFileName);  //np.lektor-fe2e3423 - na serwerze folder
             const projectId = container.project;
@@ -98,6 +103,7 @@ exports.createKorpus = (projectId, userId) => {
             const pathToContainer = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerFolderName;
             
             let promis = new Promise((resolve, reject) => {
+
               Session.findById(sessionId)
               .then(session=>{
 
@@ -140,12 +146,20 @@ exports.createKorpus = (projectId, userId) => {
                 reject();
               })
             });
+
+            console.log("wkladam push")
             promises.push(promis);
+
           }
 
 
+          console.log("inicializuje promises all")
           await Promise.all(promises)
+
+          console.log("Zakonczono promises all")
           await this.zipDirectory(pathToCorpus,pathToZIP)
+
+          console.log("stworzono zip")
           fs.removeSync(pathToCorpus);   
           resolve(pathToZIP);     
     
@@ -178,14 +192,15 @@ exports.createKorpus = (projectId, userId) => {
  * 
  * 
  */
-exports.exportToEmu = (req, res, next) => {
+exports.exportToEmu = async (req, res, next) => {
 
   const projectId = req.params.projectId;
   
   //const userId = req.params.userId;
   const userId = req.userId;
 
-  ProjectEntry.findById(projectId).then(foundProject => {
+  try {
+    const foundProject = await ProjectEntry.findById(projectId);
 
     if(!foundProject){
       const wrongProjIDErr = new Error("Nie znaleziono projektu o danym ID");
@@ -205,13 +220,10 @@ exports.exportToEmu = (req, res, next) => {
       throw error
     }) 
 
-
-  }).catch(error=>{
+  } catch (error) {
     console.log(chalk.red(error.message))
     next(error);
-  })
-
-  
+  }  
 }
 
 

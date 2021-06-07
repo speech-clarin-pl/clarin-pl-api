@@ -160,29 +160,35 @@ exports.ctms2EMU = (container) => {
         let correctContainers = [];
 
         for(let container of containers ){
+
             let promis = new Promise((resolve, reject) => {
                 this.ctms2EMU(container)
                     .then((code)=>{
                         //console.log(code)
+                        console.log("addedPromise1")
                         correctContainers.push(container);
                         resolve(code);
                     })
                     .catch((code) => {
+                        console.log("rejectPromise2")
                         reject(code)
                     })
             });
     
+            console.log("pushPromise")
             promises.push(promis);
         }
     
         Promise.all(promises)
             .then(result => {
                 resolve(correctContainers)
+                console.log("Przed 1")
             })
             .catch(err=>{
                 //zawsze robie resolve ponieważ chce sprawdzić które kontenery się nie wykonały
                 //wtedy correntContainers zawieraja tylko te którym udało się zrobić EMU JSON
                 resolve(correctContainers)
+                console.log("Przed 2")
             })
     });
 }
