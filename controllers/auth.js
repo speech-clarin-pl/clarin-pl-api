@@ -470,7 +470,6 @@ exports.login = (req, res, next) => {
 
             res.status(200).json({message: 'Jesteś zalogowany poprawnie.', token: token, userName:loadedUser.name, email: loadedUser.email});
 
-            
         })
         .catch((err) => {
             console.log(chalk.red(err.message));

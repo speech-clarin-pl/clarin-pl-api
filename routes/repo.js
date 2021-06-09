@@ -3,6 +3,7 @@ const repoController = require('../controllers/repoPanel');  // poprzednia wersj
 const audioEditorController = require('../controllers/audioEditor');  
 const router = express.Router();
 const isAuth = require('../middleware/is-auth');
+const multerConfig = require('../middleware/multerConfig');
 
  //GET /repoFiles/:userId/:projectId/:sessionId/:containerId/:fileType - pobieram plik z repozytorium użytkownika
  //router.get('/:userId/:projectId/:sessionId/:containerId/:fileType', isAuth, repoController.getFileFromContainer);
@@ -15,7 +16,7 @@ const isAuth = require('../middleware/is-auth');
  router.get('/loadBinaryAudio/:toolType/:containerId', audioEditorController.loadBinaryAudio);
 
 //POST /repoFiles/uploadFile  - wysyłam pojedynczy plik
-router.post('/uploadFile', isAuth, repoController.uploadFile);
+router.post('/uploadFile', [isAuth, multerConfig ], repoController.uploadFile);
 
 //POST /repoFiles/createNewSession  - tworze nową sesję
 router.post('/createNewSession', isAuth, repoController.createNewSession);
