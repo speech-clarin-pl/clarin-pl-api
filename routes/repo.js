@@ -7,7 +7,7 @@ const multerConfig = require('../middleware/multerConfig');
 
  //GET /repoFiles/:userId/:projectId/:sessionId/:containerId/:fileType - pobieram plik z repozytorium użytkownika
  //router.get('/:userId/:projectId/:sessionId/:containerId/:fileType', isAuth, repoController.getFileFromContainer);
- router.get('/download/:containerId/:fileType', isAuth, repoController.getFileFromContainer);
+ router.get('/download/:containerId/:fileType', isAuth, repoController.getFileFromContainer); //refactored
  
  // GET /repoFiles/loadAudioFile/REC/:containerId - dostarcza plik audio
  router.get('/loadAudioFile/:toolType/:containerId', audioEditorController.loadAudioFile);

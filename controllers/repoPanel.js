@@ -611,191 +611,144 @@ exports.runSpeechRecognition = (req, res, next) => {
  * @apiError (500) ServerError Coś poszło nie tak na serwerze
  * 
  */
+
+//refactored
 // ###################################################
 // ########### pobieram plik z repozytorium użytkownika
 // ######################################################
-exports.getFileFromContainer = (req,res,next) => {
+exports.getFileFromContainer = async (req, res, next) => {
 
- // const userId = req.params.userId;
- // const projectId = req.params.projectId;
- // const sessionId = req.params.sessionId;
+  try {
 
-  const containerId = req.params.containerId;
-  
-  const fileType = req.params.fileType;
+    const containerId = req.params.containerId;
+    const fileType = req.params.fileType;
 
-  //console.log(chalk.bgGreen('fileType'))
-  //console.log(chalk.bgRed(fileType))
+    if (!containerId) {
+      const error = new Error('Brak id kontenera');
+      error.statusCode = 400;
+      throw error;
+    }
 
-  //pobieram kontener z bazy danych
-  Container.findById(containerId)
-    .then(container => {
+    if (!fileType) {
+      const error = new Error('Brak typu pliku do pobrania');
+      error.statusCode = 400;
+      throw error;
+    }
 
-        if(!container){
-          const error = new Error('Nie znaleziono kontenera o danym ID');
-          error.statusCode = 404;
-          throw error;
-        }
+    const container = await Container.findById(containerId);
 
-        const userId = container.owner;
-        const projectId = container.project;
-        const sessionId = container.session;
+    if (!container) {
+      const error = new Error('Nie znaleziono kontenera o danym ID');
+      error.statusCode = 404;
+      throw error;
+    }
 
-        //sciezka do pliku dat
-        const repoPath = appRoot + "/repo/" + userId + "/" + projectId + "/" + sessionId;
+    const userId = container.owner;
+    const projectId = container.project;
+    const sessionId = container.session;
 
-        const containerFolderName = utils.getFileNameWithNoExt(container.fileName);
-        const fileAudioName = container.fileName;
-        const fileDatName = utils.getFileNameWithNoExt(container.fileName)+".dat";
+    //sciezka do pliku dat
+    const repoPath = appRoot + "/repo/" + userId + "/" + projectId + "/" + sessionId;
 
-        let filename = '';
+    const containerFolderName = utils.getFileNameWithNoExt(container.fileName);
+    const fileAudioName = container.fileName;
+    const fileDatName = utils.getFileNameWithNoExt(container.fileName) + ".dat";
 
-        //sprawdzam o jaki typ pliku mi chodzi
-        let filePath = '';
+    let filename = '';
 
-        //console.log(chalk.bgCyan('BEFORE SWITCH'))
-        //console.log(chalk.bgCyan(fileType))
-
-        switch(fileType){
-          case "audio": //audio w 16000Hz 16bit...
-            filePath = repoPath + "/" + containerFolderName + "/" + fileAudioName;
-            filename = fileAudioName;
-
-            //console.log(chalk.bgCyan('SWITCH'))
-            //console.log(chalk.bgCyan('audio'))
-            break;
-          case "dat": //audiowaveform dat
-            filePath = repoPath + "/" + containerFolderName + "/" + fileDatName;
-            filename = fileDatName;
-
-            //console.log(chalk.bgCyan('SWITCH'))
-            //console.log(chalk.bgCyan('dat'))
-            break;
-          case "oryginalAudio": //audio as it was uploaded
-            const oryginalAudioName = container.oryginalFileName;
-            filePath = repoPath + "/" + containerFolderName + "/" + oryginalAudioName;
-            filename = oryginalAudioName;
-            //console.log(chalk.bgCyan('SWITCH'))
-            //console.log(chalk.bgCyan('oryginalAudio'))
-            break;
-          case "DIActm": 
-            const DIActmFile = utils.getFileNameWithNoExt(container.fileName)+"_DIA.ctm";
-            filePath = repoPath + "/" + containerFolderName + "/" + DIActmFile;
-            filename = DIActmFile;
-            //console.log(chalk.bgCyan('SWITCH'))
-            //console.log(chalk.bgCyan('DIActm'))
-            break;
-          case "DIAtextGrid": 
-            const DIAtextGrid = utils.getFileNameWithNoExt(container.fileName)+"_DIA.textGrid";
-            filePath = repoPath + "/" + containerFolderName + "/" + DIAtextGrid;
-            filename = DIAtextGrid;
-            //console.log(chalk.bgCyan('SWITCH'))
-            //console.log(chalk.bgCyan('DIAtextGrid'))
-            break;
-          case "DIAJSON": 
-            const DIAJSON = utils.getFileNameWithNoExt(container.fileName)+"_DIA.json";
-            filePath = repoPath + "/" + containerFolderName + "/" + DIAJSON;
-            filename = DIAJSON;
-            //console.log(chalk.bgCyan('SWITCH'))
-            //console.log(chalk.bgCyan('DIAJSON'))
-            break;
-          case "VADctm": 
-            const VADctmFile = utils.getFileNameWithNoExt(container.fileName)+"_VAD.ctm";
-            filePath = repoPath + "/" + containerFolderName + "/" + VADctmFile;
-            filename = VADctmFile;
-            //console.log(chalk.bgCyan('SWITCH'))
-            //console.log(chalk.bgCyan('VADctm'))
-            break;
-          case "VADtextGrid": 
-            const VADtextGrid = utils.getFileNameWithNoExt(container.fileName)+"_VAD.textGrid";
-            filePath = repoPath + "/" + containerFolderName + "/" + VADtextGrid;
-            filename = VADtextGrid;
-            //console.log(chalk.bgCyan('SWITCH'))
-            //console.log(chalk.bgCyan('VADtextGrid'))
-            break;
-          case "SEGctm": 
-            const SEGctmFile = utils.getFileNameWithNoExt(container.fileName)+"_SEG.ctm";
-            filePath = repoPath + "/" + containerFolderName + "/" + SEGctmFile;
-            filename = SEGctmFile;
-            //console.log(chalk.bgCyan('SWITCH'))
-            //console.log(chalk.bgCyan('SEGctm'))
-            break;
-          case "SEGtextGrid": 
-            const SEGtextGrid = utils.getFileNameWithNoExt(container.fileName)+"_SEG.textGrid";
-            filePath = repoPath + "/" + containerFolderName + "/" + SEGtextGrid;
-            filename = SEGtextGrid;
-            //console.log(chalk.bgCyan('SWITCH'))
-            //console.log(chalk.bgCyan('SEGtextGrid'))
-            break;
-          case "VADJSON": 
-            const VADJSON = utils.getFileNameWithNoExt(container.fileName)+"_VAD.json";
-            filePath = repoPath + "/" + containerFolderName + "/" + VADJSON;
-            filename = VADJSON;
-            //console.log(chalk.bgCyan('SWITCH'))
-            //console.log(chalk.bgCyan('VADJSON'))
-            break;
-          case "JSONTranscript": 
-            const JSONTranscript = utils.getFileNameWithNoExt(container.fileName)+".json";
-            filePath = repoPath + "/" + containerFolderName + "/" + JSONTranscript;
-            filename = JSONTranscript;
-            //console.log(chalk.bgCyan('SWITCH'))
-            //console.log(chalk.bgCyan('JSONTranscript'))
-            break;
-          case "TXTTranscript": 
-            const TXTTranscript = utils.getFileNameWithNoExt(container.fileName)+"_TXT.txt";
-            filePath = repoPath + "/" + containerFolderName + "/" + TXTTranscript;
-            filename = TXTTranscript;
-            console.log(chalk.bgCyan('SWITCH'))
-            console.log(chalk.bgCyan('TXTTranscript'))
-            console.log(chalk.bgCyan(TXTTranscript))
-            console.log(chalk.bgCyan(filePath))
-            break;
-          case "EMUJSON": 
-            const EMUJSON = utils.getFileNameWithNoExt(container.fileName)+"_annot.json";
-            filePath = repoPath + "/" + containerFolderName + "/" + EMUJSON;
-            filename = EMUJSON;
-            //console.log(chalk.bgCyan('SWITCH'))
-           // console.log(chalk.bgCyan('EMUJSON'))
-            break;
-          default:
-           // console.log(chalk.bgCyan('SWITCH'))
-            //console.log(chalk.bgCyan('default'))
-            const error = new Error("Nie rozpoznano typu wyjścia");
-            throw error;
-            //filePath = '';
-            //filename = 'default';
-            //console.log("wrong file type!!")
-        }
-
-        //console.log(chalk.bgCyan('AFTER SWITCH'))
-       //     console.log(chalk.bgCyan(fileType))
-       //     console.log(chalk.bgCyan(filePath))
-
-        //res.status(200).({ message: 'The data for previewing has been sent!', containerData: filePath});        
-       // res.sendFile(filePath);
-        //res.set('Content-Type', 'application/json');
-       // res.status(200).json({toolType: toolType});
-       // res.append("toolType", toolType);
-       // fs.createReadStream(filePath).pipe(res);
-
-       try {
-
-          if(fs.existsSync(filePath)) {
-              res.download(filePath,filename);
-          } else {
-              const err = new Error("Plik tego typu nie został stworzony!")
-              throw err;
-          }
-        } catch (err) {
-            throw err;
-        }
+    //sprawdzam o jaki typ pliku mi chodzi
+    let filePath = '';
 
 
-    }).catch(error=>{
-      console.log(chalk.red(error.message));
-      error.statusCode = error.statusCode || 500;
-      next(error);
-    })
+    switch (fileType) {
+      case "audio": //audio w 16000Hz 16bit...
+        filePath = repoPath + "/" + containerFolderName + "/" + fileAudioName;
+        filename = fileAudioName;
+        break;
+      case "dat": //audiowaveform dat
+        filePath = repoPath + "/" + containerFolderName + "/" + fileDatName;
+        filename = fileDatName;
+        break;
+      case "oryginalAudio": //audio as it was uploaded
+        const oryginalAudioName = container.oryginalFileName;
+        filePath = repoPath + "/" + containerFolderName + "/" + oryginalAudioName;
+        filename = oryginalAudioName;
+        break;
+      case "DIActm":
+        const DIActmFile = utils.getFileNameWithNoExt(container.fileName) + "_DIA.ctm";
+        filePath = repoPath + "/" + containerFolderName + "/" + DIActmFile;
+        filename = DIActmFile;
+        break;
+      case "DIAtextGrid":
+        const DIAtextGrid = utils.getFileNameWithNoExt(container.fileName) + "_DIA.textGrid";
+        filePath = repoPath + "/" + containerFolderName + "/" + DIAtextGrid;
+        filename = DIAtextGrid;
+        break;
+      case "DIAJSON":
+        const DIAJSON = utils.getFileNameWithNoExt(container.fileName) + "_DIA.json";
+        filePath = repoPath + "/" + containerFolderName + "/" + DIAJSON;
+        filename = DIAJSON;
+        break;
+      case "VADctm":
+        const VADctmFile = utils.getFileNameWithNoExt(container.fileName) + "_VAD.ctm";
+        filePath = repoPath + "/" + containerFolderName + "/" + VADctmFile;
+        filename = VADctmFile;
+        break;
+      case "VADtextGrid":
+        const VADtextGrid = utils.getFileNameWithNoExt(container.fileName) + "_VAD.textGrid";
+        filePath = repoPath + "/" + containerFolderName + "/" + VADtextGrid;
+        filename = VADtextGrid;
+        break;
+      case "SEGctm":
+        const SEGctmFile = utils.getFileNameWithNoExt(container.fileName) + "_SEG.ctm";
+        filePath = repoPath + "/" + containerFolderName + "/" + SEGctmFile;
+        filename = SEGctmFile;
+        break;
+      case "SEGtextGrid":
+        const SEGtextGrid = utils.getFileNameWithNoExt(container.fileName) + "_SEG.textGrid";
+        filePath = repoPath + "/" + containerFolderName + "/" + SEGtextGrid;
+        filename = SEGtextGrid;
+        break;
+      case "VADJSON":
+        const VADJSON = utils.getFileNameWithNoExt(container.fileName) + "_VAD.json";
+        filePath = repoPath + "/" + containerFolderName + "/" + VADJSON;
+        filename = VADJSON;
+        break;
+      case "JSONTranscript":
+        const JSONTranscript = utils.getFileNameWithNoExt(container.fileName) + ".json";
+        filePath = repoPath + "/" + containerFolderName + "/" + JSONTranscript;
+        filename = JSONTranscript;
+        break;
+      case "TXTTranscript":
+        const TXTTranscript = utils.getFileNameWithNoExt(container.fileName) + "_TXT.txt";
+        filePath = repoPath + "/" + containerFolderName + "/" + TXTTranscript;
+        filename = TXTTranscript;
+        break;
+      case "EMUJSON":
+        const EMUJSON = utils.getFileNameWithNoExt(container.fileName) + "_annot.json";
+        filePath = repoPath + "/" + containerFolderName + "/" + EMUJSON;
+        filename = EMUJSON;
+        break;
+      default:
+        const error = new Error("Nie rozpoznano typu wyjścia");
+        throw error;
+    }
+
+    if (fs.existsSync(filePath)) {
+      res.download(filePath, filename);
+    } else {
+      const err = new Error("Plik tego typu nie istnieje!");
+      throw err;
+    }
+
+  } catch (error) {
+    if (!error.statusCode) {
+      error.statusCode = 500;
+    }
+    error.message = "Błąd pobierania pliku"
+    next(error);
+  }
+
 }
 
 
@@ -995,7 +948,6 @@ exports.removeContainer = (req,res,next) => {
 
 exports.uploadFile = async (req, res, next) => {
 
- 
   if (!req.file) {
     //res.status(400).json({ message: 'Próbujesz przesłać zły typ pliku'})
     const error = new Error("Zły typ pliku");
@@ -1038,18 +990,11 @@ exports.uploadFile = async (req, res, next) => {
 
     //jeżeli wgrywany plik to audio
     if (typeArray[0] == 'audio') {
-      // ROBIE KONWERSJE FFMPEG
+     
       try {
 
         let process = new ffmpeg(fullFilePath);
-        process.then(audio => {
-          audio.setAudioFrequency(16000)
-            .setAudioChannels(1)
-            .setAudioBitRate(256);
-
-          audio.addCommand('-loglevel', 'warning');
-          audio.addCommand('-y', '');
-          audio.addCommand('-sample_fmt', 's16');
+        process.then(async audio => {
 
 
           //teraz robie konwersje na WAV i usuwam sufix _temp w docelowym pliku
@@ -1058,79 +1003,77 @@ exports.uploadFile = async (req, res, next) => {
           const finalAudioFileName = conainerFolderName + ".wav";
           const fillCorrectAudioPath = containerFolderPath + "/" + finalAudioFileName;
 
+          audio.setAudioFrequency(16000)
+            .setAudioChannels(1)
+            .setAudioBitRate(256);
+
+          audio.addCommand('-loglevel', 'warning');
+          audio.addCommand('-y', '');
+          audio.addCommand('-sample_fmt', 's16');
+
           //tworze odpowiednia nazwe kontenera - bez unikatowego ID oraz bez rozszerzenia
           //const finalContainerName = oryginalFileName;
+          const convertedFile = await audio.save(fillCorrectAudioPath);
 
-          audio.save(fillCorrectAudioPath)
-            .then(convertedFile => {
+          //teraz zmieniam nazwe pliku na taki jaki był przesłany oryginalnie - usuwając unikatowe id i _temp.
+          //Czyli przywracam plikowi oryginalna nazwe
+          let tooryginal = utils.bringOryginalFileName(fullFilePath);
 
-              //teraz zmieniam nazwe pliku na taki jaki był przesłany oryginalnie - usuwając unikatowe id i _temp.
-              //Czyli przywracam plikowi oryginalna nazwe
+          const sizeConverted = Number(fs.statSync(fillCorrectAudioPath).size);
+          const sizeOryginal = Number(fs.statSync(fullFilePath).size);
+          //const sizeOryginal = 0;
 
-              let tooryginal = utils.bringOryginalFileName(fullFilePath);
+          //zapisuje tą informaje do DB
+          let newContainer = new Container({
+            fileName: finalAudioFileName,
+            containerName: utils.getFileNameWithNoExt(oryginalFileName),
+            oryginalFileName: utils.getFileNameFromPath(tooryginal),
+            size: sizeConverted, //wielkosc przekonwertowanego pliku
+            sizeOryginal: sizeOryginal, //wielkosc oryginalnego pliku
+            owner: userId,
+            project: projectId,
+            session: sessionId,
+            ifVAD: false,
+            ifDIA: false,
+            ifREC: false,
+            ifSEG: false,
+            statusVAD: 'ready',
+            statusDIA: 'ready',
+            statusREC: 'ready',
+            statusSEG: 'ready',
+          });
 
+          fs.renameSync(fullFilePath, tooryginal);
 
-              // const changedOryginalFilePath =  containerFolderPath + "/" + tooryginal;
+          let ext = utils.getFileExtention(finalAudioFileName);
+          ext = (ext[0] + '').toLowerCase();
 
-              const sizeConverted = Number(fs.statSync(fillCorrectAudioPath).size);
-              const sizeOryginal = Number(fs.statSync(fullFilePath).size);
-              //const sizeOryginal = 0;
+          const finalDATFileName = conainerFolderName + ".dat";
+          const fillCorrectDATPath = containerFolderPath + "/" + finalDATFileName;
 
+          const shellcomm = 'audiowaveform -i ' + fillCorrectAudioPath + ' -o ' + fillCorrectDATPath + ' -z 32 -b 8 --input-format ' + ext;
 
+          //obliczam z pliku audio podgląd dat
+          if (shell.exec(shellcomm, { silent: true }).code !== 0) {
+            shell.echo('Error: Problem with extracting dat for audio file');
+            console.log(chalk.red('Error: Problem with extracting dat for audio file'));
+            //shell.exit(1);
+            const err = new Error('Error: Problem with extracting dat for audio file');
+            throw err;
+          } else {
 
-              //zapisuje tą informaje do DB
-              let newContainer = new Container({
-                fileName: finalAudioFileName,
-                containerName: utils.getFileNameWithNoExt(oryginalFileName),
-                oryginalFileName: utils.getFileNameFromPath(tooryginal),
-                size: sizeConverted, //wielkosc przekonwertowanego pliku
-                sizeOryginal: sizeOryginal, //wielkosc oryginalnego pliku
-                owner: userId,
-                project: projectId,
-                session: sessionId,
-                ifVAD: false,
-                ifDIA: false,
-                ifREC: false,
-                ifSEG: false,
-                statusVAD: 'ready',
-                statusDIA: 'ready',
-                statusREC: 'ready',
-                statusSEG: 'ready',
-              });
-
-              fs.renameSync(fullFilePath, tooryginal);
-
-              let ext = utils.getFileExtention(finalAudioFileName);
-              ext = (ext[0] + '').toLowerCase();
-
-              const finalDATFileName = conainerFolderName + ".dat";
-              const fillCorrectDATPath = containerFolderPath + "/" + finalDATFileName;
-
-              const shellcomm = 'audiowaveform -i ' + fillCorrectAudioPath + ' -o ' + fillCorrectDATPath + ' -z 32 -b 8 --input-format ' + ext;
-
-              //obliczam z pliku audio podgląd dat
-              if (shell.exec(shellcomm, { silent: true }).code !== 0) {
-                shell.echo('Error: Problem with extracting dat for audio file');
-                console.log(chalk.red('Error: Problem with extracting dat for audio file'));
-                //shell.exit(1);
-                const err = new Error('Error: Problem with extracting dat for audio file');
-                throw err;
-              } else {
-                newContainer.save()
-                  .then(createdContainer => {
-                    //updating the reference in given session
-                    Session.findOneAndUpdate({ _id: sessionId }, { $push: { containersIds: createdContainer._id } })
-                      .then(updatedSession => {
-                        res.status(201).json({ message: 'Wgranie pliku zakończone powodzeniem!', sessionId: sessionId, oryginalName: oryginalFileName, containerId: createdContainer._id })
-                      })
-                  })
-                  .catch(error => {
-                    throw error;
-                  })
+            const createdContainer = await newContainer.save();
+            const updatedSession = await Session.findOneAndUpdate({ _id: sessionId }, {
+              $push: {
+                containersIds: {
+                  $each: [createdContainer._id], $position: 0
+                }
               }
-            }).catch(err => {
-              throw err;
-            })
+            });
+
+            res.status(201).json({ message: 'Wgranie pliku zakończone powodzeniem!', sessionId: sessionId, oryginalName: oryginalFileName, containerId: createdContainer._id })
+
+          }
         }).catch(error => {
           throw error;
         })
@@ -1181,7 +1124,6 @@ exports.uploadFile = async (req, res, next) => {
     }
   }
 }
-
 
 
 //##########################################
@@ -1486,7 +1428,7 @@ exports.getRepoAssets = (req,res,next) => {
         let sessionList = [];
         let containerList = [];
 
-        Session.find({_id: sessionIds})
+        Session.find({_id: sessionIds}).sort({'createdAt':-1})
           .then(listaSesji => {
             sessionList = listaSesji;
 
@@ -1502,7 +1444,7 @@ exports.getRepoAssets = (req,res,next) => {
           })
           .then(listaSesji => {
 
-            Container.find({owner: userId, project: projectId})
+            Container.find({owner: userId, project: projectId}).sort({'createdAt':-1})
               .then(containers=>{
 
                 containerList = containers;

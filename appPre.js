@@ -40,8 +40,6 @@ var corsOptions = {
 const config = require('./config.js');
 
 
-
-
 if (process.env.NODE_ENV == 'development') {
     console.log(chalk.green("SERWER IN DEVELOPMENT MODE"))
 } else if (process.env.NODE_ENV == 'production') {
@@ -95,23 +93,14 @@ app.use((req, res, next) => {
 });
 
 
-
-
-
-//app.use(uploadAudio, (req, res, next) => {
-//     next();
-//});
-
-
 //static files in repo....
 app.use('/repoFiles', isAuth, express.static(path.join(__dirname, '/repo')));
 
 //app.use(serveStatic(__dirname+'/repo', { }))
 
 //routes for different parts of requests in app
-app.use('/projectsList', projectsListRoutes);
-app.use('/recognition', recognitionRoutes);
-//app.use('/segmentation', segmentationRoutes);
+app.use('/projectsList', projectsListRoutes); //refactored
+app.use('/recognition', recognitionRoutes); //refactored
 app.use('/repoFiles', repoRoutes);
 app.use('/vad', VADRoutes);
 app.use('/dia', DIARoutes);
@@ -121,12 +110,34 @@ app.use('/auth', authRoutes);
 
 //error handling...
 app.use((error, req, res, next) => {
-    console.log(chalk.red('GLOBAL ERROR HANDLER'))
+
     const status = error.statusCode || 500;
-    const message = error.message;  //wiadomosc przekazana w konstruktorze Error
-    console.log(chalk.red(message))
+    const message = error.message || "Wystąpił błąd";
     const data = error.data;
-    res.status(status).json({ message: message, data: data });
+
+    console.log(chalk.red('GLOBAL ERROR HANDLER'))
+    console.log(chalk.red(message))
+
+    let dataToReturn = null;
+    let messageToReturn = null;
+
+    //różne błędy w zależności od typu środowiska
+    if (process.env.NODE_ENV == 'development') {
+        dataToReturn = data;
+        messageToReturn = message;
+    } else if (process.env.NODE_ENV == 'production') {
+        dataToReturn = {};
+        messageToReturn = "Wystąpił błąd";
+    } else if (process.env.NODE_ENV == 'test') {
+        dataToReturn = data;
+        messageToReturn = message;
+    } else {
+        dataToReturn = {};
+        messageToReturn = "Wystąpił błąd";
+    }
+
+    res.status(status).json({ message: messageToReturn, data: dataToReturn });
+
 })
 
 //najpierw lacze sie z baza a nastepnie startuje serwer

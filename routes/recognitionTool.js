@@ -1,20 +1,13 @@
 const express = require('express');
 const recognitionToolController = require('../controllers/recognitionTool');
+const isAuth = require('../middleware/is-auth');
 
 const router = express.Router();
 
-// POST /recognition/singleFile
-//router.post('/singleFile', recognitionToolController.startFileRecognitionOK);
-
 // GET /recognition/loadTranscription/containerId
-router.get('/loadTranscription/:containerId', recognitionToolController.loadTranscription);
+router.get('/loadTranscription/:containerId', isAuth, recognitionToolController.loadTranscription); //refactored
 
 // PUT /recognition/saveTranscription
-router.put('/saveTranscription', recognitionToolController.saveTranscription);
-
-
-// POST /recognition/multipleFiles
-//router.post('/multipleFiles', recognitionToolController.startBatchRecognition);
-
+router.put('/saveTranscription', isAuth, recognitionToolController.saveTranscription); //refactored
 
 module.exports = router;

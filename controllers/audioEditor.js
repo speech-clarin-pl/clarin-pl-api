@@ -20,43 +20,53 @@ const Container = require('../models/Container')
 //##########################################
 //#### pobieram plik audio i wysyłam do klienta w celu podglądu pliku ######
 //#######################################
-exports.loadAudioFile = (req, res, next) => {
+exports.loadAudioFile = async (req, res, next) => {
 
-  const containerId = req.params.containerId;
-  const toolType = req.params.toolType;
+  try {
 
-  //console.log('ładuje dane do poglądu' + containerId);
+    console.log('Load Audio File...')
 
-  //pobieram kontener z bazy danych
-  Container.findById(containerId)
-    .then(container => {
+    const containerId = req.params.containerId;
+    const toolType = req.params.toolType;
 
-        const userId = container.owner;
-        const projectId = container.project;
-        const sessionId = container.session;
+    let error = new Error();
 
-        //sciezka do pliku dat
-        const repoPath = appRoot + "/repo/" + userId + "/" + projectId + "/" + sessionId;
+    if (!containerId) {
+      error.message = "Nieodpowiedni parametr";
+      error.statusCode = 400;
+      throw error;
+    }
 
-        // dorobić rozpoznawanie typu pliku audio do zwrócenia
+    if (!toolType) {
+      error.message = "Nieodpowiedni parametr";
+      error.statusCode = 400;
+      throw error;
+    }
 
-        const fileToDeliver1 = utils.getFileNameWithNoExt(container.fileName) + ".wav";
-        const filePath1 = repoPath + "/" + fileToDeliver1;
-        //res.status(200).({ message: 'The data for previewing has been sent!', containerData: filePath});
-        
-       // res.sendFile(filePath);
+    //pobieram kontener z bazy danych
+    const container = await Container.findById(containerId);
 
-        //res.set('Content-Type', 'application/json');
-       // res.status(200).json({toolType: toolType});
-       // res.append("toolType", toolType);
-       // fs.createReadStream(filePath).pipe(res);
+    const userId = container.owner;
+    const projectId = container.project;
+    const sessionId = container.session;
 
-       res.sendFile(filePath1);
-      //  res.download(filePath);
+    //sciezka do pliku dat
+    const repoPath = appRoot + "/repo/" + userId + "/" + projectId + "/" + sessionId;
 
-    })
- 
+    // dorobić rozpoznawanie typu pliku audio do zwrócenia
+
+    const fileToDeliver1 = utils.getFileNameWithNoExt(container.fileName) + ".wav";
+    const filePath1 = repoPath + "/" + fileToDeliver1;
+
+    res.sendFile(filePath1);
+
+  } catch (error) {
+    error.message = error.message || "Błąd z ładowaniem pliku";
+    error.statusCode = error.statusCode || 500;
+    next(error);
+  }
 }
+  
 
 
 //##########################################
