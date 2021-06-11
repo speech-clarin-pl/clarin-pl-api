@@ -10,31 +10,31 @@ const multerConfig = require('../middleware/multerConfig');
  router.get('/download/:containerId/:fileType', isAuth, repoController.getFileFromContainer); //refactored
  
  // GET /repoFiles/loadAudioFile/REC/:containerId - dostarcza plik audio
- router.get('/loadAudioFile/:toolType/:containerId', audioEditorController.loadAudioFile);
+ router.get('/loadAudioFile/:toolType/:containerId', isAuth, audioEditorController.loadAudioFile);//refactored
 
  // GET /repoFiles/loadContainerPreview/REC/:containerId - dostarcza metadane kontenera potrzebne do renderingu podglądu
- router.get('/loadBinaryAudio/:toolType/:containerId', audioEditorController.loadBinaryAudio);
+ router.get('/loadBinaryAudio/:toolType/:containerId', isAuth, audioEditorController.loadBinaryAudio); //refactored
 
 //POST /repoFiles/uploadFile  - wysyłam pojedynczy plik
-router.post('/uploadFile', [isAuth, multerConfig ], repoController.uploadFile);
+router.post('/uploadFile', [isAuth, multerConfig ], repoController.uploadFile); //refactored
 
 //POST /repoFiles/createNewSession  - tworze nową sesję
-router.post('/createNewSession', isAuth, repoController.createNewSession);
+router.post('/createNewSession', isAuth, repoController.createNewSession); //refactored
 
 //PUT /repoFiles/changeContainerName/:containerId
-router.put('/changeContainerName/:containerId', isAuth, repoController.changeContainerName);
+router.put('/changeContainerName/:containerId', isAuth, repoController.changeContainerName); //refactored
 
 // GET /repoFiles/projectId - do pobierania listy plikow
-router.get('/getProjectAssets/:projectId', isAuth, repoController.getRepoAssets);
+router.get('/getProjectAssets/:projectId', isAuth, repoController.getRepoAssets); //refactored
 
 //pobieranie statystyk o załadowanych plikach do repo
-router.get('/getRepoStats/:projectId', isAuth, repoController.getRepoStats);
+router.get('/getRepoStats/:projectId', isAuth, repoController.getRepoStats); //refactored
 
  //DELETE /repoFiles/delete/:containerId - usuwa container
-router.delete('/delete/:containerId', isAuth, repoController.removeContainer);
+router.delete('/delete/:containerId', isAuth, repoController.removeContainer); //refactored
 
  //DELETE /repoFiles/deleteFile/userId - usuwa sesje
- router.delete('/deleteSession/:sessionId', isAuth, repoController.removeSession);
+ router.delete('/deleteSession/:sessionId', isAuth, repoController.removeSession); //refactored
 
  //PUT /repoFiles/runSpeechReco/containerId - wykonuje daną usługę na określonym kontenerze
  router.put('/runSpeechRecognition/:containerId', isAuth, repoController.runSpeechRecognition);

@@ -16,15 +16,13 @@ const IncomingForm = require('formidable').IncomingForm;
 const Session = require('../models/Session');
 const Container = require('../models/Container')
 
-
+//refactored
 //##########################################
 //#### pobieram plik audio i wysyłam do klienta w celu podglądu pliku ######
 //#######################################
 exports.loadAudioFile = async (req, res, next) => {
 
   try {
-
-    console.log('Load Audio File...')
 
     const containerId = req.params.containerId;
     const toolType = req.params.toolType;
@@ -50,6 +48,16 @@ exports.loadAudioFile = async (req, res, next) => {
     const projectId = container.project;
     const sessionId = container.session;
 
+    //sprawdzam czy mamy uprawnienia
+    //sprawdzam czy rzeczywiście mam uprawnienia do pobrania tego pliku
+    const userToCheck = await User.findById(container.owner,"_id status");
+    if ((userToCheck._id.toString() !== req.userId.toString()) || (userToCheck.status.toString() !== "Active")) {
+      const error = new Error('Nie masz uprawnień!');
+      error.statusCode = 403;
+      throw error;
+    }
+
+
     //sciezka do pliku dat
     const repoPath = appRoot + "/repo/" + userId + "/" + projectId + "/" + sessionId;
 
@@ -68,14 +76,54 @@ exports.loadAudioFile = async (req, res, next) => {
 }
   
 
-
+//refactored
 //##########################################
 //#### pobieram plik dat i wysyłam do klienta w celu podglądu pliku ######
 //#######################################
-exports.loadBinaryAudio = (req, res, next) => {
+exports.loadBinaryAudio = async (req, res, next) => {
 
-  const containerId = req.params.containerId;
-  const toolType = req.params.toolType;
+  try {
+    const containerId = req.params.containerId;
+
+    if (!containerId) {
+      error.message = "Nieodpowiedni parametr id contenera";
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const container = await Container.findById(containerId);
+
+    const userId = container.owner;
+    const projectId = container.project;
+    const sessionId = container.session;
+
+    //sprawdzam czy rzeczywiście mam uprawnienia do pobrania tego pliku
+    const userToCheck = await User.findById(container.owner,"_id status");
+    if ((userToCheck._id.toString() !== req.userId.toString()) || (userToCheck.status.toString() !== "Active")) {
+      const error = new Error('Nie masz uprawnień!');
+      error.statusCode = 403;
+      throw error;
+    }
+
+    //sciezka do pliku dat
+    const repoPath = appRoot + "/repo/" + userId + "/" + projectId + "/" + sessionId;
+
+    const fileToDeliver1 = utils.getFileNameWithNoExt(container.fileName) + ".dat";
+    const filePath1 = repoPath + "/" + fileToDeliver1;
+
+   // fs.createReadStream(filePath).pipe(res);
+
+    res.sendFile(filePath1);
+
+  } catch (error) {
+
+    error.message = error.message || "Błąd ładowania pliku dat";
+    error.statusCode = error.statusCode || 500;
+    next(error);
+
+  }
+
+  
 
   //console.log('ładuje dane do poglądu' + containerId);
 

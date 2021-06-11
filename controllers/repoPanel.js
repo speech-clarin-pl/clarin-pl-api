@@ -18,6 +18,7 @@ const uniqueFilename = require('unique-filename');
 const shell = require('shelljs');
 const {spawn} = require('child_process');
 const chalk = require('chalk');
+const createNewSessionHandler = require('./Handlers/createNewSessionHandler');
 
 
 //const AdmZip = require('adm-zip');
@@ -306,36 +307,43 @@ exports.getReadyKorpus = (req,res,next) => {
  * @apiError (500) ServerError 
  */
 
+
+//refactored
 //##########################################
 //#### zmieniam nazwe contenera ######
 //#######################################
 
-exports.changeContainerName = (req, res, next) => {
-  //const projectId = req.params.projectId;
-  const containerId = req.params.containerId;
-  const newName = req.body.newName;
+exports.changeContainerName = async (req, res, next) => {
 
-  let owner = null;
-  Container.findById(containerId).then(foundContainer=>{
+  try {
 
-    owner = foundContainer.owner;
-    return owner;
-  }).then(owner => {
-    return User.findById(owner);
-  }).then(user=>{
-    //zabezpieczenie....
-    if((user._id+"") == (owner+"")){
-      Container.findByIdAndUpdate(containerId,{containerName: newName}).then(container => {
-        res.status(200).json({message: 'Zmiana nazwy zakończona sukcesem!', containerId: container._id, newName: newName});
-      }).catch(error =>{
-        throw error;
-      })
+    const containerId = req.params.containerId;
+    const newName = req.body.newName;
+
+
+    const foundContainer = await Container.findById(containerId);
+    let owner = foundContainer.owner;
+
+
+    //sprawdzam czy mam uprawnienia
+    const userToCheck = await User.findById(owner,"_id status");
+    if ((userToCheck._id.toString() !== req.userId.toString()) || (userToCheck.status.toString() !== "Active")) {
+      const error = new Error('Nie masz uprawnień!');
+      error.statusCode = 403;
+      throw error;
     }
-  }).catch(error=>{
-    console.log(chalk.red(error.message));
-    error.statusCode = error.statusCode || 500;
-    next(error)
-  });
+
+    const container = await Container.findByIdAndUpdate(containerId, { containerName: newName });
+
+    res.status(200).json({ message: 'Zmiana nazwy zakończona sukcesem!', containerId: container._id, newName: newName });
+
+  } catch (error) {
+    if (!error.statusCode) {
+      error.statusCode = 500;
+    }
+    error.message = "Błąd zmiany nazwy kontenera"
+    next(error);
+  }
 }
 
 
@@ -647,6 +655,14 @@ exports.getFileFromContainer = async (req, res, next) => {
     const projectId = container.project;
     const sessionId = container.session;
 
+    //sprawdzam czy rzeczywiście mam uprawnienia do pobrania tego pliku
+    const userToCheck = await User.findById(container.owner,"_id status");
+    if ((userToCheck._id.toString() !== req.userId.toString()) || (userToCheck.status.toString() !== "Active")) {
+      const error = new Error('Nie masz uprawnień!');
+      error.statusCode = 403;
+      throw error;
+    }
+
     //sciezka do pliku dat
     const repoPath = appRoot + "/repo/" + userId + "/" + projectId + "/" + sessionId;
 
@@ -780,51 +796,58 @@ exports.getFileFromContainer = async (req, res, next) => {
 //#### usuwanie sesji
 //#######################################
 
-exports.removeSession = (req,res,next) => {
+exports.removeSession = async (req,res,next) => {
 
-  let userId;
-  let projectId;
-  const sessionId = req.params.sessionId;
-  let sessionPath;
-  let containersInThisSession = [];
+  try {
 
-  //usuwam sesje
-  Session.findByIdAndRemove(sessionId)
-    .then(foundSession => {
-        if(!foundSession){
-          const notSessionFoundError = new Error("Błędne ID sesji!");
-          console.log(chalk.red(notSessionFoundError.message));
-          throw notSessionFoundError;
-        }
+    const sessionId = req.params.sessionId;
 
-        containersInThisSession = foundSession.containersIds;
-        projectId = foundSession.projectId;
+    if (!sessionId) {
+      const error = new Error('Brak parametru id sesji');
+      error.statusCode = 400;
+      throw error;
+    }
 
-        //usuwam odniesienie do sesji w projekcie
-        return ProjectEntry.findByIdAndUpdate(projectId, {$pull: {sessionIds: sessionId}});
-      })
-      .then(foundProject=>{
-        userId = foundProject.owner;
-        
-        //usuwam kontenery które przynależały do tej sesji
-        sessionPath = appRoot + "/repo/" + userId + "/" + projectId + "/" + sessionId;
+    const foundSession = await Session.findByIdAndRemove(sessionId);
 
-        return Container.deleteMany({_id: containersInThisSession});
+    if(!foundSession){
+      const error = new Error("Nie znaleziono tej sesji");
+      error.statusCode = 404;
+      throw error;
+    }
 
-      })
-      .then(foundContainers =>{
-          //usuwam folder sesji z dysku fizycznie
-          try {
-            fs.removeSync(sessionPath);
-            res.status(200).json({ message: 'Sesja została usunięta', sessionId: sessionId});
-          } catch (error) {
-            throw error;
-          }
-      })
-      .catch(error => {
-        console.log(chalk.red(error.message));
-        next(error);
-      })
+    const containersInThisSession = foundSession.containersIds;
+    const projectId = foundSession.projectId;
+
+    const foundProject = await ProjectEntry.findById(projectId);
+    const userId = foundProject.owner;
+
+    //sprawdzam czy rzeczywiście mam uprawnienia
+    const userToCheck = await User.findById(userId,"_id status");
+    if ((userToCheck._id.toString() !== req.userId.toString()) || (userToCheck.status.toString() !== "Active")) {
+      const error = new Error('Nie masz uprawnień!');
+      error.statusCode = 403;
+      throw error;
+    }    
+
+    const updatedProject = await ProjectEntry.findByIdAndUpdate(projectId, {$pull: {sessionIds: sessionId}});
+
+    //usuwam kontenery które przynależały do tej sesji
+    const sessionPath = appRoot + "/repo/" + userId + "/" + projectId + "/" + sessionId;
+
+    const deletedContainers = await Container.deleteMany({_id: containersInThisSession});
+
+    fs.removeSync(sessionPath);
+    res.status(200).json({ message: 'Sesja została usunięta', sessionId: sessionId});
+
+
+  } catch (error) {
+    if (!error.statusCode) {
+      error.statusCode = 500;
+    }
+    error.message = "Błąd usuwania sesji"
+    next(error);
+  }
 }
 
 
@@ -856,56 +879,61 @@ exports.removeSession = (req,res,next) => {
  * 
  */
 
+//refactored
 //##########################################
 //#### usuwanie pojedynczego kontenera z repo ######
 //##########################################
-exports.removeContainer = (req,res,next) => {
+exports.removeContainer = async (req, res, next) => {
 
-  const containerId = req.params.containerId;
+  try {
 
-  //console.log("USUWAM CONTAONER: " + containerId)
-  Container.findById({_id:containerId})
-    .then(foundContainer => {
+    const containerId = req.params.containerId;
 
-      if(!foundContainer){
-        const error = new Error('Nie znaleziono kontenera o danym ID');
-        error.statusCode = 404;
-        throw error;
-      }
+    if (!containerId) {
+      const error = new Error('Brak parametru id contenera');
+      error.statusCode = 400;
+      throw error;
+    }
 
-        const userId = foundContainer.owner;
-        const projectId = foundContainer.project;
-        const sessionId = foundContainer.session;
+    const foundContainer = await Container.findById({ _id: containerId });
 
-        const conainerFolder = utils.getFileNameWithNoExt(foundContainer.fileName);
+    if (!foundContainer) {
+      const error = new Error('Nie znaleziono kontenera o danym ID');
+      error.statusCode = 404;
+      throw error;
+    }
 
-        const containerPath = appRoot + "/repo/" + userId + "/" + projectId + "/" + sessionId + "/" + conainerFolder;
+    const userId = foundContainer.owner;
+    const projectId = foundContainer.project;
+    const sessionId = foundContainer.session;
 
-        //usuwam folder kontenera z dysku fizycznie
-        fs.remove(containerPath).then(()=>{
-          //usuwam wpis w kolekcji Containers
-          Container.findByIdAndRemove(containerId)
-          .then(removedContainer => {
-              //usuwam odniesienie w kolekcji Sessions
-              Session.findByIdAndUpdate(sessionId,{$pull: {containersIds: containerId}})
-              .then(updatedSession =>{
-                res.status(200).json({ message: 'Kontener został usunięty!', sessionId: sessionId, containerId: containerId});
-              })
-              .catch(error => {
-                throw error;
-              })
-          })
-          .catch(error => {
-            throw error;
-          })
-        }).catch(error=>{
-          throw error;
-        });
-    }).catch(error=>{
-      console.log(chalk.red(error.message));
-      error.statusCode = error.statusCode || 500;
-      next(error);
-    })
+    //sprawdzam czy rzeczywiście mam uprawnienia
+    const userToCheck = await User.findById(foundContainer.owner,"_id status");
+    if ((userToCheck._id.toString() !== req.userId.toString()) || (userToCheck.status.toString() !== "Active")) {
+      const error = new Error('Nie masz uprawnień!');
+      error.statusCode = 403;
+      throw error;
+    }
+
+    const conainerFolder = utils.getFileNameWithNoExt(foundContainer.fileName);
+    const containerPath = appRoot + "/repo/" + userId + "/" + projectId + "/" + sessionId + "/" + conainerFolder;
+
+    fs.removeSync(containerPath);
+
+    const removedContainer = await Container.findByIdAndRemove(containerId);
+
+    const updatedSession = Session.findByIdAndUpdate(sessionId, { $pull: { containersIds: containerId } });
+
+    res.status(200).json({ message: 'Kontener został usunięty!', sessionId: sessionId, containerId: containerId });
+
+  } catch (error) {
+    if (!error.statusCode) {
+      error.statusCode = 500;
+    }
+    error.message = "Błąd usuwania kontenera"
+    next(error);
+  }
+
 }
 
 
@@ -941,19 +969,22 @@ exports.removeContainer = (req,res,next) => {
  * 
  */
 
-
+//refactored
 //##########################################
 //#### upload pojedynczego pliku do repo ###
 //#######################################
 
+
 exports.uploadFile = async (req, res, next) => {
 
-  if (!req.file) {
-    //res.status(400).json({ message: 'Próbujesz przesłać zły typ pliku'})
-    const error = new Error("Zły typ pliku");
-    error.statusCode = 406;
-    next(error);
-  } else {
+  try {
+
+    if (!req.file) {
+      const error = new Error("Brak pliku");
+      error.statusCode = 406;
+      throw error
+    }
+
     const savedFile = req.file.filename; // już z unikatowym id
     const oryginalFileName = req.file.originalname; //nazwa oryginalnego pliku
 
@@ -971,218 +1002,151 @@ exports.uploadFile = async (req, res, next) => {
     let conainerFolderName;
     let containerFolderPath;
 
-    try {
-      const { owner } = await ProjectEntry.findById(projectId);
-      userId = owner;
+    const { owner } = await ProjectEntry.findById(projectId);
+    userId = owner;
+
+    //sprawdzam czy mamy uprawnienia
+    const userToCheck = await User.findById(owner,"_id status");
+    if ((userToCheck._id.toString() !== req.userId.toString()) || (userToCheck.status.toString() !== "Active")) {
+      const error = new Error('Nie masz uprawnień!');
+      error.statusCode = 403;
+      throw error;
+    }
+
+
+    let fileWithNoExt = utils.getFileNameWithNoExt(savedFile);
+    let fileWithNoSufix = fileWithNoExt.substring(0, fileWithNoExt.length - 5);
+
+    conainerFolderName = fileWithNoSufix;
+    containerFolderPath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + conainerFolderName;
+    fullFilePath = containerFolderPath + "/" + savedFile;
+
+    //jeżeli wgrywany plik to audio
+    if (typeArray[0] == 'audio') {
+
+      let process = new ffmpeg(fullFilePath);
+
+      process.then(async audio => {
+
+        //teraz robie konwersje na WAV i usuwam sufix _temp w docelowym pliku
+        // musze tak robic bo zapisywanie w miejscu nie dziala przy dlugich plikach....
+
+        const finalAudioFileName = conainerFolderName + ".wav";
+        const fillCorrectAudioPath = containerFolderPath + "/" + finalAudioFileName;
+
+        audio.setAudioFrequency(16000)
+          .setAudioChannels(1)
+          .setAudioBitRate(256);
+
+        audio.addCommand('-loglevel', 'warning');
+        audio.addCommand('-y', '');
+        audio.addCommand('-sample_fmt', 's16');
+
+        //tworze odpowiednia nazwe kontenera - bez unikatowego ID oraz bez rozszerzenia
+        //const finalContainerName = oryginalFileName;
+        const convertedFile = await audio.save(fillCorrectAudioPath);
+
+        //teraz zmieniam nazwe pliku na taki jaki był przesłany oryginalnie - usuwając unikatowe id i _temp.
+        //Czyli przywracam plikowi oryginalna nazwe
+        let tooryginal = utils.bringOryginalFileName(fullFilePath);
+
+        const sizeConverted = Number(fs.statSync(fillCorrectAudioPath).size);
+        const sizeOryginal = Number(fs.statSync(fullFilePath).size);
+        //const sizeOryginal = 0;
+
+        //zapisuje tą informaje do DB
+        let newContainer = new Container({
+          fileName: finalAudioFileName,
+          containerName: utils.getFileNameWithNoExt(oryginalFileName),
+          oryginalFileName: utils.getFileNameFromPath(tooryginal),
+          size: sizeConverted, //wielkosc przekonwertowanego pliku
+          sizeOryginal: sizeOryginal, //wielkosc oryginalnego pliku
+          owner: userId,
+          project: projectId,
+          session: sessionId,
+          ifVAD: false,
+          ifDIA: false,
+          ifREC: false,
+          ifSEG: false,
+          statusVAD: 'ready',
+          statusDIA: 'ready',
+          statusREC: 'ready',
+          statusSEG: 'ready',
+        });
+
+        fs.renameSync(fullFilePath, tooryginal);
+
+        let ext = utils.getFileExtention(finalAudioFileName);
+        ext = (ext[0] + '').toLowerCase();
+
+        const finalDATFileName = conainerFolderName + ".dat";
+        const fillCorrectDATPath = containerFolderPath + "/" + finalDATFileName;
+
+        const shellcomm = 'audiowaveform -i ' + fillCorrectAudioPath + ' -o ' + fillCorrectDATPath + ' -z 32 -b 8 --input-format ' + ext;
+
+        //obliczam z pliku audio podgląd dat
+        if (shell.exec(shellcomm, { silent: true }).code !== 0) {
+          shell.echo('Error: Problem with extracting dat for audio file');
+          console.log(chalk.red('Error: Problem with extracting dat for audio file'));
+          //shell.exit(1);
+          const err = new Error('Error: Problem with extracting dat for audio file');
+          throw err;
+        } else {
+
+          const createdContainer = await newContainer.save();
+          const updatedSession = await Session.findOneAndUpdate({ _id: sessionId }, {
+            $push: {
+              containersIds: {
+                $each: [createdContainer._id], $position: 0
+              }
+            }
+          });
+
+          res.status(201).json({ message: 'Wgranie pliku zakończone powodzeniem!', sessionId: sessionId, oryginalName: oryginalFileName, containerId: createdContainer._id })
+
+        }
+      }).catch(error => {
+        error.message = "Problem z konwersją pliku";
+        throw error;
+      })
+
+      //jeżeli jest wgrywany plik txt
+    } else if (typeArray[0] == 'text') {
+
+      const updatedContainer = await Container.findByIdAndUpdate(containerId, { ifREC: true, statusREC: 'done' });
+
+      const oryginalFolderName = utils.getFileNameWithNoExt(updatedContainer.fileName);
+      const sciezkaOryginalna = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + oryginalFolderName + '/' + savedFile;
 
       let fileWithNoExt = utils.getFileNameWithNoExt(savedFile);
       let fileWithNoSufix = fileWithNoExt.substring(0, fileWithNoExt.length - 5);
 
-      conainerFolderName = fileWithNoSufix;
-      containerFolderPath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + conainerFolderName;
-      fullFilePath = containerFolderPath + "/" + savedFile;
+      //console.log(updatedContainer)
+      const docelowaSciezka = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + oryginalFolderName + '/' + utils.getFileNameWithNoExt(updatedContainer.fileName) + '_TXT.txt';
+      fs.moveSync(sciezkaOryginalna, docelowaSciezka, { overwrite: true });
 
-    } catch (error) {
-      error.message = "Coś poszło nie tak z przekazanymi parametrami. Sprawdź czy są poprawne!";
-      console.log(chalk.red(error.message))
-      throw error;
+      //zapisuje transkrypcje do pliku JSON
+      const JSONtranscription = utils.convertTxtFileIntoJSON(docelowaSciezka);
+
+      //zapisuje tego JSONA w katalogu containera
+      const JSONTransPath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + oryginalFolderName + '/' + utils.getFileNameWithNoExt(updatedContainer.fileName) + '.json';
+
+      await fs.writeJson(JSONTransPath, JSONtranscription);
+
+      //TO DO przerobienie tego na plik JSON - aby dało się podglądać
+
+      res.status(201).json({ message: 'Wgranie pliku zakończone powodzeniem!', sessionId: sessionId, oryginalName: oryginalFileName, containerId: updatedContainer._id });
+
     }
 
-    //jeżeli wgrywany plik to audio
-    if (typeArray[0] == 'audio') {
-     
-      try {
-
-        let process = new ffmpeg(fullFilePath);
-        process.then(async audio => {
-
-
-          //teraz robie konwersje na WAV i usuwam sufix _temp w docelowym pliku
-          // musze tak robic bo zapisywanie w miejscu nie dziala przy dlugich plikach....
-
-          const finalAudioFileName = conainerFolderName + ".wav";
-          const fillCorrectAudioPath = containerFolderPath + "/" + finalAudioFileName;
-
-          audio.setAudioFrequency(16000)
-            .setAudioChannels(1)
-            .setAudioBitRate(256);
-
-          audio.addCommand('-loglevel', 'warning');
-          audio.addCommand('-y', '');
-          audio.addCommand('-sample_fmt', 's16');
-
-          //tworze odpowiednia nazwe kontenera - bez unikatowego ID oraz bez rozszerzenia
-          //const finalContainerName = oryginalFileName;
-          const convertedFile = await audio.save(fillCorrectAudioPath);
-
-          //teraz zmieniam nazwe pliku na taki jaki był przesłany oryginalnie - usuwając unikatowe id i _temp.
-          //Czyli przywracam plikowi oryginalna nazwe
-          let tooryginal = utils.bringOryginalFileName(fullFilePath);
-
-          const sizeConverted = Number(fs.statSync(fillCorrectAudioPath).size);
-          const sizeOryginal = Number(fs.statSync(fullFilePath).size);
-          //const sizeOryginal = 0;
-
-          //zapisuje tą informaje do DB
-          let newContainer = new Container({
-            fileName: finalAudioFileName,
-            containerName: utils.getFileNameWithNoExt(oryginalFileName),
-            oryginalFileName: utils.getFileNameFromPath(tooryginal),
-            size: sizeConverted, //wielkosc przekonwertowanego pliku
-            sizeOryginal: sizeOryginal, //wielkosc oryginalnego pliku
-            owner: userId,
-            project: projectId,
-            session: sessionId,
-            ifVAD: false,
-            ifDIA: false,
-            ifREC: false,
-            ifSEG: false,
-            statusVAD: 'ready',
-            statusDIA: 'ready',
-            statusREC: 'ready',
-            statusSEG: 'ready',
-          });
-
-          fs.renameSync(fullFilePath, tooryginal);
-
-          let ext = utils.getFileExtention(finalAudioFileName);
-          ext = (ext[0] + '').toLowerCase();
-
-          const finalDATFileName = conainerFolderName + ".dat";
-          const fillCorrectDATPath = containerFolderPath + "/" + finalDATFileName;
-
-          const shellcomm = 'audiowaveform -i ' + fillCorrectAudioPath + ' -o ' + fillCorrectDATPath + ' -z 32 -b 8 --input-format ' + ext;
-
-          //obliczam z pliku audio podgląd dat
-          if (shell.exec(shellcomm, { silent: true }).code !== 0) {
-            shell.echo('Error: Problem with extracting dat for audio file');
-            console.log(chalk.red('Error: Problem with extracting dat for audio file'));
-            //shell.exit(1);
-            const err = new Error('Error: Problem with extracting dat for audio file');
-            throw err;
-          } else {
-
-            const createdContainer = await newContainer.save();
-            const updatedSession = await Session.findOneAndUpdate({ _id: sessionId }, {
-              $push: {
-                containersIds: {
-                  $each: [createdContainer._id], $position: 0
-                }
-              }
-            });
-
-            res.status(201).json({ message: 'Wgranie pliku zakończone powodzeniem!', sessionId: sessionId, oryginalName: oryginalFileName, containerId: createdContainer._id })
-
-          }
-        }).catch(error => {
-          throw error;
-        })
-
-
-      } catch (error) {
-        console.log(chalk.red(error.message));
-        error.statusCode = error.statusCode || 500;
-        next(error);
-      }
-    } else if (typeArray[0] == 'text') {
-      try {
-
-        //wyszukuje czy taki kontener istnieje
-
-        const updatedContainer = await Container.findByIdAndUpdate(containerId, { ifREC: true, statusREC: 'done' });
-
-        const oryginalFolderName = utils.getFileNameWithNoExt(updatedContainer.fileName);
-        const sciezkaOryginalna = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + oryginalFolderName + '/' + savedFile;
-
-        let fileWithNoExt = utils.getFileNameWithNoExt(savedFile);
-        let fileWithNoSufix = fileWithNoExt.substring(0, fileWithNoExt.length - 5);
-
-        //console.log(updatedContainer)
-        const docelowaSciezka = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + oryginalFolderName + '/' + utils.getFileNameWithNoExt(updatedContainer.fileName) + '_TXT.txt';
-        fs.moveSync(sciezkaOryginalna, docelowaSciezka, { overwrite: true });
-
-        //zapisuje transkrypcje do pliku JSON
-        const JSONtranscription = utils.convertTxtFileIntoJSON(docelowaSciezka);
-
-        //zapisuje tego JSONA w katalogu containera
-        const JSONTransPath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + oryginalFolderName + '/' + utils.getFileNameWithNoExt(updatedContainer.fileName) + '.json';
-
-        await fs.writeJson(JSONTransPath, JSONtranscription);
-
-        //TO DO przerobienie tego na plik JSON - aby dało się podglądać
-
-        res.status(201).json({ message: 'Wgranie pliku zakończone powodzeniem!', sessionId: sessionId, oryginalName: oryginalFileName, containerId: updatedContainer._id });
-
-
-      } catch (error) {
-        throw error;
-      }
-    } else {
-      const error = new Error("Zły typ pliku");
-      error.statusCode = 406;
-      next(error);
+  } catch (error) {
+    if (!error.statusCode) {
+      error.statusCode = 500;
     }
+    error.message = "Błąd wgrywania pliku"
+    next(error);
   }
-}
 
-
-//##########################################
-//#### tworzenie nowej sesji ######
-//#######################################
-
-exports.createNewSessionHandler = (sesName, projId) => {
-  return new Promise((resolve, reject) => {
-
-      const sessionName = sesName;
-      const projectId = projId;
-
-      let userId = null;
-      let sessionId = null;
-      
-      ProjectEntry.findById(projectId).then(foundProject=>{
-        if(!foundProject){
-          const projIDError = new Error("Nie znaleziono projektu o zadanym ID");
-          throw projIDError;
-        }
-        return foundProject.owner;
-      }).then(owner => {
-        userId = owner;
-
-        //walidacja nazwy sesji
-        const sessNameError = new Error("Błędna nazwa sesji lub jej brak!");
-        if(!sessionName){
-          throw sessNameError;
-        } else{
-          if(sessionName.trim().length < 1 || sessionName.trim().length > 100){
-            throw sessNameError;
-          }
-        }
-        
-
-        let session = new Session({
-          name: sessionName,
-          projectId: projectId,
-        });
-
-        return session.save();
-      }).then(createdSession=>{
-        sessionId = createdSession._id;
-        return ProjectEntry.findByIdAndUpdate(projectId,{$push: {sessionIds: createdSession._id}});
-      }).then(updatedProject =>{
-        
-        const repoPath = appRoot + "/repo/" + userId + "/" + projectId;
-        fs.mkdir(repoPath + '/' + sessionId).then(()=>{
-          return sessionId;
-        }).catch(error=>{
-          throw error;
-        }) 
-      }).then(()=>{
-        resolve(sessionId);
-      }).catch(error=>{
-        error.statusCode = error.statusCode || 500;
-        reject(error)
-      });
-  });
 }
 
 
@@ -1212,16 +1176,46 @@ exports.createNewSessionHandler = (sesName, projId) => {
  * 
  */
 
-exports.createNewSession = (req, res, next) => {
+exports.createNewSession = async (req, res, next) => {
+
+  try {
     const sessionName = req.body.sessionName;
     const projectId = req.body.projectId;
 
-    this.createNewSessionHandler(sessionName, projectId).then(newSessionId=>{
-      res.status(201).json({ message: 'Nowa sesja została utworzona!', sessionName: sessionName, id: newSessionId});
-    }).catch(error=>{
-      error.statusCode = error.statusCode || 500;
-      next(error);
-    });
+    if (!sessionName) {
+      const error = new Error("Brak nazwy sesji");
+      error.statusCode = 400;
+      throw error
+    }
+
+    if (!projectId) {
+      const error = new Error("Brak id projektu");
+      error.statusCode = 400;
+      throw error
+    }
+
+    //sprawdzam czy mam uprawnienia do tworzenia sesji w tym projekcie
+    const givenProject = await ProjectEntry.findById(projectId);
+
+    //sprawdzam czy mam uprawnienia
+    const userToCheck = await User.findById(givenProject.owner,"_id status");
+    if ((userToCheck._id.toString() !== req.userId.toString()) || (userToCheck.status.toString() !== "Active")) {
+      const error = new Error('Nie masz uprawnień!');
+      error.statusCode = 403;
+      throw error;
+    }
+
+    const newSessionId = await createNewSessionHandler(sessionName, projectId);
+
+    res.status(201).json({ message: 'Nowa sesja została utworzona!', sessionName: sessionName, id: newSessionId });
+
+  } catch (error) {
+    if (!error.statusCode) {
+      error.statusCode = 500;
+    }
+    error.message = "Błąd tworzenia nowej sesji"
+    next(error);
+  }
 }
 
 
@@ -1385,147 +1379,136 @@ exports.createNewSession = (req, res, next) => {
  * @apiError (500) ServerError 
  * 
  */
+
+//refactored
 //#######################################################
 //################ pobieram assety użytkownika ##########
 //#########################################################
 
-exports.getRepoAssets = (req,res,next) => {
+exports.getRepoAssets = async (req, res, next) => {
 
- 
-  //wydobywam dane z urla
- // const userId = req.params.userId;
-  const projectId = req.params.projectId;
+  try {
 
- // console.log("test");
- // console.log(projectId);
-  
-  //szukam plików w bazie danych dla danego usera
-  let znalezionyProjekt = null;
-  //let userId = null;
+    const projectId = req.params.projectId;
 
-  let userId = req.userId;
-  
-  let projectUserId = null;
+    if (!projectId) {
+      const error = new Error('Błądny parametr id projektu');
+      error.statusCode = 400;
+      throw error;
+    }
 
-  ProjectEntry.findById(projectId)
-    .then(foundPE => {
+    const znalezionyProjekt = await ProjectEntry.findById(projectId);
+    const projectUserId = znalezionyProjekt.owner;
 
-      if(!foundPE){
-        const noProjectErr = new Error("Nie znaleziono tego projektu");
-        throw noProjectErr;
-      }
+    //sprawdzam czy mam uprawnienia
+    const userToCheck = await User.findById(projectUserId,"_id status");
+    if ((userToCheck._id.toString() !== req.userId.toString()) || (userToCheck.status.toString() !== "Active")) {
+      const error = new Error('Nie masz uprawnień!');
+      error.statusCode = 403;
+      throw error;
+    }
 
-      znalezionyProjekt = foundPE;
-      projectUserId = znalezionyProjekt.owner;
-      
-      return User.findById(projectUserId);
+    //wydobywam liste sesji
+    let sessionIds = znalezionyProjekt.sessionIds;
+
+
+
+    const listaSesji = await Session.find({ _id: sessionIds }).sort({ 'createdAt': -1 });
+
+    const sessionList = listaSesji.map(sesja => {
+      return ({
+        id: sesja._id,
+        sessionName: sesja.name,
+        ifSelected: false,
+        containers: sesja.containersIds,
+      });
     })
-    .then(user => {
-      if((user._id + "") === (userId+"")) {
-        //wydobywam liste sesji
-        let sessionIds = znalezionyProjekt.sessionIds;
 
-        let sessionList = [];
-        let containerList = [];
 
-        Session.find({_id: sessionIds}).sort({'createdAt':-1})
-          .then(listaSesji => {
-            sessionList = listaSesji;
+    const containerList = await Container.find({ owner: req.userId, project: projectId }).sort({ 'createdAt': -1 });
 
-            sessionList = listaSesji.map(sesja => {
-              return({
-                id: sesja._id,
-                sessionName: sesja.name,
-                ifSelected: false,
-                containers: sesja.containersIds,
-              });
-            })
-            return sessionList;
-          })
-          .then(listaSesji => {
+    res.status(200).json({ message: 'Pliki dla tego projektu zostały pobrane!', sessions: sessionList, containers: containerList })
 
-            Container.find({owner: userId, project: projectId}).sort({'createdAt':-1})
-              .then(containers=>{
-
-                containerList = containers;
-
-                res.status(200).json({ message: 'Pliki dla tego projektu zostały pobrane!', sessions: sessionList, containers: containerList })
-              })
-          })
-          .catch(error => {
-            console.log(error);
-            throw error;
-          })
-
-      } else {
-        let error = new Error('Not authorized access');
-        error.statusCode = 401;
-        throw error;
-      }
-    })
-    .catch(err => {
-      console.log(chalk.red(err.message))
-      next(err)
-    })
+  } catch (error) {
+    if (!error.statusCode) {
+      error.statusCode = 500;
+    }
+    error.message = "Błąd pobierania zawartości repozytorium"
+    next(error);
+  }
 }
 
 
 // @api {post} /repoFiles/getRepoStats/:projectId  pobieranie statystyk o kontenerach
+//refactored
 exports.getRepoStats = async (req, res, next) => {
 
-  const projectId = req.params.projectId;
-
+  
   try {
+
+    const projectId = req.params.projectId;
+
+    if (!projectId) {
+      const error = new Error('Błądny parametr id projektu');
+      error.statusCode = 400;
+      throw error;
+    }
+
     const foundProject = await ProjectEntry.findById(projectId);
 
-    if(!foundProject){
+    if (!foundProject) {
       const noProjectErr = new Error("Nie znaleziono tego projektu");
       throw noProjectErr;
     }
 
     let userId = req.userId;
 
+    //sprawdzam czy mam uprawnienia
+    const userToCheck = await User.findById(foundProject.owner, "_id status");
+    if ((userToCheck._id.toString() !== req.userId.toString()) || (userToCheck.status.toString() !== "Active")) {
+      const error = new Error('Nie masz uprawnień!');
+      error.statusCode = 403;
+      throw error;
+    }
+
     //znajduje kontenery użytkownika i pobieram statystyki
 
-   const foundContainers = await Container.find({owner: userId, project: projectId});
-   
-   const mappedConverted = foundContainers.map(element => {
-     return Number(element.size)
-   });
+    const foundContainers = await Container.find({ owner: userId, project: projectId });
 
-   const mappedOryginal = foundContainers.map(element => {
-     return Number(element.sizeOryginal)
-   });
+    const mappedConverted = foundContainers.map(element => {
+      return Number(element.size)
+    });
 
-
-   const containersNumber = mappedConverted.length;
-   const weightOfOryginal = mappedOryginal.reduce((total, value)=>{
-     return (total + value)
-   });
-   const weightOfConverted = mappedConverted.reduce((total, value)=>{
-    return (total + value)
-  });
-   const totalWeight = weightOfOryginal + weightOfConverted;
+    const mappedOryginal = foundContainers.map(element => {
+      return Number(element.sizeOryginal)
+    });
 
 
+    const containersNumber = mappedConverted.length;
+    const weightOfOryginal = mappedOryginal.reduce((total, value) => {
+      return (total + value)
+    });
+    const weightOfConverted = mappedConverted.reduce((total, value) => {
+      return (total + value)
+    });
+    const totalWeight = weightOfOryginal + weightOfConverted;
 
-  // console.log(foundContainers)
+    const dataToReturn = {
+      containersNumber: containersNumber,
+      weightOfOryginal: weightOfOryginal,
+      weightOfConverted: weightOfConverted,
+      totalWeight: totalWeight,
+    }
 
-   const dataToReturn = {
-     containersNumber: containersNumber,   
-     weightOfOryginal: weightOfOryginal,
-     weightOfConverted: weightOfConverted,
-     totalWeight: totalWeight,
-   }
+    res.status(200).json({ repoStats: dataToReturn, });
 
-   res.status(200).json({ repoStats: dataToReturn, });
-
-    
-
-  } catch (error){
-    console.log(chalk.red(error.message))
-    next(err)
+  } catch (error) {
+    if (!error.statusCode) {
+      error.statusCode = 500;
+    }
+    error.message = "Błąd pobierania zawartości repozytorium"
+    next(error);
   }
-  
+
 
 }
