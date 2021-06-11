@@ -568,6 +568,47 @@ exports.runSpeechSegmentation = (req, res, next) => {
  * 
  */
 
+
+ exports.runSpeechRecognition = async (req, res, next) => {
+
+  try {
+
+    const containerId = req.params.containerId;
+
+    if (!containerId) {
+        const error = new Error('Błądny parametr id kontenera');
+        error.statusCode = 400;
+        throw error;
+    }
+
+    console.log(chalk.cyan("Uruchamiam rozpoznawanie mowy dla " + containerId));
+
+    const container = await Container.findById(containerId);
+
+    //sprawdzam czy rzeczywiście mam uprawnienia do pobrania tego pliku
+    const userToCheck = await User.findById(container.owner,"_id status");
+    if ((userToCheck._id.toString() !== req.userId.toString()) || (userToCheck.status.toString() !== "Active")) {
+      const error = new Error('Nie masz uprawnień!');
+      error.statusCode = 403;
+      throw error;
+    }
+
+    const updatedContainer = await runTask.runREC(container);
+
+    //Tutaj dorobić sprawdzanie czasu ile można czekać na zakończenie....
+
+    console.log(chalk.cyan("Zakończono rozpoznawanie mowy dla: " + containerId ));
+    res.status(200).json({ message: 'Rozpoznawanie mowy zostało zakończone!', containerId: updatedContainer._id, toolType: "REC"});
+
+  } catch (error) {
+      error.message = error.message || "Błąd rozpoznawania mowy"
+      error.statusCode = error.statusCode || 500;
+      next(error);
+  }
+}
+
+/*
+//wersja przed refactoringiem
 exports.runSpeechRecognition = (req, res, next) => {
   //const containerId = req.body.containerId;
   //const toolType = req.body.toolType;
@@ -592,6 +633,7 @@ exports.runSpeechRecognition = (req, res, next) => {
     next(error);
   })
 }
+*/
 
 
 

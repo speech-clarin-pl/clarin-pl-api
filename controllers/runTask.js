@@ -11,6 +11,7 @@ const Container = require('../models/Container');
 const path = require('path');
 const emu = require('./emu');
 const chalk = require('chalk');
+const speechRecognitionDoneHandler = require('./Handlers/speechRecognitionDoneHandler');
 
 
 exports.runVAD = (container) => {
@@ -243,7 +244,26 @@ exports.runDIA = (container) => {
                                     //   }],
 
                                     //każdy segment jest w osobnej linii
-
+                                    const fs = require('fs');
+                                    const path = require('path');
+                                    const moment = require('moment');
+                                    const fsextra = require('fs-extra');
+                                    const utilsForFiles = require('../../utils/utils');
+                                    var copy = require('recursive-copy');
+                                    
+                                    const {validationResult} = require('express-validator/check');
+                                    
+                                    //importuje model wpisu projektu
+                                    const ProjectEntry = require('../../models/projectEntry');
+                                    const ProjectFile = require('../../models/projectFile');
+                                    const Container = require('../../models/Container')
+                                    const User = require('../../models/user');
+                                    const Session = require('../../models/Session');
+                                    const chalk = require('chalk');
+                                    var mkdirp = require("mkdirp"); //do tworzenia folderu
+                                    var rimraf = require("rimraf"); 
+                                    var appRoot = require('app-root-path'); //zwraca roota aplikacji
+                                    const createDemoFiles = require('./createDemoFiles');
                                     let segments = [];
 
                                     var diaSegment = fs.readFileSync(finalPathToResult).toString().split("\n");
@@ -262,7 +282,26 @@ exports.runDIA = (container) => {
                                             const start = info[2];
                                             const dlugosc = info[3];
                                             const rodzaj = info[4];
-
+                                            const fs = require('fs');
+                                            const path = require('path');
+                                            const moment = require('moment');
+                                            const fsextra = require('fs-extra');
+                                            const utilsForFiles = require('../../utils/utils');
+                                            var copy = require('recursive-copy');
+                                            
+                                            const {validationResult} = require('express-validator/check');
+                                            
+                                            //importuje model wpisu projektu
+                                            const ProjectEntry = require('../../models/projectEntry');
+                                            const ProjectFile = require('../../models/projectFile');
+                                            const Container = require('../../models/Container')
+                                            const User = require('../../models/user');
+                                            const Session = require('../../models/Session');
+                                            const chalk = require('chalk');
+                                            var mkdirp = require("mkdirp"); //do tworzenia folderu
+                                            var rimraf = require("rimraf"); 
+                                            var appRoot = require('app-root-path'); //zwraca roota aplikacji
+                                            const createDemoFiles = require('./createDemoFiles');
                                             const segment = {
                                                 startTime: Number(parseFloat(start).toFixed(2)),
                                                 endTime: Number((Number(parseFloat(start)) + Number(parseFloat(dlugosc))).toFixed(2)),
@@ -503,9 +542,79 @@ exports.runSEG = (container) => {
     })
 }
 
+exports.runREC = (container) => {
+    return new Promise(async (resolve, reject) => {
+
+        try {
+
+            const userId = container.owner;
+            const projectId = container.project;
+            const sessionId = container.session;
+
+            const audioFileName = container.fileName;       //np. lektor-fe2e3423.wav - na serwerze
+            const containerFolderName = utils.getFileNameWithNoExt(audioFileName);  //np.lektor-fe2e3423 - na serwerze folder
+        
+            let inputAudioFilePath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerFolderName + '/' + audioFileName;
+        
+            //do dockera podaje ścieżke relatywną
+            inputAudioFilePath = path.relative(appRoot + '/repo/', inputAudioFilePath);
+
+            const dockerTask = new Task({
+                task: "recognize",
+                in_progress: false,
+                done: false,
+                time: new Date().toUTCString(),
+                input: inputAudioFilePath,
+            });
+
+             // uruchamiam usługę z dockera
+            const savedTask = await dockerTask.save();
+
+            //w tle docker robi swoje a ja odpytuje baze co sekunde czy juz sie ukonczylo
+            //odpytuje co 1 sekunde
+            let checkerdb = setInterval(async () => {
+
+                const task = await Task.findById(savedTask._id);
+
+                //jeżeli zmienił się jego status na ukończony i nie ma bledow
+                if (task.done) {
+                    if (!task.error) {
+                          const updatedContainer = await speechRecognitionDoneHandler(task, container);
+                          clearInterval(checkerdb);
+                          resolve(updatedContainer);
+                    } else {
+                        const error = new Error(task.error);
+                        clearInterval(checkerdb);
+                        reject(error)
+                    }
+
+                    clearInterval(checkerdb);
+                }
+
+            }, 1000);
 
 
+            //jak nie ma odpowiedzi w ciagu 2h to zatrzymuje task
+            setTimeout(() => {
+                clearInterval(checkerdb);
+                const error = new Error("Task przerwany z powodu zbyt długiego działania.")
+                reject(error)
+            }, 1000*60*60*2);
 
+
+        } catch (error) {
+            error.message = error.message || "Błąd rozpoznawania mowy"
+            error.statusCode = error.statusCode || 500;
+            reject(error)
+        }
+               
+    })
+}
+
+
+/*
+
+//kopia przed refaktoringiem
 exports.runREC = (container) => {
     return new Promise(async (resolve, reject) => {
 
@@ -583,6 +692,9 @@ exports.runREC = (container) => {
                         clearInterval(checkerdb);
                         resolve(updatedContainer);
 
+                        //testowo
+                        //const testErro = new Error("testowy error bledu rozpoznawania");
+                        //reject(testErro);
                     } catch (error) {
                         console.error(chalk.red(error.message))
                         clearInterval(checkerdb);
@@ -608,6 +720,8 @@ exports.runREC = (container) => {
                
     })
 }
+
+*/
 
 
 
