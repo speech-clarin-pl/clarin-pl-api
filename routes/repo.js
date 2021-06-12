@@ -43,7 +43,7 @@ router.delete('/delete/:containerId', isAuth, repoController.removeContainer); /
   router.put('/runSpeechSegmentation/:containerId', isAuth, repoController.runSpeechSegmentation); //refactored
 
   //PUT /repoFiles/runSpeechDiarization/containerId - wykonuje daną usługę na określonym kontenerze
-  router.put('/runSpeechDiarization/:containerId', isAuth, repoController.runSpeechDiarization);
+  router.put('/runSpeechDiarization/:containerId', isAuth, repoController.runSpeechDiarization); //refactored
 
   //PUT /repoFiles/runSpeechVAD/containerId - wykonuje daną usługę na określonym kontenerze
   router.put('/runSpeechVAD/:containerId', isAuth, repoController.runSpeechVAD);

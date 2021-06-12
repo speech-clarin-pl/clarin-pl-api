@@ -461,7 +461,47 @@ exports.runSpeechVAD = (req, res, next) => {
  * @apiError (500) ServerError 
  */
 
+//refactored
+ exports.runSpeechDiarization = async (req, res, next) => {
+  try {
 
+    const containerId = req.params.containerId;
+
+    if (!containerId) {
+      const error = new Error('Błądny parametr id kontenera');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    console.log(chalk.cyan("Uruchamiam diaryzacje dla " + containerId));
+
+    const container = await Container.findById(containerId);
+
+    //sprawdzam czy rzeczywiście mam uprawnienia do tego pliku
+    const userToCheck = await User.findById(container.owner, "_id status");
+    if ((userToCheck._id.toString() !== req.userId.toString()) || (userToCheck.status.toString() !== "Active")) {
+      const error = new Error('Nie masz uprawnień!');
+      error.statusCode = 403;
+      throw error;
+    }
+
+    const DIAsegments = await runTask.runDIA(container);
+
+    console.log(chalk.cyan("Zakończono Diaryzacje dla " + containerId));
+    res.status(200).json({ message: 'Diaryzacja zakończona sukcesem!', containerId: containerId, toolType: "DIA",  DIAsegments: DIAsegments});
+
+
+  } catch (error) {
+    error.message = error.message || "Błąd diaryzacji";
+    error.statusCode = error.statusCode || 500;
+    next(error);
+  }
+ 
+}
+
+
+/*
+//kopia przed refaktoryzacja
 exports.runSpeechDiarization = (req, res, next) => {
 
   const containerId = req.params.containerId;
@@ -483,6 +523,7 @@ exports.runSpeechDiarization = (req, res, next) => {
     next(error);
   })
 }
+*/
 
 
 /**

@@ -65,9 +65,10 @@ exports.ctmDIA2tg = (container) => {
             //console.log(`child process close all stdio with code ${code}`);
             // 0 cussess, 2 error, 1 cos nie tak z argumentami
             if(code==0){
-                resolve();
+                resolve(code);
             } else {
-                reject();
+                const error = new Error("Problem z konwersją DIA CTM do TextGrid")
+                reject(error);
             }
         });
     })
