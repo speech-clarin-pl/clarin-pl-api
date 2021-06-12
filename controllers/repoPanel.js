@@ -513,30 +513,50 @@ exports.runSpeechDiarization = (req, res, next) => {
  * 
  * 
  */
-exports.runSpeechSegmentation = (req, res, next) => {
 
-  const containerId = req.params.containerId;
-  //const toolType = req.body.toolType;
+//refactored
+exports.runSpeechSegmentation = async (req, res, next) => {
 
-  Container.findById(containerId).then(container => {  
-    runTask.runSEG(container)
-      .then(returnData => {
-        let updatedContainer = returnData.updatedContainer;
-        let EMUlink = returnData.EMUlink;
+  try {
+    const containerId = req.params.containerId;
 
+    if (!containerId) {
+      const error = new Error('Błądny parametr id kontenera');
+      error.statusCode = 400;
+      throw error;
+    }
 
-        console.log(chalk.green("Zakończono Segmentacje dla: " + containerId));
-        res.status(200).json({ message: 'Segmentacja została wykonana pomyślnie', containerId: updatedContainer._id, toolType: "SEG"});
-      }).catch(error => {
-        console.log(chalk.red('TASK ERROR'));
-        console.log(chalk.red(error.message))
-        res.status(503).json({ message: 'Coś poszło nie tak z segmentacją!', containerId: containerId, toolType: "SEG"});
-      })
-  }).catch(error => {
-    console.log(chalk.red(error.message));
+    console.log(chalk.cyan("Uruchamiam segmentacje dla " + containerId));
+
+    const container = await Container.findById(containerId);
+
+    //sprawdzam czy rzeczywiście mam uprawnienia do tego pliku
+    const userToCheck = await User.findById(container.owner, "_id status");
+    if ((userToCheck._id.toString() !== req.userId.toString()) || (userToCheck.status.toString() !== "Active")) {
+      const error = new Error('Nie masz uprawnień!');
+      error.statusCode = 403;
+      throw error;
+    }
+
+    //container musi mieć najpierw wgraną transkrypcje
+    if(container.ifREC === false){
+      const error = new Error("Brak wgranej transkrypcji");
+      error.statusCode = 406;
+      throw error;
+  }
+
+    const returnData = await runTask.runSEG(container);
+
+    let updatedContainer = returnData.updatedContainer;
+
+    console.log(chalk.cyan("Zakonczono segmentacje dla " + containerId));
+    res.status(200).json({ message: 'Segmentacja została wykonana pomyślnie', containerId: updatedContainer._id, toolType: "SEG" });
+
+  } catch (error) {
+    error.message = error.message || "Błąd segmentacji";
     error.statusCode = error.statusCode || 500;
     next(error);
-  })
+  }
 }
 
 
@@ -568,17 +588,17 @@ exports.runSpeechSegmentation = (req, res, next) => {
  * 
  */
 
-
- exports.runSpeechRecognition = async (req, res, next) => {
+//refactored
+exports.runSpeechRecognition = async (req, res, next) => {
 
   try {
 
     const containerId = req.params.containerId;
 
     if (!containerId) {
-        const error = new Error('Błądny parametr id kontenera');
-        error.statusCode = 400;
-        throw error;
+      const error = new Error('Błądny parametr id kontenera');
+      error.statusCode = 400;
+      throw error;
     }
 
     console.log(chalk.cyan("Uruchamiam rozpoznawanie mowy dla " + containerId));
@@ -586,7 +606,7 @@ exports.runSpeechSegmentation = (req, res, next) => {
     const container = await Container.findById(containerId);
 
     //sprawdzam czy rzeczywiście mam uprawnienia do pobrania tego pliku
-    const userToCheck = await User.findById(container.owner,"_id status");
+    const userToCheck = await User.findById(container.owner, "_id status");
     if ((userToCheck._id.toString() !== req.userId.toString()) || (userToCheck.status.toString() !== "Active")) {
       const error = new Error('Nie masz uprawnień!');
       error.statusCode = 403;
@@ -597,13 +617,13 @@ exports.runSpeechSegmentation = (req, res, next) => {
 
     //Tutaj dorobić sprawdzanie czasu ile można czekać na zakończenie....
 
-    console.log(chalk.cyan("Zakończono rozpoznawanie mowy dla: " + containerId ));
-    res.status(200).json({ message: 'Rozpoznawanie mowy zostało zakończone!', containerId: updatedContainer._id, toolType: "REC"});
+    console.log(chalk.cyan("Zakończono rozpoznawanie mowy dla: " + containerId));
+    res.status(200).json({ message: 'Rozpoznawanie mowy zostało zakończone!', containerId: updatedContainer._id, toolType: "REC" });
 
   } catch (error) {
-      error.message = error.message || "Błąd rozpoznawania mowy"
-      error.statusCode = error.statusCode || 500;
-      next(error);
+    error.message = error.message || "Błąd rozpoznawania mowy"
+    error.statusCode = error.statusCode || 500;
+    next(error);
   }
 }
 

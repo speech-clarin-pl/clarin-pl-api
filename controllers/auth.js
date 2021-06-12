@@ -11,6 +11,7 @@ const nodemailer = require('nodemailer');
 const transporter = require('../transporter');
 var generator = require('generate-password');
 const projectsList = require('../controllers/projectsList');
+const createProjectHandler = require('./Handlers/createProjectHandler');
 
 dotenv.config();
 
@@ -300,7 +301,7 @@ exports.verifyUser = (req, res, next) => {
                         console.log(chalk.red(err));
                         return err;
                     } else {
-                        projectsList.createProjectHandler("DOMYŚLNY PROJEKT", user._id, true).then((results) => {
+                        createProjectHandler("DOMYŚLNY PROJEKT", user._id, true).then((results) => {
                             res.status(201).json({
                                 message: 'Konto zostało założone',
                                 defaultProjectId: results.project._id,

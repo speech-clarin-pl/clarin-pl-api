@@ -12,6 +12,7 @@ const path = require('path');
 const emu = require('./emu');
 const chalk = require('chalk');
 const speechRecognitionDoneHandler = require('./Handlers/speechRecognitionDoneHandler');
+const speechSegmentationDoneHandler = require('./Handlers/segmentationDoneHandler');
 
 
 exports.runVAD = (container) => {
@@ -403,146 +404,8 @@ exports.runDIA = (container) => {
     })
 }
 
-
-
+//refactored
 exports.runSEG = (container) => {
-    return new Promise(async (resolve, reject) => {
-
-        //container musi mieć najpierw wgraną transkrypcje
-        if(container.ifREC == false){
-
-            //aktualizuje flage w kontenrze
-            try{
-                const updatedContainer = await Container.findOneAndUpdate({_id: container._id},
-                    {ifSEG: true, statusSEG: 'error',errorMessage:'Musisz mieć najpier wykonane rozpoznawanie mowy aby użyć segmentacji'})
-            } catch(error) {
-                reject(error);
-            }
-
-            const error = new Error("Brak wgranej transkrypcji");
-            reject(error);
-        }
-        
-        const userId = container.owner;
-        const projectId = container.project;
-        const sessionId = container.session;
-
-        let checkerdb = null; //checker do odpytywania db
-    
-        const audioFileName = container.fileName;       //np. lektor-fe2e3423.wav - na serwerze
-        const containerFolderName = utils.getFileNameWithNoExt(audioFileName);  //np.lektor-fe2e3423 - na serwerze folder
-
-        const pathToContainer = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerFolderName;
-        
-        //to juz mam
-         const JSONTransPath = pathToContainer + '/' + containerFolderName + '.json';
-
-        //to juz mam
-        const AudioFilePath = pathToContainer + '/' + audioFileName;
-        
-        // to musze stworzyc - tymczasowo aby obliczyc a pózniej usuwam... bo przetrzymuje dane w jsonie
-         const TXTFilePath = pathToContainer + '/' + containerFolderName + '_TXT.txt';
-        
-        // decyduje czy odpalic forcealign czy segmentalign w zaleznosci od dlugosci pliku
-        // dla krotkich plików < 500kB uruchamiam forcealign, dla długich > 500kB uruchamiam segmentalign
-        let inputAudioFileSize = fs.statSync(AudioFilePath).size;
-        inputAudioFileSize = Math.round(inputAudioFileSize / 1000); //wielkosc w kB
-
-        let segmentationType = "segmentalign";
-
-        if(inputAudioFileSize < 500){
-            segmentationType = "forcealign";
-        } else {
-            segmentationType = "segmentalign";
-        }
-
-
-        //do dockera podaje ścieżke relatywną
-        let relativeInputAudioFilePath = path.relative(appRoot + '/repo/', AudioFilePath);
-        let relativeInputTxtFilePath = path.relative(appRoot + '/repo/', TXTFilePath);
-
-        const dockerTask = new Task({
-            task: segmentationType,
-            in_progress: false,
-            done: false,
-            time: new Date().toUTCString(),
-            input: {
-                audio:relativeInputAudioFilePath,
-                text: relativeInputTxtFilePath,
-            }
-        });
-
-        // uruchamiam usługę z dockera
-        const savedTask = await dockerTask.save();
-                
-        let block = true;
-                
-        checkerdb = setInterval(async () => {
-
-                const task = await Task.findById(savedTask._id);
-                if(block) console.log(chalk.green("Znalazłem SEG task i czekam aż się ukończy...."))
-                block = false;
-                                 
-                //jeżeli zmienił się jego status na ukończony
-                if (task.done) {
-                    //i jeżeli nie ma errorów
-                    if (!task.error) {
-
-                        const resultFile = task.result;
-                        const pathToResult = appRoot + '/repo/' + resultFile;
-
-                        const pathToDestResult = pathToContainer + '/' + resultFile;
-
-                        //zapisuje wynik DIA w katalogu containera
-                        const finalPathToResult = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerFolderName + '/' + containerFolderName + '_SEG.ctm';
-        
-                        try{
-                            //przenosze plik z wynikami do katalogu kontenera
-                            fs.moveSync(pathToResult, finalPathToResult,{overwrite: true});
-                            //convertuje na textGrid
-                            await emu.ctmSEG2tg(container);
-
-                            const updatedContainer = await Container.findOneAndUpdate({_id: container._id},{ifSEG: true, statusSEG: 'done',errorMessage:''},{new:true});
-                            //teraz usuwam z dysku plik  log
-                            fs.removeSync(pathToResult+'_log.txt');
-
-                            let returnData = {
-                                updatedContainer: updatedContainer,
-                            };
-
-                            clearInterval(checkerdb);
-                            resolve(returnData)
-
-                        } catch (error){
-
-                            const updatedContainer = Container.findOneAndUpdate({_id: container._id},{ifSEG: true, statusSEG: 'error',errorMessage:'Coś poszło nie tak'},{new:true})
-                            console.log(chalk.red(error.message));
-                            clearInterval(checkerdb);
-                            reject(error)
-                        }
-
-                    } else {
-                        const error = new Error(task.error);
-                        clearInterval(checkerdb);
-                        reject(error);
-                    }
-
-                    clearInterval(checkerdb);
-                }
-                        
-        },1000);
-                
-                
-        //jak nie ma odpowiedzi w ciagu 2h to zatrzymuje task
-        setTimeout(() => {
-            clearInterval(checkerdb);
-        }, 7200000);
-               
-           
-    })
-}
-
-exports.runREC = (container) => {
     return new Promise(async (resolve, reject) => {
 
         try {
@@ -553,39 +416,61 @@ exports.runREC = (container) => {
 
             const audioFileName = container.fileName;       //np. lektor-fe2e3423.wav - na serwerze
             const containerFolderName = utils.getFileNameWithNoExt(audioFileName);  //np.lektor-fe2e3423 - na serwerze folder
-        
-            let inputAudioFilePath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerFolderName + '/' + audioFileName;
-        
+
+            const pathToContainer = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerFolderName;
+
+            //to juz mam
+            const AudioFilePath = pathToContainer + '/' + audioFileName;
+
+            // to musze stworzyc - tymczasowo aby obliczyc a pózniej usuwam... bo przetrzymuje dane w jsonie
+            const TXTFilePath = pathToContainer + '/' + containerFolderName + '_TXT.txt';
+
+            // decyduje czy odpalic forcealign czy segmentalign w zaleznosci od dlugosci pliku
+            // dla krotkich plików < 500kB uruchamiam forcealign, dla długich > 500kB uruchamiam segmentalign
+            let inputAudioFileSize = fs.statSync(AudioFilePath).size;
+            inputAudioFileSize = Math.round(inputAudioFileSize / 1000); //wielkosc w kB
+
+            let segmentationType = "segmentalign";
+
+            if (inputAudioFileSize < 500) {
+                segmentationType = "forcealign";
+            } else {
+                segmentationType = "segmentalign";
+            }
+
             //do dockera podaje ścieżke relatywną
-            inputAudioFilePath = path.relative(appRoot + '/repo/', inputAudioFilePath);
+            let relativeInputAudioFilePath = path.relative(appRoot + '/repo/', AudioFilePath);
+            let relativeInputTxtFilePath = path.relative(appRoot + '/repo/', TXTFilePath);
 
             const dockerTask = new Task({
-                task: "recognize",
+                task: segmentationType,
                 in_progress: false,
                 done: false,
                 time: new Date().toUTCString(),
-                input: inputAudioFilePath,
+                input: {
+                    audio: relativeInputAudioFilePath,
+                    text: relativeInputTxtFilePath,
+                }
             });
 
-             // uruchamiam usługę z dockera
+            // uruchamiam usługę z dockera
             const savedTask = await dockerTask.save();
 
-            //w tle docker robi swoje a ja odpytuje baze co sekunde czy juz sie ukonczylo
-            //odpytuje co 1 sekunde
             let checkerdb = setInterval(async () => {
 
                 const task = await Task.findById(savedTask._id);
 
-                //jeżeli zmienił się jego status na ukończony i nie ma bledow
+                //jeżeli zmienił się jego status na ukończony
                 if (task.done) {
                     if (!task.error) {
-                          const updatedContainer = await speechRecognitionDoneHandler(task, container);
-                          clearInterval(checkerdb);
-                          resolve(updatedContainer);
+                        const returnedData = await speechSegmentationDoneHandler(task, container);
+                        clearInterval(checkerdb);
+                        resolve(returnedData);
+
                     } else {
                         const error = new Error(task.error);
                         clearInterval(checkerdb);
-                        reject(error)
+                        reject(error);
                     }
 
                     clearInterval(checkerdb);
@@ -597,17 +482,89 @@ exports.runREC = (container) => {
             //jak nie ma odpowiedzi w ciagu 2h to zatrzymuje task
             setTimeout(() => {
                 clearInterval(checkerdb);
+                const error = new Error("Task segmentacji przerwany z powodu zbyt długiego działania.")
+                reject(error)
+            }, 1000 * 60 * 60 * 2);
+
+        } catch (error) {
+            error.message = error.message || "Błąd segmentacji"
+            error.statusCode = error.statusCode || 500;
+            reject(error)
+        }
+    })
+}
+
+
+//refactored
+exports.runREC = (container) => {
+    return new Promise(async (resolve, reject) => {
+
+        try {
+
+            const userId = container.owner;
+            const projectId = container.project;
+            const sessionId = container.session;
+
+            const audioFileName = container.fileName;       //np. lektor-fe2e3423.wav - na serwerze
+            const containerFolderName = utils.getFileNameWithNoExt(audioFileName);  //np.lektor-fe2e3423 - na serwerze folder
+
+            //sciezka repo do katalogu kontenera
+            const containerFolderPath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerFolderName;
+
+            let inputAudioFilePath = containerFolderPath + '/' + audioFileName;
+
+            //do dockera podaje ścieżke relatywną
+            inputAudioFilePath = path.relative(appRoot + '/repo/', inputAudioFilePath);
+
+            //buduje task w DB
+            const dockerTask = new Task({
+                task: "recognize",
+                in_progress: false,
+                done: false,
+                time: new Date().toUTCString(),
+                input: inputAudioFilePath,
+            });
+
+            // uruchamiam usługę z dockera zapisując task
+            const savedTask = await dockerTask.save();
+
+            //w tle docker robi swoje a ja odpytuje baze co sekunde czy juz sie ukonczylo
+            let checkerdb = setInterval(async () => {
+
+                //robie co sekundę zapytanie do bazy danych
+                const task = await Task.findById(savedTask._id);
+
+                //jeżeli docker zmienił  status tasku na ukończony i nie ma bledow to obsluguje rezultaty
+                if (task.done) {
+                    if (!task.error) {
+                        const updatedContainer = await speechRecognitionDoneHandler(task, container);
+                        clearInterval(checkerdb);
+                        resolve(updatedContainer);
+                    } else {
+                        const error = new Error(task.error);
+                        clearInterval(checkerdb);
+                        reject(error)
+                    }
+
+                    //na wszelki wypadek zostawiam
+                    clearInterval(checkerdb);
+                }
+            }, 1000);
+
+
+            //jak nie ma odpowiedzi w ciagu 2h to zatrzymuje task
+            setTimeout(() => {
+                clearInterval(checkerdb);
                 const error = new Error("Task przerwany z powodu zbyt długiego działania.")
                 reject(error)
-            }, 1000*60*60*2);
-
+            }, 1000 * 60 * 60 * 2);
 
         } catch (error) {
             error.message = error.message || "Błąd rozpoznawania mowy"
             error.statusCode = error.statusCode || 500;
             reject(error)
         }
-               
+
     })
 }
 

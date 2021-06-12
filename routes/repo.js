@@ -37,10 +37,10 @@ router.delete('/delete/:containerId', isAuth, repoController.removeContainer); /
  router.delete('/deleteSession/:sessionId', isAuth, repoController.removeSession); //refactored
 
  //PUT /repoFiles/runSpeechReco/containerId - wykonuje daną usługę na określonym kontenerze
- router.put('/runSpeechRecognition/:containerId', isAuth, repoController.runSpeechRecognition);
+ router.put('/runSpeechRecognition/:containerId', isAuth, repoController.runSpeechRecognition); //refactored
 
   //PUT /repoFiles/runSpeechReco/containerId - wykonuje daną usługę na określonym kontenerze
-  router.put('/runSpeechSegmentation/:containerId', isAuth, repoController.runSpeechSegmentation);
+  router.put('/runSpeechSegmentation/:containerId', isAuth, repoController.runSpeechSegmentation); //refactored
 
   //PUT /repoFiles/runSpeechDiarization/containerId - wykonuje daną usługę na określonym kontenerze
   router.put('/runSpeechDiarization/:containerId', isAuth, repoController.runSpeechDiarization);

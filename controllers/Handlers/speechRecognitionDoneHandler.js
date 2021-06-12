@@ -58,6 +58,7 @@ module.exports = (task, container) => {
             //reject(testError);
 
         } catch (error) {
+            error.message = "Błąd obsługi wyniku rozpoznawania";
             reject(error)
         }
 

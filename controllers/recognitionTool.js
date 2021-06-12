@@ -15,17 +15,27 @@ exports.saveTranscription = async (req, res, next) => {
 
         const transcription = req.body.transcription;
 
+
         if (!transcription) {
             const error = new Error('Brak transkrypcji do zapisania');
             error.statusCode = 400;
             throw error;
         }
 
-        const container = req.body.container;
+        const container = await Container.findById(req.body.container._id);
 
         if (!container) {
             const error = new Error('Brak informacji o kontenerze');
             error.statusCode = 400;
+            throw error;
+        }
+
+
+        //sprawdzam czy mamy uprawnienia
+        const userToCheck = await User.findById(container.owner,"_id status");
+        if ((userToCheck._id.toString() !== req.userId.toString()) || (userToCheck.status.toString() !== "Active")) {
+            const error = new Error('Nie masz uprawnień!');
+            error.statusCode = 403;
             throw error;
         }
 
@@ -34,9 +44,11 @@ exports.saveTranscription = async (req, res, next) => {
         const sessionId = container.session;
 
         const containerName = utils.getFileNameWithNoExt(container.fileName);
-        const transfFileName = utils.getFileNameWithNoExt(container.fileName) + '.json';
+        const transfFileNameJSON = utils.getFileNameWithNoExt(container.fileName) + '.json';
+        const transfFileNameTXT = utils.getFileNameWithNoExt(container.fileName) + '_TXT.txt';
 
-        const transfPath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerName + '/' + transfFileName;
+        const transfPathJSON = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerName + '/' + transfFileNameJSON;
+        const transfPathTXT = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerName + '/' + transfFileNameTXT;
 
         //tymczasowy template do zapisania jako JSON - w przyszłości do zmiany na coś lepszego
         //ten template można jednak rozbudować o dodatkowe bloki
@@ -53,8 +65,14 @@ exports.saveTranscription = async (req, res, next) => {
             ]
         }
 
-        fs.writeJsonSync(transfPath, toSaveTemplate);
 
+        //zapisuje JSONa i TXT (dla ewentualnej Segmentacji)
+        fs.writeJsonSync(transfPathJSON, toSaveTemplate);
+        fs.outputFileSync(transfPathTXT,transcription);
+        
+
+        //zapisuje update do bazy danych
+        await Container.findByIdAndUpdate(req.body.container._id,{ifREC: true});
         res.status(201).json({ message: 'transcrypcja została zapisana!' });
 
     } catch (error) {
