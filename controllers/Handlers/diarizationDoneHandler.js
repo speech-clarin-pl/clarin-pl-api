@@ -114,9 +114,13 @@ module.exports = (task, container) => {
             //i usuwam tymczasowy plik txt
             fs.removeSync(pathToResult);
 
+             //testowo
+            // const testError = new Error("testowy error diaryzacji");
+            // throw testError
+
             resolve(segments)
 
-
+           
         } catch (error) {
             error.message = "Wystąpił błąd obsługi diaryzacji";
             reject(error);

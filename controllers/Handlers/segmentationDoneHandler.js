@@ -38,6 +38,10 @@ module.exports = (task, container) => {
                 updatedContainer: updatedContainer,
             };
 
+             //testowo
+             //const testError = new Error("testowy error");
+             //throw testError
+
             resolve(returnData)
         } catch (error) {
             error.message = "Błąd obsługi wyników segmentacji"

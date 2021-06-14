@@ -90,6 +90,11 @@ module.exports = (task, container) => {
             fs.removeSync(pathToResult+'_log.txt');
             //i usuwam tymczasowy plik txt
             fs.removeSync(pathToResult);
+
+            //testowo
+            // const testError = new Error("testowy error");
+            // throw testError
+
             resolve(segments);
 
         } catch (error) {

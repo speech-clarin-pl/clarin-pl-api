@@ -51,11 +51,12 @@ module.exports = (task, container) => {
             fs.removeSync(pathToResult);
             fs.removeSync(pathToResult + '_log.txt');
 
+             //testowo
+            // const testError = new Error("testowy error");
+            // throw testError
+
             resolve(updatedContainer);
 
-            //testowo
-            //const testError = new Error("testowy error bledu rozpoznawania");
-            //reject(testError);
 
         } catch (error) {
             error.message = "Błąd obsługi wyniku rozpoznawania";

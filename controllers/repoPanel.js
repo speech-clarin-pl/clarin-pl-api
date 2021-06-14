@@ -320,10 +320,8 @@ exports.changeContainerName = async (req, res, next) => {
     const containerId = req.params.containerId;
     const newName = req.body.newName;
 
-
     const foundContainer = await Container.findById(containerId);
     let owner = foundContainer.owner;
-
 
     //sprawdzam czy mam uprawnienia
     const userToCheck = await User.findById(owner,"_id status");
@@ -397,17 +395,19 @@ exports.changeContainerName = async (req, res, next) => {
 //refactored
  exports.runSpeechVAD = async (req, res, next) => {
 
+  let containerId = req.params.containerId;
+
+  if (!containerId) {
+    const error = new Error('Błądny parametr id kontenera');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  let container = null;
+
   try {
 
-    let containerId = req.params.containerId;
-
-    if (!containerId) {
-      const error = new Error('Błądny parametr id kontenera');
-      error.statusCode = 400;
-      throw error;
-    }
-
-    const container = await Container.findById(containerId);
+    container = await Container.findById(containerId);
 
     console.log(chalk.cyan("Uruchamiam detekcje mowy dla " + containerId));
     //sprawdzam czy rzeczywiście mam uprawnienia do tego pliku
@@ -425,8 +425,17 @@ exports.changeContainerName = async (req, res, next) => {
 
 
   } catch (error) {
+    
     error.message = error.message || "Błąd detekcji aktywacji mowy";
     error.statusCode = error.statusCode || 500;
+
+    //wpisuje błąd do bazy danych
+    if(container){
+      container.statusVAD = 'error';
+      container.errorMessage = error.message ;
+      await container.save();
+    }
+
     next(error);
   }
 }
@@ -504,19 +513,20 @@ exports.runSpeechVAD = (req, res, next) => {
 
 //refactored
  exports.runSpeechDiarization = async (req, res, next) => {
+
+  const containerId = req.params.containerId;
+
+  if (!containerId) {
+    const error = new Error('Błądny parametr id kontenera');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  let container = null;
+
   try {
 
-    const containerId = req.params.containerId;
-
-    if (!containerId) {
-      const error = new Error('Błądny parametr id kontenera');
-      error.statusCode = 400;
-      throw error;
-    }
-
-   
-
-    const container = await Container.findById(containerId);
+    container = await Container.findById(containerId);
 
     console.log(chalk.cyan("Uruchamiam diaryzacje dla " + containerId));
     //sprawdzam czy rzeczywiście mam uprawnienia do tego pliku
@@ -532,10 +542,19 @@ exports.runSpeechVAD = (req, res, next) => {
     console.log(chalk.cyan("Zakończono Diaryzacje dla " + containerId));
     res.status(200).json({ message: 'Diaryzacja zakończona sukcesem!', containerId: containerId, toolType: "DIA",  DIAsegments: DIAsegments});
 
-
   } catch (error) {
+    
     error.message = error.message || "Błąd diaryzacji";
     error.statusCode = error.statusCode || 500;
+
+    //wpisuje błąd do bazy danych
+    if(container){
+      container.statusDIA = 'error';
+      container.errorMessage = error.message ;
+      await container.save();
+    }
+
+
     next(error);
   }
  
@@ -600,18 +619,22 @@ exports.runSpeechDiarization = (req, res, next) => {
 //refactored
 exports.runSpeechSegmentation = async (req, res, next) => {
 
-  try {
-    const containerId = req.params.containerId;
+  const containerId = req.params.containerId;
 
-    if (!containerId) {
-      const error = new Error('Błądny parametr id kontenera');
-      error.statusCode = 400;
-      throw error;
-    }
+  if (!containerId) {
+    const error = new Error('Błądny parametr id kontenera');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  let container = null;
+
+  try {
+   
 
     console.log(chalk.cyan("Uruchamiam segmentacje dla " + containerId));
 
-    const container = await Container.findById(containerId);
+    container = await Container.findById(containerId);
 
     //sprawdzam czy rzeczywiście mam uprawnienia do tego pliku
     const userToCheck = await User.findById(container.owner, "_id status");
@@ -636,8 +659,16 @@ exports.runSpeechSegmentation = async (req, res, next) => {
     res.status(200).json({ message: 'Segmentacja została wykonana pomyślnie', containerId: updatedContainer._id, toolType: "SEG" });
 
   } catch (error) {
+    
     error.message = error.message || "Błąd segmentacji";
     error.statusCode = error.statusCode || 500;
+
+    if(container){
+      container.statusSEG = 'error';
+      container.errorMessage = error.message ;
+      await container.save();
+    }
+
     next(error);
   }
 }
@@ -674,20 +705,21 @@ exports.runSpeechSegmentation = async (req, res, next) => {
 //refactored
 exports.runSpeechRecognition = async (req, res, next) => {
 
+  const containerId = req.params.containerId;
+
+  if (!containerId) {
+    const error = new Error('Błądny parametr id kontenera');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  let container = null;
+
   try {
 
-    const containerId = req.params.containerId;
-
-    if (!containerId) {
-      const error = new Error('Błądny parametr id kontenera');
-      error.statusCode = 400;
-      throw error;
-    }
+    container = await Container.findById(containerId);
 
     console.log(chalk.cyan("Uruchamiam rozpoznawanie mowy dla " + containerId));
-
-    const container = await Container.findById(containerId);
-
     //sprawdzam czy rzeczywiście mam uprawnienia do pobrania tego pliku
     const userToCheck = await User.findById(container.owner, "_id status");
     if ((userToCheck._id.toString() !== req.userId.toString()) || (userToCheck.status.toString() !== "Active")) {
@@ -704,8 +736,18 @@ exports.runSpeechRecognition = async (req, res, next) => {
     res.status(200).json({ message: 'Rozpoznawanie mowy zostało zakończone!', containerId: updatedContainer._id, toolType: "REC" });
 
   } catch (error) {
+
+    
     error.message = error.message || "Błąd rozpoznawania mowy"
     error.statusCode = error.statusCode || 500;
+
+    if(container){
+      container.statusREC = 'error';
+      container.errorMessage = error.message ;
+      await container.save();
+    }
+
+    
     next(error);
   }
 }

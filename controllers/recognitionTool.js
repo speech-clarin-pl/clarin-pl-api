@@ -72,7 +72,7 @@ exports.saveTranscription = async (req, res, next) => {
         
 
         //zapisuje update do bazy danych
-        await Container.findByIdAndUpdate(req.body.container._id,{ifREC: true});
+        await Container.findByIdAndUpdate(req.body.container._id,{ifREC: true, statusREC:'done',errorMessage: ''});
         res.status(201).json({ message: 'transcrypcja została zapisana!' });
 
     } catch (error) {

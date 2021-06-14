@@ -12,7 +12,6 @@ const Container = require('../models/Container')
 
 exports.saveSegments = (req, res, next) => {
 
-    console.log("Zapisuje DIA Segmenty")
     let segmentsTemp = req.body.segments;
     const toolType = req.body.toolType;
     const container = req.body.container;
@@ -54,7 +53,8 @@ exports.saveSegments = (req, res, next) => {
     //zapisuje CTM
     fs.writeFileSync(DIAFilePath_CTM, newdata);
 
-    Container.findByIdAndUpdate(container._id,{DIAUserSegments: segments})
+    //
+    Container.findByIdAndUpdate(container._id,{DIAUserSegments: segments, ifDIA: true, statusDIA:'done',errorMessage: ''})
         .then(updated => {
    
            //tutaj na nowo formatuje plik i go zapisuje 

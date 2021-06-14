@@ -12,7 +12,6 @@ const Container = require('../models/Container')
 
 exports.saveSegments = (req, res, next) => {
 
-    console.log("Zapisuje VAD Segmenty")
     let segmentsTemp = req.body.segments;
     const toolType = req.body.toolType;
     const container = req.body.container;
@@ -55,7 +54,9 @@ exports.saveSegments = (req, res, next) => {
     //zapisuje CTM
     fs.writeFileSync(VADFilePath_CTM, newdata);
 
-    Container.findByIdAndUpdate(container._id,{VADUserSegments: segments})
+    
+
+    Container.findByIdAndUpdate(container._id,{VADUserSegments: segments, ifVAD: true, statusVAD: 'done',errorMessage: ''})
         .then(updated => {
    
    

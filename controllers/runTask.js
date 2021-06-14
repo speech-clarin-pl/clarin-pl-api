@@ -20,6 +20,8 @@ const voiceActivityDetectionDoneHandler = require('./Handlers/voiceActivityDetec
 exports.runVAD = (container) => {
     return new Promise(async (resolve, reject) => {
 
+        let checkerdb = null;
+
         try {
 
             const userId = container.owner;
@@ -45,16 +47,21 @@ exports.runVAD = (container) => {
             //uruchamiam dockera
             const savedTask = await dockerTask.save();
 
-            let checkerdb = setInterval( async () => {
+            checkerdb = setInterval( async () => {
 
                 const task = await Task.findById(savedTask._id);
     
                 if (task.done) {
                     if (!task.error) {
-    
-                        const segments = await voiceActivityDetectionDoneHandler(rask,container);
-                        clearInterval(checkerdb);
-                        resolve(segments);
+
+                        try{
+                            const segments = await voiceActivityDetectionDoneHandler(task,container);
+                            clearInterval(checkerdb);
+                            resolve(segments);
+                        } catch (err) {
+                            clearInterval(checkerdb);
+                            reject(err)
+                        }
                         
                     } else {
                         clearInterval(checkerdb);
@@ -72,6 +79,7 @@ exports.runVAD = (container) => {
         } catch (error) {
             error.message = error.message || "Błąd aktywacji mowy"
             error.statusCode = error.statusCode || 500;
+            clearInterval(checkerdb);
             reject(error)
         }        
     })
@@ -227,6 +235,8 @@ exports.runVAD = (container) => {
 exports.runDIA = (container) => {
     return new Promise(async (resolve, reject) => {
 
+        let checkerdb = null;
+
         try {
             const userId = container.owner;
             const projectId = container.project;
@@ -250,16 +260,22 @@ exports.runDIA = (container) => {
 
             const savedTask = await dockerTask.save();
 
-            let checkerdb = setInterval(async () => {
+            checkerdb = setInterval(async () => {
 
                 const task = await Task.findById(savedTask._id);
 
                 if (task.done) {
                     if (!task.error) {
-                       const segments = await diarizationDoneHandler(task, container);
-                       clearInterval(checkerdb);
-                       resolve(segments);
 
+                        try{
+                            const segments = await diarizationDoneHandler(task, container);
+                            clearInterval(checkerdb);
+                            resolve(segments);
+                        } catch (err) {
+                            clearInterval(checkerdb);
+                            reject(err)
+                        }
+                       
                     } else {
                         const error = new Error(task.error);
                         clearInterval(checkerdb);
@@ -278,6 +294,7 @@ exports.runDIA = (container) => {
         } catch (error) {
             error.message = error.message || "Błąd diaryzacji"
             error.statusCode = error.statusCode || 500;
+            clearInterval(checkerdb);
             reject(error)
         }
 
@@ -902,6 +919,8 @@ exports.runDIA = (container) => {
 exports.runSEG = (container) => {
     return new Promise(async (resolve, reject) => {
 
+        let checkerdb = null;
+
         try {
 
             const userId = container.owner;
@@ -950,17 +969,23 @@ exports.runSEG = (container) => {
             // uruchamiam usługę z dockera
             const savedTask = await dockerTask.save();
 
-            let checkerdb = setInterval(async () => {
+            checkerdb = setInterval(async () => {
 
                 const task = await Task.findById(savedTask._id);
 
                 //jeżeli zmienił się jego status na ukończony
                 if (task.done) {
                     if (!task.error) {
-                        const returnedData = await speechSegmentationDoneHandler(task, container);
-                        clearInterval(checkerdb);
-                        resolve(returnedData);
 
+                        try{
+                            const returnedData = await speechSegmentationDoneHandler(task, container);
+                            clearInterval(checkerdb);
+                            resolve(returnedData);
+                        } catch (err) {
+                            clearInterval(checkerdb);
+                            reject(err)
+                        }
+                        
                     } else {
                         const error = new Error(task.error);
                         clearInterval(checkerdb);
@@ -983,6 +1008,7 @@ exports.runSEG = (container) => {
         } catch (error) {
             error.message = error.message || "Błąd segmentacji"
             error.statusCode = error.statusCode || 500;
+            clearInterval(checkerdb);
             reject(error)
         }
     })
@@ -992,6 +1018,8 @@ exports.runSEG = (container) => {
 //refactored
 exports.runREC = (container) => {
     return new Promise(async (resolve, reject) => {
+
+        let checkerdb = null;
 
         try {
 
@@ -1023,7 +1051,7 @@ exports.runREC = (container) => {
             const savedTask = await dockerTask.save();
 
             //w tle docker robi swoje a ja odpytuje baze co sekunde czy juz sie ukonczylo
-            let checkerdb = setInterval(async () => {
+            checkerdb = setInterval(async () => {
 
                 //robie co sekundę zapytanie do bazy danych
                 const task = await Task.findById(savedTask._id);
@@ -1031,9 +1059,16 @@ exports.runREC = (container) => {
                 //jeżeli docker zmienił  status tasku na ukończony i nie ma bledow to obsluguje rezultaty
                 if (task.done) {
                     if (!task.error) {
-                        const updatedContainer = await speechRecognitionDoneHandler(task, container);
-                        clearInterval(checkerdb);
-                        resolve(updatedContainer);
+
+                        try{
+                            const updatedContainer = await speechRecognitionDoneHandler(task, container);
+                            clearInterval(checkerdb);
+                            resolve(updatedContainer);
+                        } catch (err) {
+                            clearInterval(checkerdb);
+                            reject(err)
+                        }
+                        
                     } else {
                         const error = new Error(task.error);
                         clearInterval(checkerdb);
@@ -1056,6 +1091,7 @@ exports.runREC = (container) => {
         } catch (error) {
             error.message = error.message || "Błąd rozpoznawania mowy"
             error.statusCode = error.statusCode || 500;
+            clearInterval(checkerdb);
             reject(error)
         }
 
