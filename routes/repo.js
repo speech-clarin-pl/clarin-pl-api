@@ -46,8 +46,8 @@ router.delete('/delete/:containerId', isAuth, repoController.removeContainer); /
   router.put('/runSpeechDiarization/:containerId', isAuth, repoController.runSpeechDiarization); //refactored
 
   //PUT /repoFiles/runSpeechVAD/containerId - wykonuje daną usługę na określonym kontenerze
-  router.put('/runSpeechVAD/:containerId', isAuth, repoController.runSpeechVAD);
-
+  router.put('/runSpeechVAD/:containerId', isAuth, repoController.runSpeechVAD); //refactored
+ 
   //GET /repoFiles/exportToEmu/:userId/:projectId - exportuje do EMU
   //router.get('/exportToEmu/:userId/:projectId', isAuth, repoController.exportToEmu);
   router.get('/createCorpus/:projectId', isAuth, repoController.exportToEmu);

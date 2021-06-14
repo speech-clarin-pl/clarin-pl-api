@@ -14,8 +14,71 @@ const chalk = require('chalk');
 const speechRecognitionDoneHandler = require('./Handlers/speechRecognitionDoneHandler');
 const speechSegmentationDoneHandler = require('./Handlers/segmentationDoneHandler');
 const diarizationDoneHandler = require('./Handlers/diarizationDoneHandler');
+const voiceActivityDetectionDoneHandler = require('./Handlers/voiceActivityDetectionDoneHandler');
 
+//refactored
+exports.runVAD = (container) => {
+    return new Promise(async (resolve, reject) => {
 
+        try {
+
+            const userId = container.owner;
+            const projectId = container.project;
+            const sessionId = container.session;
+        
+            const audioFileName = container.fileName;       //np. lektor-fe2e3423.wav - na serwerze
+            const containerFolderName = utils.getFileNameWithNoExt(audioFileName);  //np.lektor-fe2e3423 - na serwerze folder
+        
+            //sciezka do pliku relatywna dla dockera
+            let inputAudioFilePath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerFolderName + '/' + audioFileName;
+            inputAudioFilePath = path.relative(appRoot + '/repo/', inputAudioFilePath);
+
+            //tworze task
+            const dockerTask = new Task({
+                task: "vad",
+                in_progress: false,
+                done: false,
+                time: new Date().toUTCString(),
+                input: inputAudioFilePath,
+            });
+
+            //uruchamiam dockera
+            const savedTask = await dockerTask.save();
+
+            let checkerdb = setInterval( async () => {
+
+                const task = await Task.findById(savedTask._id);
+    
+                if (task.done) {
+                    if (!task.error) {
+    
+                        const segments = await voiceActivityDetectionDoneHandler(rask,container);
+                        clearInterval(checkerdb);
+                        resolve(segments);
+                        
+                    } else {
+                        clearInterval(checkerdb);
+                        const err = new Error('Task zwrócił błąd')
+                        reject(err);
+                    }
+                }
+            }, 1000);
+    
+            //jak nie ma odpowiedzi w ciagu 2h to zatrzymuje task
+            setTimeout(() => {
+                clearInterval(checkerdb);
+            }, 1000*60*60*2);
+
+        } catch (error) {
+            error.message = error.message || "Błąd aktywacji mowy"
+            error.statusCode = error.statusCode || 500;
+            reject(error)
+        }        
+    })
+}
+
+/*
+//kopia przed refactor
 exports.runVAD = (container) => {
     return new Promise(async (resolve, reject) => {
         
@@ -158,6 +221,7 @@ exports.runVAD = (container) => {
         
     })
 }
+*/
 
 //refactored
 exports.runDIA = (container) => {

@@ -394,6 +394,46 @@ exports.changeContainerName = async (req, res, next) => {
  * 
  */
 
+//refactored
+ exports.runSpeechVAD = async (req, res, next) => {
+
+  try {
+
+    let containerId = req.params.containerId;
+
+    if (!containerId) {
+      const error = new Error('Błądny parametr id kontenera');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const container = await Container.findById(containerId);
+
+    console.log(chalk.cyan("Uruchamiam detekcje mowy dla " + containerId));
+    //sprawdzam czy rzeczywiście mam uprawnienia do tego pliku
+    const userToCheck = await User.findById(container.owner, "_id status");
+    if ((userToCheck._id.toString() !== req.userId.toString()) || (userToCheck.status.toString() !== "Active")) {
+      const error = new Error('Nie masz uprawnień!');
+      error.statusCode = 403;
+      throw error;
+    }
+
+    const VADsegments = await runTask.runVAD(container);
+
+    console.log(chalk.cyan("Zakończono detekcje mowy dla " + containerId));
+    res.status(200).json({ message: 'Zakończono detekcję mowy!', containerId: containerId, toolType: "VAD", VADSegments: VADsegments});
+
+
+  } catch (error) {
+    error.message = error.message || "Błąd detekcji aktywacji mowy";
+    error.statusCode = error.statusCode || 500;
+    next(error);
+  }
+}
+
+
+/*
+//kopia przed refactoringiem
 exports.runSpeechVAD = (req, res, next) => {
   let containerId = req.params.containerId;
   //const toolType = req.body.toolType;
@@ -414,6 +454,7 @@ exports.runSpeechVAD = (req, res, next) => {
     next(error);
   })
 }
+*/
 
 
 
@@ -473,10 +514,11 @@ exports.runSpeechVAD = (req, res, next) => {
       throw error;
     }
 
-    console.log(chalk.cyan("Uruchamiam diaryzacje dla " + containerId));
+   
 
     const container = await Container.findById(containerId);
 
+    console.log(chalk.cyan("Uruchamiam diaryzacje dla " + containerId));
     //sprawdzam czy rzeczywiście mam uprawnienia do tego pliku
     const userToCheck = await User.findById(container.owner, "_id status");
     if ((userToCheck._id.toString() !== req.userId.toString()) || (userToCheck.status.toString() !== "Active")) {
