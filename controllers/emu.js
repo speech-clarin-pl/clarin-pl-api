@@ -98,9 +98,10 @@ exports.ctmSEG2tg = (container) => {
             //console.log(`child process close all stdio with code ${code}`);
             // 0 cussess, 2 error, 1 cos nie tak z argumentami
             if(code==0){
-                resolve();
+                resolve(code);
             } else {
-                reject();
+                const error = new Error("Konwersja CTM na TextGrid zwróciła kod " + code);
+                reject(error);
             }
         });
     })
@@ -109,6 +110,7 @@ exports.ctmSEG2tg = (container) => {
   //########### generuje plik JSCON dla EMU z plikow ctms
 exports.ctms2EMU = (container) => {
     return new Promise((resolve, reject) => {
+
         const containerId = container._id;
         const userId = container.owner;
         const audioFileName = container.fileName;
@@ -132,16 +134,17 @@ exports.ctms2EMU = (container) => {
                                             segCtmFileName,
                                             JSONOutputFileName]);
 
+
         ctms_2_emu.on('close', (code) => {
            // console.log("konversja ctm CTMs 2 JSON zakonczona")
            // console.log(`child process close all stdio with code ${code}`);
             // 0 cussess, 2 error, 1 cos nie tak z argumentami
             if(code>0){
-                reject(code);
+                const error = new Error("Konwersja CTM na EMU zwróciła kod " + code);
+                reject(error);
             } else {
                 resolve(code);
             }
-
         });
     })
 }
@@ -149,49 +152,49 @@ exports.ctms2EMU = (container) => {
 
 
  exports.containers2EMU = (containers) => {
+    return new Promise(async (resolve, reject) => {
 
-    return new Promise((resolve, reject) => {
+        try {
 
-        if(containers.length == 0){
-            reject("Lista contenerów dla EMU JSCON była pusta");
-        }
+            if(containers.length === 0){
+                const error = new Error("Lista contenerów dla EMU JSON była pusta")
+                reject(error);
+            }
 
-        let promises = [];
+            let promises = [];
+            let correctContainers = [];
 
-        let correctContainers = [];
+            for(let container of containers ){
 
-        for(let container of containers ){
-
-            let promis = new Promise((resolve, reject) => {
-                this.ctms2EMU(container)
-                    .then((code)=>{
-                        //console.log(code)
-                        
-                        correctContainers.push(container);
-                        resolve(code);
-                    })
-                    .catch((code) => {
-                    
-                        reject(code)
-                    })
-            });
-    
-          
-            promises.push(promis);
-        }
-    
-        Promise.all(promises)
-            .then(result => {
-                resolve(correctContainers)
-             
-            })
-            .catch(err=>{
-                //zawsze robie resolve ponieważ chce sprawdzić które kontenery się nie wykonały
-                //wtedy correntContainers zawieraja tylko te którym udało się zrobić EMU JSON
-                //resolve(correctContainers)
-                reject(correctContainers)
+                let promis = new Promise((resolve, reject) => {
+                    this.ctms2EMU(container)
+                        .then((code)=>{
+                            correctContainers.push(container);
+                            resolve(code);
+                        })
+                        .catch((error) => {
+                            reject(error)
+                        })
+                });
+            
+                promises.push(promis);
+            }
+        
+            Promise.all(promises)
+                .then(result => {
+                    resolve(correctContainers)
                 
-            })
+                })
+                .catch(err=>{
+                    reject(err)
+                })
+
+        } catch (error) {
+            error.message = error.message || "Błąd konwertowania CTM na EMU podczas tworzenia korpusu";
+            error.statusCode = error.statusCode || 500;
+            reject(error);
+        }
+        
     });
 }
 

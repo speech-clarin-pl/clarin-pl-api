@@ -19,152 +19,11 @@ const shell = require('shelljs');
 const {spawn} = require('child_process');
 const chalk = require('chalk');
 const createNewSessionHandler = require('./Handlers/createNewSessionHandler');
-
-
-//const AdmZip = require('adm-zip');
-
+const createCorpusHandler = require('./Handlers/createCorpusHandler')
 const emu = require('./emu');
-
 const runTask = require('./runTask');
-
 const archiver = require('archiver');
 
-
-//##########################################
-//#### Eksportuje do emu ######
-//#######################################
-
-exports.zipDirectory = (source, out) => {
-  const archive = archiver('zip', { zlib: { level: 9 }});
-  const stream = fs.createWriteStream(out);
-
-  return new Promise((resolve, reject) => {
-    archive
-      .directory(source, false)
-      .on('error', err => reject(err))
-      .pipe(stream)
-    ;
-
-    stream.on('close', () => resolve());
-    archive.finalize();
-  });
-}
-
-
-exports.createKorpus = (projectId, userId) => {
-  return new Promise(async (resolve, reject) => {
-
-    console.log(chalk.green("Rozpoczynam tworzenie korpusu..."));
-
-    try{
-
-          // tutaj robie export do EMU tylko tych plików które mają wszystkie narzędzia wykonane
-          //przeglądam kontenery tego użytkownika i wybieram tylko te które mogą być zapisane
-          let containers = await Container.find({owner: userId, project: projectId, ifVAD: true, ifDIA: true, ifREC: true, ifSEG: true },
-                          {VADUserSegments:0, DIAUserSegments:0,RECUserSegments:0,SEGUserSegments:0})
-
-          const nazwaKorpusu = 'KORPUS';
-          const pathToUserProject = appRoot + '/repo/' + userId + '/' + projectId;
-          const pathToCorpus = pathToUserProject + '/' + nazwaKorpusu;
-          const pathToZIP = pathToCorpus+'.zip';
-        
-          let correctContainers = await emu.containers2EMU(containers);
-    
-        
-          //console.log("Folder do CORPUSU: " +  pathToCorpus);
-
-          //teraz tworze folder w katalogu projektu danego usera z gotowym korpusem
-          if(!fs.existsSync(pathToCorpus)){
-            fs.mkdirSync(pathToCorpus, { recursive: true })
-          } 
-        
-          let oryginalDBconfigPath = appRoot + '/emu/test_DBconfig.json';
-          let pathToDBconfig = pathToCorpus + '/' + nazwaKorpusu + '_DBconfig.json';
-          //teraz kopiuje do niego plik DBconfig.json
-          //zamieniam parametr name na nazwe korpusu
-        
-          const dbconfig = fs.readJsonSync(oryginalDBconfigPath);
-
-          dbconfig.name = nazwaKorpusu;
-
-          fs.writeJsonSync(pathToDBconfig, dbconfig,{spaces: '\t'});
-          //fs.copySync(oryginalDBconfigPath, pathToDBconfig);
-
-          let promises = [];
-                
-          //teraz tworze w tym folderze katalogi z sesjami i kopiuje tam foldery z contenerami
-          for (let container of correctContainers){
-
-
-            const audioFileName = container.fileName;
-            const containerFolderName = utils.getFileNameWithNoExt(audioFileName);  //np.lektor-fe2e3423 - na serwerze folder
-            const projectId = container.project;
-            const sessionId = container.session;
-            const pathToContainer = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerFolderName;
-            
-            let promis = new Promise((resolve, reject) => {
-
-              Session.findById(sessionId)
-              .then(session=>{
-
-                const sessionName = session.name;
-                const sessionPath = pathToCorpus + '/' + sessionName + '_ses';
-
-                //console.log("tworze sesje: " + sessionPath)
-                //tworze katalog sesji jeżeli nie istnieje
-                if(!fs.ensureDirSync(sessionPath)){
-                  //console.log("stworzyłem sesje: " + sessionPath)
-                  fs.mkdirSync(sessionPath, { recursive: true })
-                } 
-
-
-                const containerPath = sessionPath + '/' + containerFolderName + '_bndl';
-                //tworze katalog contenera jeżeli nie istnieje
-                if(!fs.ensureDirSync(containerPath)){
-                 // console.log("stworzyłem container folder: " + containerPath)
-                  fs.mkdirSync(containerPath, { recursive: true })
-                } 
-
-                //kopiuje do niego pliki EMU json oraz wav
-
-                let srcpathToWAV = pathToContainer + '/' + audioFileName;
-                let destpathToWAV = containerPath + '/' + audioFileName;
-
-                let srcpathToEMUjson = pathToContainer + '/' + containerFolderName + '_annot.json';
-                let destpathToEMUjson = containerPath + '/' + containerFolderName + '_annot.json';
-
-                try{
-                  fs.copySync(srcpathToWAV, destpathToWAV);
-                  fs.copySync(srcpathToEMUjson, destpathToEMUjson);
-                  resolve();
-                } catch(error) {
-                  reject();
-                }
-
-              }).catch(error=>{
-                console.error(error)
-                reject();
-              })
-            });
-
-            promises.push(promis);
-
-          }
-
-
-          await Promise.all(promises)
-
-          await this.zipDirectory(pathToCorpus,pathToZIP)
-
-          fs.removeSync(pathToCorpus);   
-          resolve(pathToZIP);     
-    
-  } catch (error) {
-    reject(error)
-  } 
-    
-  })
-}
 
 
 /**
@@ -188,36 +47,45 @@ exports.createKorpus = (projectId, userId) => {
  * 
  * 
  */
+
+//refactored
 exports.exportToEmu = async (req, res, next) => {
 
-  const projectId = req.params.projectId;
-  
-  //const userId = req.params.userId;
-  const userId = req.userId;
-
   try {
+
+    const projectId = req.params.projectId;
+  
+    //const userId = req.params.userId;
+    const userId = req.userId;
+
     const foundProject = await ProjectEntry.findById(projectId);
 
     if(!foundProject){
       const wrongProjIDErr = new Error("Nie znaleziono projektu o danym ID");
+      wrongProjIDErr.statusCode = 404;
       throw wrongProjIDErr
     }
 
-    this.createKorpus(projectId, userId)
-    .then((pathToZIP)=>{
-      console.log(chalk.green("ZIP stworzony: " + pathToZIP))
-     // res.sendFile(pathToZIP)
-     // res.download(pathToZIP, 'readyZIP.zip');
-      res.status(200).json({ message: 'Tworzenie korpusu zakończone sukcesem. Możesz go ściągnąć.'});
-      //res.status(200).json({ message: 'ZIP created successfuly!'});
-    })
-    .catch((error)=>{
-      //res.status(204).json({ message: 'Twoje pliki nie zawierają wszystkich poziomów anotacji lub coś poszło nie tak na serwerze'});
-      throw error
-    }) 
+    //sprawdzam czy mam uprawnienia
+    const userToCheck = await User.findById(foundProject.owner,"_id status");
+    if ((userToCheck._id.toString() !== req.userId.toString()) || (userToCheck.status.toString() !== "Active")) {
+      const error = new Error('Nie masz uprawnień!');
+      error.statusCode = 403;
+      throw error;
+    }
+
+    console.log(chalk.green("Rozpoczynam tworzenie korpusu..."));
+
+    const pathToZIP = await createCorpusHandler(foundProject);
+
+    console.log(chalk.green("ZIP korpusu stworzony: " + pathToZIP));
+
+    res.status(200).json({ message: 'Tworzenie korpusu zakończone sukcesem. Możesz go ściągnąć.'});
+
 
   } catch (error) {
-    console.log(chalk.red(error.message))
+    error.message = error.message || "Błąd tworzenia korpusu ZIP";
+    error.statusCode = error.statusCode || 500;
     next(error);
   }  
 }
@@ -242,42 +110,49 @@ exports.exportToEmu = async (req, res, next) => {
 // ########### pobieram gotowy korpus
 // ######################################################
 
-exports.getReadyKorpus = (req,res,next) => {
+exports.getReadyKorpus = async (req,res,next) => {
 
-  const userId = req.userId;
-  const projectId = req.params.projectId;
+  try {
 
-  ProjectEntry.findById(projectId)
-    .then(foundPE => {
-      if(!foundPE){
-        const error = new Error('Nie znaleziono projektu o danym ID');
-        error.statusCode = 404;
-        throw error;
-      }
+    const userId = req.userId;
+    const projectId = req.params.projectId;
+  
+    const foundPE = await ProjectEntry.findById(projectId);
 
+    if(!foundPE){
+      const error = new Error('Nie znaleziono projektu o danym ID');
+      error.statusCode = 404;
+      throw error;
+    }
+
+     //sprawdzam czy mam uprawnienia
+     const userToCheck = await User.findById(foundPE.owner,"_id status");
+     if ((userToCheck._id.toString() !== req.userId.toString()) || (userToCheck.status.toString() !== "Active")) {
+       const error = new Error('Nie masz uprawnień!');
+       error.statusCode = 403;
+       throw error;
+     }
+
+  
       const nazwaKorpusu = 'KORPUS';
       const pathToUserProject = appRoot + '/repo/' + userId + '/' + projectId;
       const pathToCorpus = pathToUserProject + '/' + nazwaKorpusu;
       const pathToZIP = pathToCorpus+'.zip';
 
-      try {
-        if(fs.existsSync(pathToZIP)) {
-          res.download(pathToZIP,(nazwaKorpusu+'.zip'));
-        } else {
-          const corpusNotCreatedErr = new Error("Dla tego projektu nie został wygenerowany korpus");
-          throw corpusNotCreatedErr;
-        }
-      } catch (err) {
-         throw err;
-      }
-       
-      
 
-    }).catch(error=>{
-      console.log(chalk.red(error.message));
-      error.statusCode = error.statusCode || 500;
-      next(error);
-    })
+      if(fs.existsSync(pathToZIP)) {
+        res.download(pathToZIP,(nazwaKorpusu+'.zip'));
+      } else {
+        const corpusNotCreatedErr = new Error("Dla tego projektu nie został wygenerowany korpus");
+        throw corpusNotCreatedErr;
+      }
+
+  } catch (error) {
+    error.message = error.message || "Błąd pobierania gotowego kontenera";
+    error.statusCode = error.statusCode || 500;
+    next(error);
+  }
+  
  }
 
 
@@ -336,10 +211,8 @@ exports.changeContainerName = async (req, res, next) => {
     res.status(200).json({ message: 'Zmiana nazwy zakończona sukcesem!', containerId: container._id, newName: newName });
 
   } catch (error) {
-    if (!error.statusCode) {
-      error.statusCode = 500;
-    }
-    error.message = "Błąd zmiany nazwy kontenera"
+    error.message = error.message || "Błąd zmiany nazwy kontenera";
+    error.statusCode = error.statusCode || 500;
     next(error);
   }
 }
