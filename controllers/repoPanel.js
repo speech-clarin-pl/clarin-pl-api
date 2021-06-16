@@ -157,6 +157,49 @@ exports.getReadyKorpus = async (req,res,next) => {
 
 
 
+//refactored
+//##########################################
+//#### zmieniam nazwe sesji ######
+//#######################################
+
+exports.changeSessionName = async (req, res, next) => {
+
+  try {
+
+    const sessionId = req.params.sessionId;
+    const newName = req.body.newName;
+
+    
+
+    const foundSession = await Session.findById(sessionId);
+
+    const foundProject = await ProjectEntry.findById(foundSession.projectId);
+    let owner = foundProject.owner;
+
+    //sprawdzam czy mam uprawnienia
+    const userToCheck = await User.findById(owner,"_id status");
+    if ((userToCheck._id.toString() !== req.userId.toString()) || (userToCheck.status.toString() !== "Active")) {
+      const error = new Error('Nie masz uprawnień!');
+      error.statusCode = 403;
+      throw error;
+    }
+
+    //TO DO: dorobic zmiane nazwy sesji
+
+    //const container = await Container.findByIdAndUpdate(sessionId, { containerName: newName });
+
+    //res.status(200).json({ message: 'Zmiana nazwy sesji sukcesem!', sessionId: container._id, newName: newName });
+
+    res.status(200).json({ message: 'Zmiana nazwy sesji sukcesem!', sessionId: sessionId, newName: newName });
+
+  } catch (error) {
+    error.message = error.message || "Błąd zmiany nazwy sesji";
+    error.statusCode = error.statusCode || 500;
+    next(error);
+  }
+}
+
+
 /**
  * @api {put} /repoFiles/changeContainerName/:containerId' Zmiana nazwy kontenera
  * @apiDescription Zmienia nazwę kontenera 
