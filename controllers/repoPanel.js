@@ -1019,7 +1019,7 @@ exports.removeContainer = async (req, res, next) => {
 
     const removedContainer = await Container.findByIdAndRemove(containerId);
 
-    const updatedSession = Session.findByIdAndUpdate(sessionId, { $pull: { containersIds: containerId } });
+    const updatedSession = await Session.findByIdAndUpdate(sessionId, { $pull: { containersIds: containerId } },{new: true});
 
     res.status(200).json({ message: 'Kontener został usunięty!', sessionId: sessionId, containerId: containerId });
 
@@ -1572,6 +1572,8 @@ exports.getRepoStats = async (req, res, next) => {
 
     const foundContainers = await Container.find({ owner: userId, project: projectId });
 
+    
+
     const mappedConverted = foundContainers.map(element => {
       return Number(element.size)
     });
@@ -1582,13 +1584,25 @@ exports.getRepoStats = async (req, res, next) => {
 
 
     const containersNumber = mappedConverted.length;
-    const weightOfOryginal = mappedOryginal.reduce((total, value) => {
-      return (total + value)
-    });
-    const weightOfConverted = mappedConverted.reduce((total, value) => {
-      return (total + value)
-    });
-    const totalWeight = weightOfOryginal + weightOfConverted;
+
+    let weightOfOryginal = 0;
+    let weightOfConverted = 0;
+    let totalWeight = 0;
+
+    if (containersNumber > 0) {
+      weightOfOryginal = mappedOryginal.reduce((total, value) => {
+        return (total + value)
+      });
+
+
+      weightOfConverted = mappedConverted.reduce((total, value) => {
+        return (total + value)
+      });
+      
+      totalWeight = weightOfOryginal + weightOfConverted;
+    }
+
+ 
 
     const dataToReturn = {
       containersNumber: containersNumber,
@@ -1603,7 +1617,7 @@ exports.getRepoStats = async (req, res, next) => {
     if (!error.statusCode) {
       error.statusCode = 500;
     }
-    error.message = "Błąd pobierania zawartości repozytorium"
+    error.message = "Błąd pobierania statystyk repozytorium"
     next(error);
   }
 
