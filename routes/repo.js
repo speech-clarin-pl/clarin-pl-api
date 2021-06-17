@@ -24,8 +24,11 @@ router.post('/createNewSession', isAuth, repoController.createNewSession); //ref
 //PUT /repoFiles/changeContainerName/:containerId
 router.put('/changeContainerName/:containerId', isAuth, repoController.changeContainerName); //refactored
 
-//PUT /repoFiles/changeSessionName/:containerId
+//PUT /repoFiles/changeSessionName/:sessionId
 router.put('/changeSessionName/:sessionId', isAuth, repoController.changeSessionName); //refactored
+
+//PUT /repoFiles/moveContainerToSession/:containerId
+router.put('/moveContainerToSession/:containerId', isAuth, repoController.moveContainerToSession); //refactored
 
 // GET /repoFiles/projectId - do pobierania listy plikow
 router.get('/getProjectAssets/:projectId', isAuth, repoController.getRepoAssets); //refactored

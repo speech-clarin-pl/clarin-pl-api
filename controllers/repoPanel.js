@@ -155,7 +155,52 @@ exports.getReadyKorpus = async (req,res,next) => {
   
  }
 
+//#############################################
+//##### przenosze kontener do innej sesji #####
+//#############################################
 
+exports.moveContainerToSession = async (req,res, next) => {
+  try {
+
+    const containerId = req.params.containerId;
+    const sessionIdTo = req.body.sessionId;
+
+    const container = await Container.findById(containerId);
+    //sprawdzam czy mam uprawnienia
+    const userToCheck = await User.findById(container.owner,"_id status");
+    if ((userToCheck._id.toString() !== req.userId.toString()) || (userToCheck.status.toString() !== "Active")) {
+      const error = new Error('Nie masz uprawnień!');
+      error.statusCode = 403;
+      throw error;
+    }
+
+    const userId = req.userId;
+    const projectId = container.project;
+    const sessionIdFROM = container.session;
+    const containerFolderName = utils.getFileNameWithNoExt(container.fileName);
+
+    //najpierw przenosze cały folder fizycznie z repo z jednego miejsca do drugiego
+    const PathToContainerFROM = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionIdFROM + '/' + containerFolderName;
+    const PathToContainerTO = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionIdTo + '/' + containerFolderName;
+
+    fs.moveSync(PathToContainerFROM, PathToContainerTO,{overwrite: true});
+
+    //aktualizuje w bazie danych
+    container.session = sessionIdTo;
+    await container.save();
+
+    //return ProjectEntry.findByIdAndUpdate(projectId,{$push: {sessionIds: createdSession._id}});
+    await Session.findByIdAndUpdate(sessionIdFROM,{$pull: {containersIds: containerId}});
+    await Session.findByIdAndUpdate(sessionIdTo,{$push: {containersIds: containerId}});
+
+    res.status(200).json({ message: 'Kontener został przeniesiony!', containerId: containerId, sessionId: sessionIdTo });
+
+  } catch (error) {
+    error.message = error.message || "Błąd przenoszenia kontenera do innej sesji";
+    error.statusCode = error.statusCode || 500;
+    next(error);
+  }
+}
 
 //refactored
 //##########################################
@@ -1598,7 +1643,7 @@ exports.getRepoStats = async (req, res, next) => {
       weightOfConverted = mappedConverted.reduce((total, value) => {
         return (total + value)
       });
-      
+
       totalWeight = weightOfOryginal + weightOfConverted;
     }
 
