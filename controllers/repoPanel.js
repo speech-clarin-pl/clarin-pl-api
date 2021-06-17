@@ -169,8 +169,6 @@ exports.changeSessionName = async (req, res, next) => {
     const sessionId = req.params.sessionId;
     const newName = req.body.newName;
 
-    
-
     const foundSession = await Session.findById(sessionId);
 
     const foundProject = await ProjectEntry.findById(foundSession.projectId);
@@ -184,11 +182,7 @@ exports.changeSessionName = async (req, res, next) => {
       throw error;
     }
 
-    //TO DO: dorobic zmiane nazwy sesji
-
-    //const container = await Container.findByIdAndUpdate(sessionId, { containerName: newName });
-
-    //res.status(200).json({ message: 'Zmiana nazwy sesji sukcesem!', sessionId: container._id, newName: newName });
+    await Session.findByIdAndUpdate(sessionId,{name: newName});
 
     res.status(200).json({ message: 'Zmiana nazwy sesji sukcesem!', sessionId: sessionId, newName: newName });
 
