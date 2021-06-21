@@ -19,6 +19,7 @@ const recognitionRoutes =  require('./routes/recognitionTool');
 const VADRoutes =  require('./routes/VADTool');
 const DIARoutes =  require('./routes/DIATool');
 const SEGRoutes =  require('./routes/SEGTool');
+const G2PRoutes = require('./routes/G2PTool');
 //const segmentationRoutes = require('./routes/segmentationTool');
 const repoRoutes = require('./routes/repo'); 
 const authRoutes =  require('./routes/auth');
@@ -106,6 +107,7 @@ app.use('/vad', VADRoutes);
 app.use('/dia', DIARoutes);
 app.use('/seg', SEGRoutes);
 app.use('/auth', authRoutes);
+app.use('/G2P', G2PRoutes)
 
 
 //error handling...
