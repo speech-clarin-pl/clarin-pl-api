@@ -299,6 +299,53 @@ exports.changeContainerName = async (req, res, next) => {
   }
 }
 
+//refactored
+exports.runG2P = async (req, res, next) => {
+
+  const words = req.body.words;
+  const alphabet = req.body.alphabet;
+
+  console.log(req.userId)
+
+  if (!words) {
+    const error = new Error('Nie przesłano słów do tłumaczenia');
+    error.statusCode = 400;
+    throw error;
+  }
+
+
+  try {
+
+    
+
+    //sprawdzam czy rzeczywiście mam uprawnienia do tego pliku
+    const userToCheck = await User.findById(req.userId, "_id status");
+    if ((userToCheck._id.toString() !== req.userId.toString()) || (userToCheck.status.toString() !== "Active")) {
+      const error = new Error('Nie masz uprawnień!');
+      error.statusCode = 403;
+      throw error;
+    }
+
+    console.log(chalk.cyan("Uruchamiam G2P"));
+
+    const g2pResults = await runTask.runG2P(words, alphabet, userToCheck);
+
+    console.log(chalk.cyan("Zakończono G2P"));
+
+    res.status(200).json({
+      message: 'G2P zakończone powodzeniem',
+      alphabet: alphabet,
+      g2pResults: g2pResults,
+  });
+
+
+  } catch (error) {
+    error.message = error.message || "Błąd G2P";
+    error.statusCode = error.statusCode || 500;
+    next(error);
+  }
+}
+
 
 //refactored
 exports.runKWS = async (req, res, next) => {

@@ -10,7 +10,8 @@ const utils = require('../utils/utils');
 const ffmpeg = require('ffmpeg');
 const Container = require('../models/Container')
 
-exports.makeG2P = (req, res, next) => {
+/*
+exports.runG2P = (req, res, next) => {
     const alphabet = req.body.alphabet || 'alpha';
     const setOfWords = req.body.setOfWords || [];
 
@@ -20,5 +21,5 @@ exports.makeG2P = (req, res, next) => {
         alphabet: alphabet
     });
 }
-
+*/
 

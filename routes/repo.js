@@ -42,20 +42,23 @@ router.delete('/delete/:containerId', isAuth, repoController.removeContainer); /
  //DELETE /repoFiles/deleteFile/userId - usuwa sesje
  router.delete('/deleteSession/:sessionId', isAuth, repoController.removeSession); //refactored
 
- //PUT /repoFiles/runSpeechReco/containerId - wykonuje daną usługę na określonym kontenerze
+ //PUT /repoFiles/runSpeechReco/containerId 
  router.put('/runSpeechRecognition/:containerId', isAuth, repoController.runSpeechRecognition); //refactored
 
-  //PUT /repoFiles/runSpeechReco/containerId - wykonuje daną usługę na określonym kontenerze
+  //PUT /repoFiles/runSpeechReco/containerId 
   router.put('/runSpeechSegmentation/:containerId', isAuth, repoController.runSpeechSegmentation); //refactored
 
-  //PUT /repoFiles/runSpeechDiarization/containerId - wykonuje daną usługę na określonym kontenerze
+  //PUT /repoFiles/runSpeechDiarization/containerId 
   router.put('/runSpeechDiarization/:containerId', isAuth, repoController.runSpeechDiarization); //refactored
 
-  //PUT /repoFiles/runSpeechVAD/containerId - wykonuje daną usługę na określonym kontenerze
+  //PUT /repoFiles/runSpeechVAD/containerId 
   router.put('/runSpeechVAD/:containerId', isAuth, repoController.runSpeechVAD); //refactored
 
-    //PUT /repoFiles/runSpeechVAD/containerId - wykonuje daną usługę na określonym kontenerze
-   router.put('/runKWS/:containerId', isAuth, repoController.runKWS);
+  //PUT /repoFiles/runSpeechVAD/containerId 
+  router.put('/runKWS/:containerId', isAuth, repoController.runKWS);
+
+  //PUT /repoFiles/runSpeechVAD/containerId 
+  router.put('/runG2P', isAuth, repoController.runG2P);
  
   //GET /repoFiles/exportToEmu/:userId/:projectId - exportuje do EMU
   router.get('/createCorpus/:projectId', isAuth, repoController.exportToEmu); //refactored

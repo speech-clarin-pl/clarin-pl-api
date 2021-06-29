@@ -1100,6 +1100,83 @@ exports.runREC = (container) => {
 }
 
 
+//refactored
+exports.runG2P = (words, alphabet, user) => {
+    return new Promise(async (resolve, reject) => {
+
+        let checkerdb = null;
+
+        try {
+
+            const userId = user._id;
+
+            //slowa musze zapisać w postaci pliku tekstowego jako wejscie do dockera w katalogu usera
+            const userFolderPath = appRoot + '/repo/' + userId;
+            let inputWordsTxt = userFolderPath + '/' + userId+'_G2P_temp.txt';
+            fs.writeFileSync(inputWordsTxt, words);
+
+            //podaje do dockera
+            const finalInputWordsTxt = path.relative(appRoot + '/repo/', inputWordsTxt);
+
+            //buduje task w DB
+            const dockerTask = new Task({
+                task: "g2p",
+                in_progress: false,
+                done: false,
+                time: new Date().toUTCString(),
+                input: finalInputWordsTxt
+            });
+
+            // uruchamiam usługę z dockera zapisując task
+            const savedTask = await dockerTask.save();
+
+            //w tle docker robi swoje a ja odpytuje baze co sekunde czy juz sie ukonczylo
+            checkerdb = setInterval(async () => {
+
+                //robie co sekundę zapytanie do bazy danych
+                const task = await Task.findById(savedTask._id);
+
+                //jeżeli docker zmienił  status tasku na ukończony i nie ma bledow to obsluguje rezultaty
+                if (task.done) {
+                    if (!task.error) {
+                        try{
+                            fs.removeSync(inputWordsTxt); //usuwam bo juz nie bedzie potrzebne
+                            const g2pResults = await g2pDoneHandler(task, userId);
+                            clearInterval(checkerdb);
+                            resolve(g2pResults);
+                        } catch (err) {
+                            clearInterval(checkerdb);
+                            reject(err)
+                        }
+                        
+                    } else {
+                        const error = new Error(task.error);
+                        clearInterval(checkerdb);
+                        reject(error)
+                    }
+
+                    //na wszelki wypadek zostawiam
+                    clearInterval(checkerdb);
+                }
+            }, 1000);
+
+
+            //jak nie ma odpowiedzi w ciagu 2h to zatrzymuje task
+            setTimeout(() => {
+                clearInterval(checkerdb);
+                const error = new Error("Task przerwany z powodu zbyt długiego działania.")
+                reject(error)
+            }, 1000 * 60 * 60 * 2);
+
+        } catch (error) {
+            error.message = error.message || "Błąd G2P"
+            error.statusCode = error.statusCode || 500;
+            clearInterval(checkerdb);
+            reject(error)
+        }
+
+    })
+}
 
 //refactored
 exports.runKWS = (container, keywords) => {
@@ -1158,7 +1235,7 @@ exports.runKWS = (container, keywords) => {
                     if (!task.error) {
 
                         try{
-
+                            fs.removeSync(inputKeywordsTxt);
                             const kwsResults = await kwsDoneHandler(task, container);
                             clearInterval(checkerdb);
                             resolve(kwsResults);
