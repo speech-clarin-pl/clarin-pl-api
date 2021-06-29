@@ -10,6 +10,7 @@ const utils = require('../utils/utils');
 const ffmpeg = require('ffmpeg');
 const Container = require('../models/Container')
 
+/*
 exports.makeKWS = (req, res, next) => {
 
     const setOfWords = req.body.setOfWords || [];
@@ -21,5 +22,6 @@ exports.makeKWS = (req, res, next) => {
         containerId: containerId
     });
 }
+*/
 
 

@@ -23,7 +23,7 @@ const createCorpusHandler = require('./Handlers/createCorpusHandler')
 const emu = require('./emu');
 const runTask = require('./runTask');
 const archiver = require('archiver');
-
+var ObjectId = require('mongoose').Types.ObjectId;
 
 
 /**
@@ -299,6 +299,65 @@ exports.changeContainerName = async (req, res, next) => {
   }
 }
 
+
+//refactored
+exports.runKWS = async (req, res, next) => {
+
+  let containerId = req.params.containerId;
+  const keywords = req.body.keywords;
+
+  if (!containerId) {
+    const error = new Error('Błądny parametr id kontenera');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  let container = null;
+
+  try {
+
+    //validuje czy przekazany parametr jest poprawnym id
+    if(!ObjectId.isValid(containerId)){
+      const error = new Error('Błędne ID kontenera!');
+      error.statusCode = 404;
+      throw error;
+    }
+ 
+    container = await Container.findById(containerId);
+
+    if(!container){
+      const error = new Error('Błędne ID kontenera!');
+      error.statusCode = 404;
+      throw error;
+    }
+    
+    //sprawdzam czy rzeczywiście mam uprawnienia do tego pliku
+    const userToCheck = await User.findById(container.owner, "_id status");
+    if ((userToCheck._id.toString() !== req.userId.toString()) || (userToCheck.status.toString() !== "Active")) {
+      const error = new Error('Nie masz uprawnień!');
+      error.statusCode = 403;
+      throw error;
+    }
+
+    console.log(chalk.cyan("Uruchamiam KWS dla " + containerId));
+
+    const KWSResults = await runTask.runKWS(container,keywords);
+
+    console.log(chalk.cyan("Zakończono KWS dla " + containerId));
+
+    res.status(200).json({
+      message: 'Wyszukiwanie Słów kluczowych zakończone powodzeniem',
+      kwsResults: KWSResults,
+      containerId: containerId
+  });
+
+
+  } catch (error) {
+    error.message = error.message || "Błąd KWS";
+    error.statusCode = error.statusCode || 500;
+    next(error);
+  }
+}
 
 
 

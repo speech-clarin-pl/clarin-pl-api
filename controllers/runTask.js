@@ -12,6 +12,7 @@ const path = require('path');
 const emu = require('./emu');
 const chalk = require('chalk');
 const speechRecognitionDoneHandler = require('./Handlers/speechRecognitionDoneHandler');
+const kwsDoneHandler = require('./Handlers/kwsDoneHandler')
 const speechSegmentationDoneHandler = require('./Handlers/segmentationDoneHandler');
 const diarizationDoneHandler = require('./Handlers/diarizationDoneHandler');
 const voiceActivityDetectionDoneHandler = require('./Handlers/voiceActivityDetectionDoneHandler');
@@ -1090,6 +1091,103 @@ exports.runREC = (container) => {
 
         } catch (error) {
             error.message = error.message || "Błąd rozpoznawania mowy"
+            error.statusCode = error.statusCode || 500;
+            clearInterval(checkerdb);
+            reject(error)
+        }
+
+    })
+}
+
+
+
+//refactored
+exports.runKWS = (container, keywords) => {
+    return new Promise(async (resolve, reject) => {
+
+        let checkerdb = null;
+
+        try {
+
+            const userId = container.owner;
+            const projectId = container.project;
+            const sessionId = container.session;
+
+            const audioFileName = container.fileName;       //np. lektor-fe2e3423.wav - na serwerze
+            const containerFolderName = utils.getFileNameWithNoExt(audioFileName);  //np.lektor-fe2e3423 - na serwerze folder
+
+            //sciezka repo do katalogu kontenera
+            const containerFolderPath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + containerFolderName;
+
+            let inputAudioFilePath = containerFolderPath + '/' + audioFileName;
+
+            //do dockera podaje ścieżke relatywną
+            inputAudioFilePath = path.relative(appRoot + '/repo/', inputAudioFilePath);
+
+            //keywordy musze zapisać w postaci pliku tekstowego jako wejscie do dockera
+            let inputKeywordsTxt = containerFolderPath + '/' + containerFolderName+'_KWS_temp.txt';
+
+            fs.writeFileSync(inputKeywordsTxt, keywords);
+
+            //podaje do dockera
+            const finalInputKeywordsTxt = path.relative(appRoot + '/repo/', inputKeywordsTxt);
+
+            //buduje task w DB
+            const dockerTask = new Task({
+                task: "kws",
+                in_progress: false,
+                done: false,
+                time: new Date().toUTCString(),
+                input: {
+                    audio: inputAudioFilePath,
+                    keywords: finalInputKeywordsTxt,   
+                }
+            });
+
+            // uruchamiam usługę z dockera zapisując task
+            const savedTask = await dockerTask.save();
+
+            //w tle docker robi swoje a ja odpytuje baze co sekunde czy juz sie ukonczylo
+            checkerdb = setInterval(async () => {
+
+                //robie co sekundę zapytanie do bazy danych
+                const task = await Task.findById(savedTask._id);
+
+                //jeżeli docker zmienił  status tasku na ukończony i nie ma bledow to obsluguje rezultaty
+                if (task.done) {
+                    if (!task.error) {
+
+                        try{
+
+                            const kwsResults = await kwsDoneHandler(task, container);
+                            clearInterval(checkerdb);
+                            resolve(kwsResults);
+                        } catch (err) {
+                            clearInterval(checkerdb);
+                            reject(err)
+                        }
+                        
+                    } else {
+                        const error = new Error(task.error);
+                        clearInterval(checkerdb);
+                        reject(error)
+                    }
+
+                    //na wszelki wypadek zostawiam
+                    clearInterval(checkerdb);
+                }
+            }, 1000);
+
+
+            //jak nie ma odpowiedzi w ciagu 2h to zatrzymuje task
+            setTimeout(() => {
+                clearInterval(checkerdb);
+                const error = new Error("Task przerwany z powodu zbyt długiego działania.")
+                reject(error)
+            }, 1000 * 60 * 60 * 2);
+
+        } catch (error) {
+            error.message = error.message || "Błąd rozpoznawania słów kluczowych"
             error.statusCode = error.statusCode || 500;
             clearInterval(checkerdb);
             reject(error)
