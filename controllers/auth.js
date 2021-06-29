@@ -466,8 +466,7 @@ exports.login = (req, res, next) => {
             const token = jwt.sign({
                 email: loadedUser.email, 
                 userId: loadedUser._id.toString()
-            }, config.tokenKey,
-            {expiresIn: '192h'});
+            }, config.tokenKey);
 
             res.status(200).json({message: 'Jesteś zalogowany poprawnie.', token: token, userName:loadedUser.name, email: loadedUser.email});
 
