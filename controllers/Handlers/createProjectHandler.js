@@ -1,24 +1,13 @@
-const fs = require('fs');
-const path = require('path');
+
 const moment = require('moment');
 const fsextra = require('fs-extra');
-const utilsForFiles = require('../../utils/utils');
 var copy = require('recursive-copy');
-
-const {validationResult} = require('express-validator/check');
-
-//importuje model wpisu projektu
 const ProjectEntry = require('../../models/projectEntry');
-const ProjectFile = require('../../models/projectFile');
 const Container = require('../../models/Container')
 const User = require('../../models/user');
 const Session = require('../../models/Session');
-
-
 const chalk = require('chalk');
-
 var mkdirp = require("mkdirp"); //do tworzenia folderu
-var rimraf = require("rimraf"); 
 var appRoot = require('app-root-path'); //zwraca roota aplikacji
 
 const createDemoFiles = require('./createDemoFiles');

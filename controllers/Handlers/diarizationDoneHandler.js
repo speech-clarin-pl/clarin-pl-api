@@ -1,12 +1,7 @@
-//importuje model wpisu projektu
-const Task = require('../../models/DockerTask');
+
 const appRoot = require('app-root-path'); //zwraca roota aplikacji   
 const utils = require('../../utils/utils');
-const moment = require('moment');
 const fs = require('fs-extra');
-const ProjectEntry = require('../../models/projectEntry');
-const ProjectFile = require('../../models/projectFile');
-const User = require('../../models/user');
 const Container = require('../../models/Container');
 const path = require('path');
 const emu = require('../emu');
@@ -106,17 +101,13 @@ module.exports = (task, container) => {
             //convertuje na textGrid
             await emu.ctmDIA2tg(container);
 
-            const updatedContainer = await Container.findOneAndUpdate({ _id: container._id }, { ifDIA: true, DIAUserSegments: segments, statusDIA: 'done', errorMessage: '' });
+            await Container.findOneAndUpdate({ _id: container._id }, { ifDIA: true, DIAUserSegments: segments, statusDIA: 'done', errorMessage: '' });
 
             //teraz usuwam z dysku plik  log
             fs.removeSync(pathToResult + '_log.txt');
 
             //i usuwam tymczasowy plik txt
             fs.removeSync(pathToResult);
-
-             //testowo
-            // const testError = new Error("testowy error diaryzacji");
-            // throw testError
 
             resolve(segments)
 

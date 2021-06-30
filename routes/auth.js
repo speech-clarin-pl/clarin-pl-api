@@ -29,10 +29,6 @@ router.get('/confirmUser/:confirmationCode', authController.verifyUser);
 //############## wysłanie maila do administrtora ############
 router.post('/sendEmailToAdmin/',isAuth, authController.sendEmailToAdmin);
 
-//############## wyświetlenie strony do wpisania nowego hasła ############
-
-//router.get('/enterNewPass/:token',authController.enterNewPass);
-
 //############## przypomnienie hasła - wysłanie linka na email ############
 router.post('/forgotPass/',authController.forgotPass);
 

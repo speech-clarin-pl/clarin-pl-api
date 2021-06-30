@@ -141,7 +141,7 @@ exports.bytesToSize = (bytes) => {
         //plik nie mial rozszerzenia ale jest ciagle ok
         //wtedy biore przed 3 myslnik przed myslinikeim
         
-        
+
         filename = encodedFileName.substring(0,pozycja);
     }
     
@@ -182,11 +182,6 @@ exports.bytesToSize = (bytes) => {
             console.log("przenosze plik: " + file);
             
             let dir = appRoot + '/repo/' + userId + '/' + projectId;
-            //console.log("------------------------")
-            //console.log("do katalogu " + dir )
-           // console.log(userId)
-            //console.log(projectId)
-           // console.log(dir)
 
             fs.move('./repo/uploaded_temp/' + file, dir + '/' + file, function (err) {
                 if (err) {

@@ -1,28 +1,16 @@
 const fs = require('fs-extra');
-const path = require('path');
 const ffmpeg = require('ffmpeg');
-
-const mkdirp = require("mkdirp"); //do tworzenia folderu
-const rimraf = require("rimraf");
 const appRoot = require('app-root-path'); //zwraca roota aplikacji
-const moment = require('moment');
 const utils = require('../utils/utils');
-const config = require('../config.js');
 const ProjectEntry = require('../models/projectEntry');
 const Container = require('../models/Container')
 const Session = require('../models/Session');
-const ProjectFile = require('../models/projectFile');
 const User = require('../models/user');
-const IncomingForm = require('formidable').IncomingForm;
-const uniqueFilename = require('unique-filename');
 const shell = require('shelljs');
-const {spawn} = require('child_process');
 const chalk = require('chalk');
 const createNewSessionHandler = require('./Handlers/createNewSessionHandler');
 const createCorpusHandler = require('./Handlers/createCorpusHandler')
-const emu = require('./emu');
 const runTask = require('./runTask');
-const archiver = require('archiver');
 var ObjectId = require('mongoose').Types.ObjectId;
 
 
@@ -502,31 +490,6 @@ exports.runKWS = async (req, res, next) => {
 }
 
 
-/*
-//kopia przed refactoringiem
-exports.runSpeechVAD = (req, res, next) => {
-  let containerId = req.params.containerId;
-  //const toolType = req.body.toolType;
-
-  Container.findById(containerId).then(container => {  
-    runTask.runVAD(container)
-      .then(VADsegments => {
-        console.log(chalk.green("Zakończono VAD dla: " + containerId));
-        res.status(200).json({ message: 'Zakończono detekcję mowy!', containerId: containerId, toolType: "VAD", VADSegments: VADsegments});
-      }).catch(error => {
-        console.log(chalk.red('TASK ERROR'));
-        console.log(chalk.red(error.message))
-        res.status(503).json({ message: 'Coś poszło nie tak z detekcją mowy!', containerId: containerId, toolType: "VAD"});
-      })
-  }).catch(error => {
-    console.log(chalk.red(error.message));
-    error.statusCode = error.statusCode || 500;
-    next(error);
-  })
-}
-*/
-
-
 
 /**
  * @api {put} /repoFiles/runSpeechDiarization/:containerId Diaryzacja
@@ -620,32 +583,6 @@ exports.runSpeechVAD = (req, res, next) => {
   }
  
 }
-
-
-/*
-//kopia przed refaktoryzacja
-exports.runSpeechDiarization = (req, res, next) => {
-
-  const containerId = req.params.containerId;
-  //const toolType = req.body.toolType;
-
-  Container.findById(containerId).then(container => {  
-    runTask.runDIA(container)
-      .then(DIAsegments => {
-        console.log(chalk.green("Zakończono Diaryzacje dla: " + containerId));
-        res.status(200).json({ message: 'Diaryzacja zakończona sukcesem!', containerId: containerId, toolType: "DIA",  DIAsegments: DIAsegments});
-      }).catch(error => {
-        console.log(chalk.red('TASK ERROR'));
-        console.log(chalk.red(error.message))
-        res.status(503).json({ message: 'Coś poszło nie tak z diaryzacją!', containerId: containerId, toolType: "DIA"});
-      })
-  }).catch(error => {
-    console.log(chalk.red(error.message));
-    error.statusCode = error.statusCode || 500;
-    next(error);
-  })
-}
-*/
 
 
 /**
@@ -812,38 +749,6 @@ exports.runSpeechRecognition = async (req, res, next) => {
     next(error);
   }
 }
-
-/*
-//wersja przed refactoringiem
-exports.runSpeechRecognition = (req, res, next) => {
-  //const containerId = req.body.containerId;
-  //const toolType = req.body.toolType;
-  const containerId = req.params.containerId;
-  console.log(containerId)
-  console.log(chalk.cyan("uruchamiam SpeechRecognition"));
-
-  // tutaj odpalam odpowiednia usługę
-  Container.findById(containerId).then(container => {  
-    runTask.runREC(container)
-      .then(updatedContainer => {
-          console.log(chalk.green("Zakończono speech recognition dla: " + containerId ));
-          res.status(200).json({ message: 'Rozpoznawanie mowy zostało zakończone!', containerId: updatedContainer._id, toolType: "REC"});
-      }).catch(error => {
-          console.log(chalk.red('TASK ERROR'));
-          console.log(chalk.red(error.message))
-          res.status(503).json({ message: 'Coś poszło nie tak z rozpoznawaniem mowy!', containerId: containerId, toolType: "REC"});
-      })
-  }).catch(error => {
-    console.log(chalk.red(error.message));
-    error.statusCode = error.statusCode || 500;
-    next(error);
-  })
-}
-*/
-
-
-
-
 
 
  

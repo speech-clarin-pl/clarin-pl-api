@@ -3,15 +3,8 @@ const path = require('path');
 const express = require('express');
 const bodyParser = require('body-parser'); //do validacji
 const mongoose = require('mongoose'); //do komunikacji z baza
-const multer = require('multer'); //for handlind multipart/form-data - upload files
-const appRoot = require('app-root-path'); //zwraca roota aplikacji
-var serveStatic = require('serve-static');
 const isAuth = require('./middleware/is-auth');
-const utils = require('./utils/utils');
-const uniqueFilename = require('unique-filename');
 const chalk = require('chalk');
-const {createNewSessionHandler} = require('./controllers/repoPanel');
-const Container = require('./models/Container');
 
 //importuje routes
 const projectsListRoutes = require('./routes/projectsList');
@@ -19,12 +12,8 @@ const recognitionRoutes =  require('./routes/recognitionTool');
 const VADRoutes =  require('./routes/VADTool');
 const DIARoutes =  require('./routes/DIATool');
 const SEGRoutes =  require('./routes/SEGTool');
-//const G2PRoutes = require('./routes/G2PTool');
-//const KWSRoutes = require('./routes/KWSTool');
-//const segmentationRoutes = require('./routes/segmentationTool');
 const repoRoutes = require('./routes/repo'); 
 const authRoutes =  require('./routes/auth');
-const projectEntry = require('./models/projectEntry');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
@@ -108,8 +97,6 @@ app.use('/vad', VADRoutes);
 app.use('/dia', DIARoutes);
 app.use('/seg', SEGRoutes);
 app.use('/auth', authRoutes);
-//app.use('/G2P', G2PRoutes);
-//app.use('/KWS', KWSRoutes);
 
 
 //error handling...

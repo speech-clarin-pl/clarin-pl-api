@@ -1,13 +1,6 @@
-
-//const dockerTaskController = require('./runTask');
-//const dockerTaskControllerOK = require('./runTaskOK_');
 const appRoot = require('app-root-path'); //zwraca roota aplikacji    
 const fs = require('fs-extra');
-const ProjectEntry = require('../models/projectEntry');
-const ProjectFile = require('../models/projectFile');
-const User = require('../models/user');
 const utils = require('../utils/utils');
-const ffmpeg = require('ffmpeg');
 const Container = require('../models/Container')
 
 exports.saveSegments = (req, res, next) => {
@@ -39,8 +32,6 @@ exports.saveSegments = (req, res, next) => {
 
     //TO DO - tutaj zrobić update segmentow na serwerze
     //Przykładowy format to: input 1 1.310 6.500 speech
-
-    //dodatkowo jest też plik JSOM - jego też musze zrobić update
 
     //zapisuje JSCON
     fs.writeJsonSync(DIAFilePath_JSON, segments);

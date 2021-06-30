@@ -1,15 +1,5 @@
-//importuje model wpisu projektu
-const Task = require('../../models/DockerTask');
 const appRoot = require('app-root-path'); //zwraca roota aplikacji   
-const utils = require('../../utils/utils');
-const moment = require('moment');
 const fs = require('fs-extra');
-const ProjectEntry = require('../../models/projectEntry');
-const ProjectFile = require('../../models/projectFile');
-const User = require('../../models/user');
-const Container = require('../../models/Container');
-const path = require('path');
-const emu = require('../emu');
 const chalk = require('chalk');
 
 module.exports = (task, userId) => {
