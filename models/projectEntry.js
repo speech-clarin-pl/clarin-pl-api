@@ -30,7 +30,11 @@ const projectEntrySchema = new Schema({
         ref: 'Session',
         required: false,
         }
-    ]
+    ],
+    corpusCreatedAt:{
+        type: Date,
+        required: false,
+    }
 }, {timestamps: true});
 
 module.exports = mongoose.model('ProjectEntry', projectEntrySchema);

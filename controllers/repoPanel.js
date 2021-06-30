@@ -76,11 +76,18 @@ exports.exportToEmu = async (req, res, next) => {
 
     console.log(chalk.green("Rozpoczynam tworzenie korpusu..."));
 
+    //const pathToZIP = "temp"
     const pathToZIP = await createCorpusHandler(foundProject);
+
+    //aktualizuje informacje w bazie danych na temat stworzonego korpusu
+    foundProject.corpusCreatedAt = Date.now();
+    await foundProject.save();
 
     console.log(chalk.green("ZIP korpusu stworzony: " + pathToZIP));
 
-    res.status(200).json({ message: 'Tworzenie korpusu zakończone sukcesem. Możesz go ściągnąć.'});
+    const corpusCreatedDate = moment(foundProject.corpusCreatedAt).format("YYYY-MM-DD, h:mm:ss a")
+
+    res.status(200).json({ message: 'Tworzenie korpusu zakończone sukcesem. Możesz go ściągnąć.', corpusCreatedAt: corpusCreatedDate});
 
 
   } catch (error) {
@@ -148,7 +155,7 @@ exports.getReadyKorpus = async (req,res,next) => {
       }
 
   } catch (error) {
-    error.message = error.message || "Błąd pobierania gotowego kontenera";
+    error.message = error.message || "Błąd pobierania gotowego korpusu";
     error.statusCode = error.statusCode || 500;
     next(error);
   }
@@ -1675,7 +1682,10 @@ exports.getRepoAssets = async (req, res, next) => {
 
     const containerList = await Container.find({ owner: req.userId, project: projectId }).sort({ 'createdAt': -1 });
 
-    res.status(200).json({ message: 'Pliki dla tego projektu zostały pobrane!', sessions: sessionList, containers: containerList })
+    //kiedy stworzony korpus
+    const corpusCreatedAt = moment(znalezionyProjekt.corpusCreatedAt).format("YYYY-MM-DD, h:mm:ss a");
+
+    res.status(200).json({ message: 'Pliki dla tego projektu zostały pobrane!', sessions: sessionList, containers: containerList, corpusCreatedAt: corpusCreatedAt })
 
   } catch (error) {
     if (!error.statusCode) {
