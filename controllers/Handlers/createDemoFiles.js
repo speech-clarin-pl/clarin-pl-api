@@ -1,26 +1,6 @@
 const fs = require('fs');
-const path = require('path');
-const moment = require('moment');
-const fsextra = require('fs-extra');
-
-var copy = require('recursive-copy');
-
-const {validationResult} = require('express-validator/check');
-
-const utilsForFiles = require('../../utils/utils');
-const ProjectEntry = require('../../models/projectEntry');
-const ProjectFile = require('../../models/projectFile');
 const Container = require('../../models/Container')
-const User = require('../../models/user');
-const chalk = require('chalk');
-
-var mkdirp = require("mkdirp"); //do tworzenia folderu
-var rimraf = require("rimraf"); 
 var appRoot = require('app-root-path'); //zwraca roota aplikacji
-
-const Session = require('../../models/Session');
-
-const createProjectHandler = require('../../controllers/Handlers/createProjectHandler');
 
 module.exports = (ownerId, projectId, sessionId) => {
 

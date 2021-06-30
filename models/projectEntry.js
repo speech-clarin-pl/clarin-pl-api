@@ -26,9 +26,9 @@ const projectEntrySchema = new Schema({
     },
     sessionIds: [
         {
-        type: Schema.Types.ObjectId,
-        ref: 'Session',
-        required: false,
+            type: Schema.Types.ObjectId,
+            ref: 'Session',
+            required: false,
         }
     ],
     corpusCreatedAt:{
@@ -38,9 +38,3 @@ const projectEntrySchema = new Schema({
 }, {timestamps: true});
 
 module.exports = mongoose.model('ProjectEntry', projectEntrySchema);
-
-// files: [
-//     {
-//         type: Schema.Types.Mixed,
-//     }
-// ]

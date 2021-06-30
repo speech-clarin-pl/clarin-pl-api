@@ -1,19 +1,8 @@
-const fs = require('fs');
-const path = require('path');
 
-const mkdirp = require("mkdirp"); //do tworzenia folderu
-const rimraf = require("rimraf");
+
 const appRoot = require('app-root-path'); //zwraca roota aplikacji
-const moment = require('moment');
 const utils = require('../utils/utils');
-const config = require('../config.js');
-
-//importuje model wpisu projektu
-const ProjectEntry = require('../models/projectEntry');
-const ProjectFile = require('../models/projectFile');
 const User = require('../models/user');
-const IncomingForm = require('formidable').IncomingForm;
-const Session = require('../models/Session');
 const Container = require('../models/Container')
 
 //refactored
