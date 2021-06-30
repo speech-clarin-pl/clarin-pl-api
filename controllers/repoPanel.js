@@ -11,6 +11,7 @@ const chalk = require('chalk');
 const createNewSessionHandler = require('./Handlers/createNewSessionHandler');
 const createCorpusHandler = require('./Handlers/createCorpusHandler')
 const runTask = require('./runTask');
+const moment = require('moment');
 var ObjectId = require('mongoose').Types.ObjectId;
 
 
@@ -1588,7 +1589,13 @@ exports.getRepoAssets = async (req, res, next) => {
     const containerList = await Container.find({ owner: req.userId, project: projectId }).sort({ 'createdAt': -1 });
 
     //kiedy stworzony korpus
-    const corpusCreatedAt = moment(znalezionyProjekt.corpusCreatedAt).format("YYYY-MM-DD, h:mm:ss a");
+
+
+    let corpusCreatedAt = null;
+
+    if(znalezionyProjekt.corpusCreatedAt){
+      corpusCreatedAt =  moment(znalezionyProjekt.corpusCreatedAt).format("YYYY-MM-DD, h:mm:ss a");
+    }
 
     res.status(200).json({ message: 'Pliki dla tego projektu zostały pobrane!', sessions: sessionList, containers: containerList, corpusCreatedAt: corpusCreatedAt })
 
