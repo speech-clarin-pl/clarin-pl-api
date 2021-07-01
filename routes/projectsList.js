@@ -11,7 +11,7 @@ router.get('', isAuth, projectsListController.getProjectsList);
 //usuwanie projektu
 router.delete('/removeProject/:projectId', isAuth, projectsListController.deleteProject);
 
-// tworzenie nowego projektu POST projects z prosciutka validacja
+// tworzenie nowego projektu z prosciutka validacja
 router.post('/addProject', isAuth, [
     body('projectName')
         .trim()

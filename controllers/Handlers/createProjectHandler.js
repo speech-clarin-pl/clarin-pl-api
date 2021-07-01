@@ -28,8 +28,8 @@ module.exports = (projectName, ownerID, ifDefaultSession = true) => {
         let projectEntry = new ProjectEntry({
             name: reqProjectName,
             owner: ownerID,
-            accessToRead: [],
-            accessToEdit: [],
+           // accessToRead: [],
+           // accessToEdit: [],
             projectCreated: moment().format('MMMM Do YYYY, h:mm:ss a'),
             files: [],
         });
@@ -121,7 +121,7 @@ module.exports = (projectName, ownerID, ifDefaultSession = true) => {
                                     })
             })
             .then(results => {
-                console.info(results.length + ' file(s) copied');          
+                //console.info(results.length + ' file(s) copied');          
                 const demoFiles = createDemoFiles(owner._id, createdProject._id, demoSession._id);
                 return Container.insertMany(demoFiles);
             })

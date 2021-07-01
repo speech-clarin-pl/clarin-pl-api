@@ -8,30 +8,71 @@ var appRoot = require('app-root-path'); //zwraca roota aplikacji
 const Session = require('../models/Session');
 const createProjectHandler = require('../controllers/Handlers/createProjectHandler');
 
+
+/**
+ * @api {get} /projectsList Pobranie listy projektów
+ * @apiDescription Zwraca listę projektów stworzonych przez zalogowanego użytkownika
+ * @apiName GetProjectList
+ * @apiGroup Pliki
+ *
+ * @apiHeader {String} Authorization Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.
+ * @apiSuccess {String} message wiadomość że projekt został utworzony.
+ * @apiSuccess {Object} projects tablica z metadanymi projektów użytkownika
+ * 
+ *
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *    "message": "Lista projektów pobrana!",
+ *    "projects": [
+ *        {
+ *            "sessionIds": [
+ *                "60dde3c32c7c40e8baedcaf2",
+ *                "60dde3c32c7c40e8baedcaf3"
+ *            ],
+ *            "_id": "60dde3c32c7c40e8baedcaf1",
+ *            "name": "Zmieniona nazwa nowego projektu XYZ",
+ *            "owner": "60ddca14f2e04bbdec0aa893",
+ *            "projectCreated": "July 1st 2021, 5:48:19 pm",
+ *            "createdAt": "2021-07-01T15:48:19.874Z",
+ *            "updatedAt": "2021-07-01T15:54:08.572Z",
+ *        },
+ *        {
+ *            "sessionIds": [
+ *                "60ddca1bf2e04bbdec0aa896",
+ *                "60ddca1bf2e04bbdec0aa897"
+ *            ],
+ *            "_id": "60ddca1bf2e04bbdec0aa894",
+ *            "name": "DOMYŚLNY PROJEKT",
+ *            "owner": "60ddca14f2e04bbdec0aa893",
+ *            "projectCreated": "July 1st 2021, 3:58:51 pm",
+ *            "createdAt": "2021-07-01T13:58:51.766Z",
+ *            "updatedAt": "2021-07-01T13:58:51.776Z",
+ *        }
+ *    ]
+ *}
+ *
+ * @apiError (500) InternalServerError Błąd serwera
+ * 
+ */
+
+
+//refactoredOK
 //kontroler do wydobywania listy projektow
-exports.getProjectsList = (req, res, next) => {
+exports.getProjectsList = async (req, res, next) => {
 
-    ProjectEntry.find({owner: req.userId}).sort({"createdAt": "desc"})
-        .then(projectsList => {
-            if(!projectsList){
-                const error = new Error('Could not find any project');
-                error.statusCode = 404;
-                throw error;
-            }
-            res.status(200).json({message: 'Projects list featched!', projects: projectsList})
-        })
-        .catch(error => {
-            if(!error.statusCode){
-                error.statusCode = 500;
-            }
-            next(error);
-        });
+    try{
 
+        const projectsList = await ProjectEntry.find({owner: req.userId}).sort({"createdAt": "desc"});
+
+        res.status(200).json({message: 'Lista projektów pobrana!', projects: projectsList})
+
+    } catch (error) {
+        error.statusCode = error.statusCode || 500;
+        error.message = error.message || "Błąd zwracania listy projektów";
+        next(error);
+    }
 }
-
-
-
-
 
 
 
@@ -51,43 +92,39 @@ exports.getProjectsList = (req, res, next) => {
  *     HTTP/1.1 201 OK
  *     {
  *       "message": 'Projekt został utworzony!',
- *       "project": { accessToRead: [],
- *                         accessToEdit: [],
- *                         sessionIds: ["5fec2f1082a28b3663a90845", "5fec2f1082a28b3663a90846"],
- *                         _id: 5fe99be5d831b7c009e36fbb,
- *                         name: 'sampleProject',
- *                         owner: 5fe39a36daa13f1fa38e1e06,
- *                         projectCreated: 'December 28th 2020, 9:48:37 am',
- *                         createdAt: 2020-12-28T08:48:37.558Z,
- *                         updatedAt: 2020-12-28T08:48:37.558Z,
- *                         __v: 0 }
+ *       "project": { 
+ *                    sessionIds: ["5fec2f1082a28b3663a90845", "5fec2f1082a28b3663a90846"],
+ *                    _id: 5fe99be5d831b7c009e36fbb,
+ *                    name: 'sampleProject',
+ *                    owner: 5fe39a36daa13f1fa38e1e06,
+ *                    projectCreated: 'December 28th 2020, 9:48:37 am',
+ *                    createdAt: 2020-12-28T08:48:37.558Z,
+ *                    updatedAt: 2020-12-28T08:48:37.558Z,
+ *          
+ *                  }
  *     }
  *
  * @apiError (422) ValidationFailed Błędna nazwa projektu
- * 
+ * @apiError (400) BadRequest Błedne polecenie
  * 
  */
 
-// refactored
+// refactoredOK
 // #################################################################################
 // ################### dodawanie nowego projektu ##################################
 // #################################################################################
 
 exports.createProject = async (req, res, next) => {
 
-    const reqProjectName = req.body.projectName;
+    try {
+        const reqProjectName = req.body.projectName;
 
-    if(!reqProjectName){
-        const error = new Error('Brak nazwy projektu');
-        error.statusCode = 400;
-        throw error;
-    }
-    
-
-    //osoba musi być zalogowana
-    const owner = req.userId;
-
-    if(owner){
+        if(!reqProjectName){
+            const error = new Error('Brak nazwy projektu');
+            error.statusCode = 400;
+            throw error;
+        }
+        
         const error = validationResult(req);
         if(!error.isEmpty()){
             console.log(chalk.red(error.array()))
@@ -96,20 +133,18 @@ exports.createProject = async (req, res, next) => {
             throw errortothrow;
         }
         
-        const results = await createProjectHandler(reqProjectName, owner);
-
+        const results = await createProjectHandler(reqProjectName, req.userId);
+    
         res.status(201).json({message: 'Projekt został utworzony!', project: results.project});
-        
-    } else {
-        const err = new Error('Nie masz uprawnień');
-        errortothrow.statusCode = 401;
-        next(err);
-    }
 
+    } catch (error) {
+        error.statusCode = error.statusCode || 500;
+        error.message = error.message || "Błąd tworzenia projektu";
+        next(error);
+    }  
 }
 
 
-// TO DO: dorobić usuwanie projektu po określonym czasie - np. po 30 dniach.
 /**
  * @api {delete} /projectsList/removeProject/:projectId Usuwanie Projektu
  * @apiDescription Wywołanie powoduje skasowanie projektu wraz z jego zawartością. Używaj z rozwagą gdyż po usunięciu nie ma możliwości odzyskania danych.
@@ -129,8 +164,9 @@ exports.createProject = async (req, res, next) => {
  *       "projectId": 5fe99be5d831b7c009e36fbb
  *     }
  *
- * @apiError (403) Not authorized Błędna nazwa projektu
- * 
+ * @apiError (404) NotFound Nie znaleziono projektu o zadanym Id
+ * @apiError (403) Forbidden Brak uprawnień
+ * @apiError (400) BadRequest Nie znaleziono projektu o zadanym Id
  * 
  */
 
@@ -159,24 +195,20 @@ exports.deleteProject = async (req,res,next) => {
             throw error;
         }
 
-        //sprawdzam czy usuwania dokonuje zalogowana osoba
-        if(projectEntry.owner.toString() !== req.userId.toString()){
-            const error = new Error('Nie masz uprawnień!');
-            error.statusCode = 403;
-            throw error;
-        }
+        //sprawdzam czy mam Uprawnienia do swojego projektu
+        await projectEntry.checkPermission(req.userId);
         
         //usuwam z bazy ten projekt
         const projectToDelete = await ProjectEntry.findByIdAndRemove(projectId);
 
          //czyszcze relacje z kolekcja usera- tam tez trzeba wyrzucic referencje do projektu
-         const updatedUser = await User.findByIdAndUpdate(req.userId, {$pull: {projects: projectId}});
+         await User.findByIdAndUpdate(req.userId, {$pull: {projects: projectId}});
 
          //usuwam z kolekcji sessions
-         const removedSessions = await Session.deleteMany({_id: projectToDelete.sessionIds});
+        await Session.deleteMany({_id: projectToDelete.sessionIds});
 
          //usuwam kontenery nalezace do projektu
-         const removedContainers = await Container.deleteMany({project: projectToDelete._id});
+         await Container.deleteMany({project: projectToDelete._id});
 
          //usuwam wszystkie pliki w projekcie danego uzytkownika
          const dirpath = appRoot + '/repo/'+req.userId + '/'+projectId;
@@ -186,10 +218,8 @@ exports.deleteProject = async (req,res,next) => {
          res.status(200).json({message: 'Projekt usunięty!', projectId: projectId})
 
     } catch (error) {
-        if(!error.statusCode){
-            error.statusCode = 500;
-        }
-        error.message = "Błąd usuwania projektu"
+        error.statusCode = error.statusCode || 500;
+        error.message = error.message || "Błąd usuwania projektu";
         next(error);
     }
 
@@ -214,19 +244,20 @@ exports.deleteProject = async (req,res,next) => {
  *     HTTP/1.1 200 OK
  *     {
  *       "message": 'Nazwa projektu zaktualizowana!',
- *       "projectId": 5fe99be5d831b7c009e36fbb,
- *       "newName": newName
+ *       "projectId": '5fe99be5d831b7c009e36fbb',
+ *       "newName": 'nowa nazwa projektu'
  *     }
  *
- * @apiError (422) ValidationFailed Błędna nazwa projektu
- * @apiError (403) NotAuthorized nieautoryzowany dostęp
- * @apiError (404) NotFound nie znaleziono projektu
+ * @apiError (422) UnprocessableEntity Błędna nazwa projektu
+ * @apiError (403) Forbidden Brak uprawnień
+ * @apiError (404) NotFound Nie znaleziono projektu
+ * @apiError (400) BadRequest Błędne Id projektu
  * 
  * 
  */
 
 
-//refactored
+//refactoredOK
 // ############################################################################
 // ################### edycja nazwy projektu ##################################
 // ############################################################################
@@ -259,12 +290,8 @@ exports.updateProjectName = async (req, res, next) => {
             throw error;
         }
 
-        //sprawdzam czy updatu dokonuje zalogowana osoba
-        if (projectEntry.owner.toString() !== req.userId.toString()) {
-            const error = new Error('Not authorized!');
-            error.statusCode = 403;
-            throw error;
-        }
+        await projectEntry.checkPermission(req.userId);
+       
 
         //zapisuje do bazy update
         projectEntry.name = newprojectName;
@@ -273,10 +300,8 @@ exports.updateProjectName = async (req, res, next) => {
         res.status(200).json({ message: 'Nazwa projektu zaktualizowana!', projectId: projectEntry._id, newName: newprojectName })
 
     } catch (error) {
-        if (!error.statusCode) {
-            error.statusCode = 500;
-        }
-        error.message = "Błąd aktualizacji nazwy projektu"
+        error.statusCode = error.statusCode || 500;
+        error.message = error.message || "Błąd aktualizacji nazwy projektu";
         next(error);
     }
 }

@@ -17,8 +17,8 @@ const userOne = {
 const token = jwt.sign({
     email: userOne.email, 
     userId: userOne._id.toString()
-}, config.tokenKey,
-{expiresIn: '192h'});
+}, config.tokenKey);
+//{expiresIn: '192h'});
 
 const setupDatabase = async() => {
     await User.deleteMany();

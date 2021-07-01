@@ -37,8 +37,8 @@ sendEmail = (sendTo, title, htmlContent) => {
                 console.log('Error in sending email', err);
                 return reject({ msg: 'Internal Server Error', error: err});
             } else {
-                console.log("Message sent: %s", inf.messageId);
-                console.log("Preview URL: %s", nodemailer.getTestMessageUrl(inf));
+                console.log("Wysłano email: %s", inf.messageId);
+                //console.log("Preview URL: %s", nodemailer.getTestMessageUrl(inf));
                 return resolve({ msg: 'Email został wysłany pomyślnie' });
             }
         })
@@ -93,7 +93,7 @@ exports.applyNewPass = (req,res,next) => {
 
 /**
  * @api {post} /auth/forgotPass/ Odzyskanie hasła
- * @apiDescription Pozwala użytkownikowi wygenerować nowe hasło. Wywołanie tego API powoduje wysłąnie wiadomości email na adres użytkownika z linkiem do strony gdzie można wprowadzić nowe hasło.
+ * @apiDescription Pozwala użytkownikowi wygenerować nowe hasło. Wywołanie tego zapytania powoduje wysłanie wiadomości email na adres użytkownika z linkiem do strony gdzie można wprowadzić nowe hasło.
  * @apiName ForgotPassword
  * @apiGroup Użytkownik
  *
@@ -136,14 +136,12 @@ exports.forgotPass = (req,res,next) => {
             }, secret,
             {expiresIn: '1h'});
 
-
              // generuje link zawierający wygenerowany token
             const url = process.env.FRONT_END_ADDRESS + "/enterNewPass/"+userId+'/'+token;
 
             let messageemail = `<b>Aby zresetować hasło kliknij w link poniżej (działa tylko przez 1 godzinę)</b>`;
             messageemail = messageemail + `<p></b>Link do zresetowania hasła: </b></p>`;
             messageemail = messageemail + `<p><a href=${url} target="_blank">${url}</a></p>`;
-
 
             //wysyłka emaila z resetem hasła
             sendEmail(emailAddress,'CLARIN-PL: Potwierdź zmianę hasła', messageemail)
@@ -197,7 +195,7 @@ exports.sendEmailToAdmin = (req,res,next) => {
 
 /**
  * @api {put} /auth/registration Rejestracja użytkownika
- * @apiDescription Rejestracja nowego użytkownika. Tylko zarejestrowani użytkownicy mogą wykonywać zapytania do API. W ten sposób chronimy dostęp do Twoich danych. Podczas rejestracji tworzony jest domyślny projekt z dwoma sesjami. Sesja demo z przykładowymi plikami oraz sesja domyślna, gotowa do wgrania własnych plików. Użytkownik może je zostawić, skasować bądź utworzyć własne dodatkowe sesje.
+ * @apiDescription Rejestracja nowego użytkownika. Tylko zarejestrowani użytkownicy mogą wykonywać zapytania do API. W ten sposób chronimy dostęp do danych. Podczas rejestracji system wysyła wiadomość na podany przez użytkownika email z linkiem aktywującym konto. Bez aktywowania konta nie ma możliwości zalogowania.
  * @apiName RegisterUser
  * @apiGroup Użytkownik
  *
@@ -205,26 +203,20 @@ exports.sendEmailToAdmin = (req,res,next) => {
  * @apiParam {String} name Imię
  * @apiParam {String} password Hasło
  *
- * @apiSuccess {String} message wiadomość potwierdzająca
- * @apiSuccess {String} defaultProjectId Identyfikator pierwszego stworzonego projektu do którego domyślnie będą wgrywane pliki oraz rezultaty działania narzędzi (o ile nie zostanie utworzony osobny projekt).
-* @apiSuccess {String} defaultSessionId Identyfikator pierwszej pustej sesji, gotowej do wgrania do niej własnych plików
-* @apiSuccess {String} demoSessionId Identyfikator sesji demo z wgranymi przykładowymi plikami
+ * @apiSuccess {String} message wiadomość potwierdzająca że link został wysłany na podany email
  * @apiSuccessExample Success-Response:
- *     HTTP/1.1 201 CREATED
+ *     HTTP/1.1 200 OK
  *     {
- *       "message": 'Użytkownik został stworzony',
- *       "defaultProjectId": "5f58a92dfa006c8aed96f846",
- *       "defaultSessionId": "5fd33950667fa7255da2dfa9"
+ *       "message": 'Wiadomość z linkiem aktywacyjnym została wysłana na podany adres email',
  *     }
  *
  * @apiError (422) UnprocesssableEntity Błędy walidacji
- * @apiError (500) ServerError Serwer error
+ * @apiError (500) InternalServerError Serwer error
  * 
  */
 exports.registration = (req, res, next) => {
     const errors = validationResult(req);
     if(!errors.isEmpty()){
-
         //zbieram informacje o błędzie
         let message = '';
         errors.array().forEach(element => {
@@ -275,6 +267,33 @@ exports.registration = (req, res, next) => {
         });
     })   
 }
+
+
+
+/**
+ * @api {get} /confirmUser/:confirmationCode Weryfikacja użytkownika
+ * @apiDescription Użytkownik po zarejestrowaniu powinien otrzymać wiadomość email z linkiem aktywującym. Kliknięcie w ten link weryfikuje użytkownika że to właśnie on się zarejestrował. 
+ * @apiName RegisterUser
+ * @apiGroup Użytkownik
+ *
+ * @apiParam {String} confirmationCode Kod weryfikacyjny zawarty w linku wysłanym na email 
+ * @apiSuccess {String} message wiadomość potwierdzająca że konto zostało założone
+ * @apiSuccess {String} defaultProjectId Identyfikator pierwszego stworzonego projektu.
+* @apiSuccess {String} defaultSessionId Identyfikator pierwszej pustej sesji, gotowej do wgrania do niej własnych plików
+* @apiSuccess {String} demoSessionId Identyfikator sesji demo z wgranymi przykładowymi plikami
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 201 CREATED
+ *     {
+ *       "message": 'Użytkownik został stworzony',
+ *       "defaultProjectId": "5f58a92dfa006c8aed96f846",
+ *       "defaultSessionId": "5fd33950667fa7255da2dfa9"
+ *     }
+ *
+ * @apiError (422) UnprocesssableEntity Błędy walidacji
+ * @apiError (500) ServerError Serwer error
+ * 
+ */
+
 
 // weryfikacja użytkownika po kliknięciu linku wysłanego na maila
 exports.verifyUser = (req, res, next) => {
@@ -331,72 +350,9 @@ exports.verifyUser = (req, res, next) => {
 
 
 
-//pod spodem kopia działającej rejestracji bez wysyłania maila
-/*
-exports.registration = (req, res, next) => {
-    const errors = validationResult(req);
-    if(!errors.isEmpty()){
-
-        //zbieram informacje o błędzie
-        let message = '';
-        errors.array().forEach(element => {
-            message = message + element.msg + "\n";
-        })
-        
-        const error = new Error(message);
-        error.statusCode = 422;
-        error.data = errors.array();
-        throw error;
-    }
-
-    const email = req.body.email+'';
-    const name = req.body.name+'';
-    const password = req.body.password+'';
-
-    bcrypt.hash(password,12)
-    .then(hashedPass => {
-        const user = new User({
-            email: email,
-            password: hashedPass,
-            name: name
-        });
-
-        return user.save();
-    })
-    .then(user => {
-
-        //tutaj tworzenie folderu z id uzytkownika w repo
-        const dirpath = appRoot + '/repo/'+user._id;
-
-        //--------------------------
-      
-        mkdirp(dirpath, function(err) {
-            // if any errors then print the errors to our console
-            if (err) {
-                console.log(chalk.red(err));
-                return err;
-            } else {
-                projectsList.createProjectHandler("DOMYŚLNY PROJEKT",user._id, true).then((results)=>{  
-                    res.status(201).json({message: 'Użytkownik został stworzony', defaultProjectId: results.project._id, defaultSessionId: results.defaultSession._id,  demoSessionId: results.demoSession._id });
-                }).catch((err)=>{
-                    return err;
-                })
-            }
-          });
-    })
-    .catch((error) => {
-        console.log(chalk.red(error.message));
-        error.statusCode = error.statusCode || 500;
-        next(error);
-    });
-}
-*/
-
-
-
 /**
  * @api {post} /auth/login Logowanie
- * @apiDescription Pozwala na zalogowanie się zarejestrowanym użytkownikom i uzyskanie tokenu JWT do przeprowadzania dzalszych zapytań API. Token należy podawać w nagłówku zapytań w polu 'Authorization'. Token jest ważny przez 192h (8 dni). Po tym czasie należy zalogować się ponownie.
+ * @apiDescription Pozwala na zalogowanie się zarejestrowanym użytkownikom i uzyskanie tokenu JWT do przeprowadzania dzalszych zapytań API. Token należy podawać w nagłówku zapytań w polu 'Authorization'.
  * @apiName LoginUser
  * @apiGroup Użytkownik
  *
@@ -417,9 +373,9 @@ exports.registration = (req, res, next) => {
  *       "email": "kowalski@gmail.com"
  *     }
  *
- * @apiError (401) Unathorized Błędne hasło
- * @apiError (404) Not Found Użytkownik o podanym email nie został znaleziony
- * @apiError (500) ServerError Serwer error
+ * @apiError (401) Unathorized Błędne hasło lub konto nie zostało potwierdzone na maila
+ * @apiError (404) NotFound Użytkownik o podanym email nie został znaleziony
+ * @apiError (500) InternalServerError błąd serwera
  * 
  * 
  */
