@@ -17,7 +17,7 @@ var ObjectId = require('mongoose').Types.ObjectId;
 
 /**
  * @api {get} /repoFiles/createCorpus/:projectId Tworzenie korpusu
- * @apiDescription Wywołanie powoduje inicjalizację procesu tworzenia korpusu w formacie EMU-SDMS i zapisuje go na serwerze w postaci pliku ZIP. Korpus jest tworzony z plików dla których wykonane zostały wszystkie poziomy anotacji (VAD, DIA, REC oraz SEG). Proces może trać dłuższy czas w zależności od ilości plików w projekcie. Po zakończeniu możesz ściągnąć korpus za pomocą osobnego zapytania API. W trakcie jego tworzenia możesz również odpytać czy korpus dla danego projektu został zakończony.
+ * @apiDescription Wywołanie powoduje inicjalizację procesu tworzenia korpusu w formacie EMU-SDMS i zapisuje go na serwerze w postaci pliku ZIP. Korpus jest tworzony z plików dla których wykonane zostały wszystkie poziomy anotacji (VAD, DIA, REC oraz SEG). Proces może trać dłuższy czas w zależności od ilości plików w projekcie. Po zakończeniu możesz ściągnąć korpus za pomocą osobnego zapytania API. 
  * @apiName CreateCorpus
  * @apiGroup Pliki
  *
@@ -37,7 +37,7 @@ var ObjectId = require('mongoose').Types.ObjectId;
  * 
  */
 
-//refactored
+//refactoredOK
 exports.exportToEmu = async (req, res, next) => {
 
   try {
@@ -55,13 +55,8 @@ exports.exportToEmu = async (req, res, next) => {
       throw wrongProjIDErr
     }
 
-    //sprawdzam czy mam uprawnienia
-    const userToCheck = await User.findById(foundProject.owner,"_id status");
-    if ((userToCheck._id.toString() !== req.userId.toString()) || (userToCheck.status.toString() !== "Active")) {
-      const error = new Error('Nie masz uprawnień!');
-      error.statusCode = 403;
-      throw error;
-    }
+    await foundProject.checkPermission(req.userId);
+
 
     console.log(chalk.green("Rozpoczynam tworzenie korpusu..."));
 
@@ -321,7 +316,7 @@ exports.changeSessionName = async (req, res, next) => {
  */
 
 
-//refactored
+//refactoredOK
 //##########################################
 //#### zmieniam nazwe contenera ######
 //#######################################
@@ -334,10 +329,17 @@ exports.changeContainerName = async (req, res, next) => {
     const newName = req.body.newName;
 
     const foundContainer = await Container.findById(containerId);
+
+    if(!foundContainer){
+      const err = new Error("Nie znalazłem kontenera o takim Id");
+      err.statusCode = 404;
+      throw err;
+    }
+
     let owner = foundContainer.owner;
 
     //sprawdzam czy mam uprawnienia
-    const foundProject = await Project.findById(owner);
+    const foundProject = await ProjectEntry.findById(foundContainer.project);
     await foundProject.checkPermission(req.userId);
 
     const container = await Container.findByIdAndUpdate(containerId, { containerName: newName });
@@ -550,7 +552,7 @@ exports.runKWS = async (req, res, next) => {
  * 
  */
 
-//refactored
+//refactoredOK
  exports.runSpeechVAD = async (req, res, next) => {
 
   let containerId = req.params.containerId;
@@ -852,11 +854,11 @@ exports.runSpeechRecognition = async (req, res, next) => {
  
 /**
  * @api {GET} /repoFiles/download/:containerId/:fileType Pobierz wyniki
- * @apiDescription Za pomocą tego zapytania możesz pobrać efekty pracy narzędzi automatycznych. Oprócz tego możesz pobrać oryginalnie wgrany plik oraz plik przekonwertowany do formatu PCM 16000Hz 16bits.
+ * @apiDescription Za pomocą tego zapytania możesz pobrać efekty pracy narzędzi automatycznych. Oprócz tego możesz pobrać oryginalnie wgrany plik oraz plik przekonwertowany do formatu WAV 16000 Hz, 16bits.
  * @apiName GETOutputFile
  * @apiGroup Pliki
  *
- * @apiParam {String} containerId   Identyfikator kontenera dla którego chcesz pobrać wynik. Możesz go również znaleźć w interfejsie użytkownika
+ * @apiParam {String} containerId   Identyfikator kontenera dla którego chcesz pobrać wynik. 
  * @apiParam {String} fileType  Wskazanie formatu w jakim chcesz pobrać wynik. <h3>Pliki audio</h3><ul><li>"oryginalAudio": Pobranie pliku który został wysłany na serwer.</li><li>"audio" : pobranie pliku przekonwertowanego do PCM 16000Hz 8bits</li></ul><h3>Detekcja mowy (VAD) </h3><ul><li>"VADctm": Wynik działania VAD w formacie CTM</li><li>"VADtextGrid": Wynik działania VAD w formacie TextGrid</li><li>"VADJSON": Wynik działania VAD w formacie JSON</li></ul><h3>Diaryzacja (DIA)</h3><ul><li>"DIActm": Wynik działania DIA w formacie CTM</li><li>"DIAtextGrid": Wynik działania DIA w formacie TextGrid.</li><li>"DIAJSON": Wynik działania DIA w formacie JSON.</li></ul><h3>Rozpoznawanie mowy (REC)</h3><ul><li>"JSONTranscript": Wynik działania REC w formacie JSCON</li><li>"TXTTranscript": Wynik działania REC w formacie TXT.</li></ul><h3>Segmentacja (SEG)</h3><ul><li>"SEGctm": Wynik działania SEG w formacie CTM</li><li>"SEGtextGrid": Wynik działania SEG w formacie TextGrid.</li><li>"EMUJSON": Wynik działania SEG w formacie EMU-SDMS. Plik tego typu jest tworzony tylko podczas tworzenia korpusu z projektu.</li></ul> 
  * @apiHeader {String} Authorization Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.
  *
@@ -871,7 +873,7 @@ exports.runSpeechRecognition = async (req, res, next) => {
  * 
  */
 
-//refactored
+//refactoredOK
 // ###################################################
 // ########### pobieram plik z repozytorium użytkownika
 // ######################################################
@@ -994,6 +996,7 @@ exports.getFileFromContainer = async (req, res, next) => {
         break;
       default:
         const error = new Error("Nie rozpoznano typu wyjścia");
+        error.statusCode = 404;
         throw error;
     }
 
@@ -1005,11 +1008,9 @@ exports.getFileFromContainer = async (req, res, next) => {
     }
 
   } catch (error) {
-    if (!error.statusCode) {
-      error.statusCode = 500;
-    }
-    error.message = "Błąd pobierania pliku"
-    next(error);
+      error.statusCode = error.statusCode || 500;
+      error.message = error.message || "Błąd pobierania pliku";
+      next(error);
   }
 
 }
