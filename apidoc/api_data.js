@@ -190,6 +190,172 @@ define({ "api": [
   },
   {
     "type": "put",
+    "url": "/repoFiles/runG2P'",
+    "title": "Uruchamia Graphen to Phonem (G2P)",
+    "description": "<p>Uruchamia usługę G2P</p>",
+    "name": "RunG2P",
+    "group": "Narzędzia",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "words",
+            "description": "<p>słowa do tłumaczenia - każde w nowej linii</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "alphabet",
+            "description": "<p>rodzaj alfabetu, może być alpha lub sampa lub ipa</p>"
+          }
+        ]
+      }
+    },
+    "header": {
+      "fields": {
+        "Header": [
+          {
+            "group": "Header",
+            "type": "String",
+            "optional": false,
+            "field": "Authorization",
+            "description": "<p>Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "fields": {
+        "Success 200": [
+          {
+            "group": "Success 200",
+            "type": "containerId",
+            "optional": false,
+            "field": "Identyfikator",
+            "description": "<p>kontenera</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "newName",
+            "optional": false,
+            "field": "Nowa",
+            "description": "<p>nazwa</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\n  \"message\": 'G2P zakończone powodzeniem',\n  \"alphabet\": \"alpha\",\n  \"g2pResults\": \"ala ma kota\",\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "error": {
+      "fields": {
+        "500": [
+          {
+            "group": "500",
+            "optional": false,
+            "field": "ServerError",
+            "description": ""
+          }
+        ]
+      }
+    },
+    "version": "0.0.0",
+    "filename": "controllers/repoPanel.js",
+    "groupTitle": "Narzędzia"
+  },
+  {
+    "type": "put",
+    "url": "/repoFiles/runKWS/:containerId'",
+    "title": "Uruchamia keyword detection (KWS)",
+    "description": "<p>Uruchamia usługę KWS</p>",
+    "name": "RunKWS",
+    "group": "Narzędzia",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "containerId",
+            "description": "<p>identyfikator kontenera na ktorym ma byc przeprowadzona usługa</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "keywords",
+            "description": "<p>słowa kluczowe do wyszukania</p>"
+          }
+        ]
+      }
+    },
+    "header": {
+      "fields": {
+        "Header": [
+          {
+            "group": "Header",
+            "type": "String",
+            "optional": false,
+            "field": "Authorization",
+            "description": "<p>Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "fields": {
+        "Success 200": [
+          {
+            "group": "Success 200",
+            "type": "containerId",
+            "optional": false,
+            "field": "Identyfikator",
+            "description": "<p>kontenera</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "newName",
+            "optional": false,
+            "field": "Nowa",
+            "description": "<p>nazwa</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\n  \"message\": 'KWS zakończone powodzeniem',\n  \"containerId\": \"60c4a68bbf17b2778c0b56be\",\n  \"kwsResults\": \"celnik 0.74 0.22 -178.839\",\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "error": {
+      "fields": {
+        "500": [
+          {
+            "group": "500",
+            "optional": false,
+            "field": "ServerError",
+            "description": ""
+          }
+        ]
+      }
+    },
+    "version": "0.0.0",
+    "filename": "controllers/repoPanel.js",
+    "groupTitle": "Narzędzia"
+  },
+  {
+    "type": "put",
     "url": "/repoFiles/runSpeechSegmentation/:containerId",
     "title": "Segmentacja",
     "description": "<p>Narzędzie segmentacji. Dla krótkich nagrań (poniżej 0.5MB) uruchamiany jest algorytm forcealign. Dla dłuższych plików segmentalign. Usługa wymaga uruchomienia najpierw usługi rozpoznawania. Po wykonaniu zapytania należy poczekać na zakończenie pracy. Po zakończeniu serwer zapisze rezultaty w kontenerze o danym ID. Aby ściągnąć rezultaty działania narzędzia należy skorzystać z osobnego zapytania API. W międzyczasie możesz odpytywać serwer na temat statusu wykonania tego narzędzia korzystając z osobnego zapytania API.</p>",

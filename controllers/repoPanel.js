@@ -295,6 +295,32 @@ exports.changeContainerName = async (req, res, next) => {
   }
 }
 
+
+/**
+ * @api {put} /repoFiles/runG2P' Uruchamia Graphen to Phonem (G2P)
+ * @apiDescription Uruchamia usługę G2P
+ * @apiName RunG2P
+ * @apiGroup Narzędzia
+ *
+ * @apiParam {String} words słowa do tłumaczenia - każde w nowej linii
+ * @apiParam {String} alphabet rodzaj alfabetu, może być alpha lub sampa lub ipa
+ * @apiHeader {String} Authorization Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.
+ *
+ * @apiSuccess {containerId} Identyfikator kontenera
+ * @apiSuccess {newName} Nowa nazwa
+ * 
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "message": 'G2P zakończone powodzeniem',
+ *       "alphabet": "alpha",
+ *       "g2pResults": "ala ma kota",
+ *     }
+ *
+ * 
+ * @apiError (500) ServerError 
+ */
+
 //refactored
 exports.runG2P = async (req, res, next) => {
 
@@ -342,6 +368,31 @@ exports.runG2P = async (req, res, next) => {
   }
 }
 
+
+/**
+ * @api {put} /repoFiles/runKWS/:containerId' Uruchamia keyword detection (KWS)
+ * @apiDescription Uruchamia usługę KWS
+ * @apiName RunKWS
+ * @apiGroup Narzędzia
+ *
+ * @apiParam {String} containerId identyfikator kontenera na ktorym ma byc przeprowadzona usługa
+ * @apiParam {String} keywords słowa kluczowe do wyszukania
+ * @apiHeader {String} Authorization Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.
+ *
+ * @apiSuccess {containerId} Identyfikator kontenera
+ * @apiSuccess {newName} Nowa nazwa
+ * 
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "message": 'KWS zakończone powodzeniem',
+ *       "containerId": "60c4a68bbf17b2778c0b56be",
+ *       "kwsResults": "celnik 0.74 0.22 -178.839",
+ *     }
+ *
+ * 
+ * @apiError (500) ServerError 
+ */
 
 //refactored
 exports.runKWS = async (req, res, next) => {

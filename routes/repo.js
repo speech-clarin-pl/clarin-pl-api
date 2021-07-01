@@ -57,7 +57,7 @@ router.delete('/delete/:containerId', isAuth, repoController.removeContainer); /
   //PUT /repoFiles/runSpeechVAD/containerId 
   router.put('/runKWS/:containerId', isAuth, repoController.runKWS);
 
-  //PUT /repoFiles/runSpeechVAD/containerId 
+  //PUT /repoFiles/runG2P
   router.put('/runG2P', isAuth, repoController.runG2P);
  
   //GET /repoFiles/exportToEmu/:userId/:projectId - exportuje do EMU
