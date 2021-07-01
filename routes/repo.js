@@ -19,7 +19,7 @@ const multerConfig = require('../middleware/multerConfig');
 router.post('/uploadFile', [isAuth, multerConfig ], repoController.uploadFile); //refactored
 
 //POST /repoFiles/createNewSession  - tworze nową sesję
-router.post('/createNewSession', isAuth, repoController.createNewSession); //refactored
+router.post('/createNewSession/:projectId', isAuth, repoController.createNewSession); //refactored
 
 //PUT /repoFiles/changeContainerName/:containerId
 router.put('/changeContainerName/:containerId', isAuth, repoController.changeContainerName); //refactored

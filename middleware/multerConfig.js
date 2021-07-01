@@ -35,6 +35,10 @@ const fileStorageAudio = multer.diskStorage({
       try {
           fp = await projectEntry.findById(projectId);
           if (fp) {
+
+              //sprawdzam Uprawnienia
+              await fp.checkPermission(loggedUserId);
+
               //teraz sprawdzam czy ten projekt zawiera daną sesje
               const foundses = fp.sessionIds.indexOf(sessionId);
               if (foundses < 0) {
@@ -53,11 +57,6 @@ const fileStorageAudio = multer.diskStorage({
       const userId = fp.owner;
       const oryginalFileName = file.originalname;
 
-      //sprawdzam czy rzeczywiście jestem właścicielem danego projektu
-      if((loggedUserId+"") !== (userId+"")){
-          errorParams.message = "Nie masz uprawnień do wykonania tej operacji";
-          cb(errorParams, null);
-      }
 
       //w zalęzności czy wgrywam transkrypcje czy plik audio to albo tworze nowy folder albo wgrywam do już istniejącego
       let type = file.mimetype;
@@ -66,6 +65,8 @@ const fileStorageAudio = multer.diskStorage({
       let finalPath = null;
 
       if (typeArray[0] == "audio") {
+
+        
 
           const conainerFolderName = utils.getFileNameWithNoExt(oryginalFileName)+"-"+uniqueHash;
           const containerFolderPath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + conainerFolderName;
@@ -95,10 +96,10 @@ const fileStorageAudio = multer.diskStorage({
               //conainerFolderName = utils.getFileNameWithNoExt(foundContainer.fileName);
               //finalPath = './repo/'+userId+'/'+projectId+'/'+sessionId+'/' + conainerFolderName;
 
-              const conainerFolderName = utils.getFileNameWithNoExt(oryginalFileName)+"-"+uniqueHash;
+              const conainerFolderName = utils.getFileNameWithNoExt(foundContainer.fileName);
               const containerFolderPath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + conainerFolderName;
               finalPath = containerFolderPath;
-              
+
           } else {
              cb(errorParams, null);
           }
