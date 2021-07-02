@@ -1,4 +1,4 @@
-This project is written in Node js as the backend (API) for a new speech proccessing platform, developed as a part of CLARIN project. The current deployment of this platform is available at [https://mowa.clarin-pl.eu:8433/](https://mowa.clarin-pl.eu:8433/). This is the beta version of the new platform. The previous platform is available at [https://mowa.clarin-pl.eu/](https://mowa.clarin-pl.eu/). All features are intended to be developed here. Any suggestions and comment are welcomed.
+This project is written in Node js as the backend (API) for a new speech proccessing platform, developed as a part of CLARIN project. The current deployment of this platform is available at [https://mowa.clarin-pl.eu](https://mowa.clarin-pl.eu). 
 
 ## How to run the app
 In order to run the app, rename the .env.example into .env and define the environmental variables defined there. Then run app.js in node. 

@@ -36,6 +36,9 @@ router.get('/getProjectAssets/:projectId', isAuth, repoController.getRepoAssets)
 //pobieranie statystyk o załadowanych plikach do repo
 router.get('/getRepoStats/:projectId', isAuth, repoController.getRepoStats); //refactored
 
+//pobieranie informacji o wybranym kontenerze
+router.get('/getContainerInfo/:containerId', isAuth, repoController.getContainerInfo); //refactored
+
  //DELETE /repoFiles/delete/:containerId - usuwa container
 router.delete('/delete/:containerId', isAuth, repoController.removeContainer); //refactored
 

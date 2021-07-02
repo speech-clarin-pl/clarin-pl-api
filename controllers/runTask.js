@@ -10,6 +10,7 @@ const kwsDoneHandler = require('./Handlers/kwsDoneHandler')
 const speechSegmentationDoneHandler = require('./Handlers/segmentationDoneHandler');
 const diarizationDoneHandler = require('./Handlers/diarizationDoneHandler');
 const voiceActivityDetectionDoneHandler = require('./Handlers/voiceActivityDetectionDoneHandler');
+const g2pDoneHandler = require('./Handlers/g2pDoneHandler');
 
 //refactored
 exports.runVAD = (container) => {
@@ -353,6 +354,7 @@ exports.runG2P = (words, alphabet, user) => {
 
             //podaje do dockera
             const finalInputWordsTxt = path.relative(appRoot + '/repo/', inputWordsTxt);
+
 
             //buduje task w DB
             const dockerTask = new Task({

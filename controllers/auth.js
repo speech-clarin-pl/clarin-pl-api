@@ -320,11 +320,11 @@ exports.verifyUser = (req, res, next) => {
                         console.log(chalk.red(err));
                         return err;
                     } else {
-                        createProjectHandler("DOMYŚLNY PROJEKT", user._id, true).then((results) => {
+                        createProjectHandler("DOMYŚLNY PROJEKT", user._id).then((results) => {
                             res.status(201).json({
                                 message: 'Konto zostało założone',
                                 defaultProjectId: results.project._id,
-                                defaultSessionId: results.defaultSession._id,
+                                //defaultSessionId: results.defaultSession._id,
                                 demoSessionId: results.demoSession._id
                             });
                         }).catch((err) => {

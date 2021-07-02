@@ -1618,7 +1618,7 @@ exports.createNewSession = async (req, res, next) => {
  *                    "labelText": "2"
  *                }
  *            ],
- *            "RECUserSegments": [],
+ *  *            "RECUserSegments": [],
  *            "SEGUserSegments": [],
  *            "__v": 0,
  *            "createdAt": "2020-12-18T17:37:21.828Z",
@@ -1629,7 +1629,10 @@ exports.createNewSession = async (req, res, next) => {
  * @apiError (400) BadRequest Błędne zapytanie 
  * @apiError (500) IntenalServerError Błąd serwera
  * 
+ * 
  */
+
+
 
 //refactoredOK
 //#######################################################
@@ -1688,6 +1691,89 @@ exports.getRepoAssets = async (req, res, next) => {
 }
 
 
+
+
+/**
+ * @api {get} /repoFiles/getContainerInfo/:containerId  Info kontenera
+ * @apiDescription Zwraca metadane danego kontenera
+ * @apiName GetContainerInfo
+ * @apiGroup Pliki
+ *
+ * @apiParam {String} containerId Identyfikator kontenera
+ * @apiHeader {String} Authorization Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.
+ *
+ * @apiSuccess {Object} repoStats statystyki użycia repozytorium
+ * 
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *    {
+ *         {
+ *             "container": {
+ *                 "ifVAD": false,
+ *                 "ifDIA": false,
+ *                 "ifREC": false,
+ *                 "ifSEG": false,
+ *                 "errorMessage": "",
+ *                 "_id": "60df2e582978b3ba4d8303d8",
+ *                 "fileName": "testowyplik-f5001650.wav",
+ *                 "containerName": "testowyplik",
+ *                 "oryginalFileName": "testowyplik.mp3",
+ *                 "size": 2694606,
+ *                 "sizeOryginal": 168408,
+ *                 "owner": "60ddca14f2e04bbdec0aa893",
+ *                 "project": "60df2e392978b3ba4d8303d0",
+ *                 "session": "60df2e4d2978b3ba4d8303d7",
+ *                 "statusVAD": "ready",
+ *                 "statusDIA": "ready",
+ *                 "statusREC": "ready",
+ *                 "statusSEG": "ready",
+ *                 "VADUserSegments": [],
+ *                 "DIAUserSegments": [],
+ *                 "RECUserSegments": [],
+ *                 "SEGUserSegments": [],
+ *                 "createdAt": "2021-07-02T15:18:48.730Z",
+ *                 "updatedAt": "2021-07-02T15:18:48.730Z",
+ *             }
+ *         }
+ *    }
+ * 
+ * @apiError (400) BadRequest Błędne zapytanie
+ * @apiError (500) InternalServerError Błąd serwera
+ * 
+ */
+
+exports.getContainerInfo =  async (req, res, next) => {
+  try {
+
+    const containerId = req.params.containerId;
+
+    if (!containerId) {
+      const error = new Error('Błądny parametr id kontenera');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const foundContainer = await Container.findById(containerId);
+
+    if (!foundContainer) {
+      const error = new Error('Nie znaleziono takiego kontenera');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const znalezionyProjekt = await ProjectEntry.findById(foundContainer.project);
+
+    //sprawdzam czy mam uprawnienia
+    await znalezionyProjekt.checkPermission(req.userId);
+
+    res.status(200).json({container: foundContainer})
+
+  } catch (error) {
+    error.statusCode = error.statusCode || 500;
+    error.message = error.message || "Błąd pobierania zawartości repozytorium"
+    next(error);
+  }
+}
 
 /**
  * @api {get} /repoFiles/getRepoStats/:projectId  Statystyki repozytorium

@@ -56,14 +56,11 @@ exports.readDir = (dir, callback) => {
                 if(isEmptyDir){
                     files.push(path.join(dir, f) + '/');
                 }
-                //callback(path.join(dir, f));
                 walkDir(dirPath, callback) ;
             } else {
                 files.push(path.join(dir, f));
-                //callback(path.join(dir, f));
             }
         });
-        //callbackWK(files)
     }
 
     walkDir(dir);
@@ -138,9 +135,6 @@ exports.bytesToSize = (bytes) => {
         //wnioskuje rozszerzenie
         filename = filename + encodedFileName.substring(pozycjaPrzedOstatniej,pozycja);
     }else{
-        //plik nie mial rozszerzenia ale jest ciagle ok
-        //wtedy biore przed 3 myslnik przed myslinikeim
-        
 
         filename = encodedFileName.substring(0,pozycja);
     }

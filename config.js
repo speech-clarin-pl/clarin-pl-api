@@ -16,15 +16,6 @@ module.exports = {
         user: process.env.SMTP_USERNAME, 
         pass: process.env.SMTP_PASSWORD,
       },
-
-
-      // smtpHost: "smtp.ethereal.email",
-      // smtpPort: 587,
-      // auth: {
-      //     user: 'louie.stokes@ethereal.email', // generated ethereal user
-      //     pass: 'tHEAnZNmq2xT1Aazk5', // generated ethereal password
-      //   },
-
 };
 
 

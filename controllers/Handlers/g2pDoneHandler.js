@@ -7,13 +7,12 @@ module.exports = (task, userId) => {
 
         try {
 
-            const userId = userId;
-
-
             const inputFilePath = task.input;
             const resultFile = task.result;
 
             const pathToResult = appRoot + '/repo/' + resultFile;
+
+            console.log(pathToResult)
 
             //przenosze resultaty do katalogu kontenera
             const g2pResultPath = appRoot + '/repo/' + userId +'/' + userId + '_G2P.txt';

@@ -118,7 +118,10 @@ app.use((error, req, res, next) => {
         messageToReturn = message;
     } else if (process.env.NODE_ENV == 'production') {
         dataToReturn = {};
-        messageToReturn = "Wystąpił błąd";
+        messageToReturn = message;
+        if(status >= 500){
+            messageToReturn = "Wystąpił błąd";
+        }
     } else if (process.env.NODE_ENV == 'test') {
         dataToReturn = data;
         messageToReturn = message;
