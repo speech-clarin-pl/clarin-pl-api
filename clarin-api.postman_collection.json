@@ -152,13 +152,7 @@
 							]
 						},
 						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"type": "text",
-								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3RAdGVzdC5jb20iLCJ1c2VySWQiOiI1ZmUzOWEzNmRhYTEzZjFmYTM4ZTFlMDYiLCJpYXQiOjE2MDkwOTkwNjYsImV4cCI6MTYwOTc5MDI2Nn0.3s-gOX6LuFFEPFrumZuy3vcq7xvVkcqRBB7ITg5CoFQ"
-							}
-						],
+						"header": [],
 						"body": {
 							"mode": "raw",
 							"raw": "{\n    \"projectName\": \"Nowy projekt ABC\"\n}",
@@ -228,13 +222,7 @@
 							]
 						},
 						"method": "PUT",
-						"header": [
-							{
-								"key": "Authorization",
-								"type": "text",
-								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3RAdGVzdC5jb20iLCJ1c2VySWQiOiI1ZmUzOWEzNmRhYTEzZjFmYTM4ZTFlMDYiLCJpYXQiOjE2MDkwOTkwNjYsImV4cCI6MTYwOTc5MDI2Nn0.3s-gOX6LuFFEPFrumZuy3vcq7xvVkcqRBB7ITg5CoFQ"
-							}
-						],
+						"header": [],
 						"body": {
 							"mode": "raw",
 							"raw": "{\n    \"newProjectName\": \"Zmieniona nazwa nowego projektu XYZ\"\n}",
@@ -608,13 +596,7 @@
 							]
 						},
 						"method": "PUT",
-						"header": [
-							{
-								"key": "Authorization",
-								"type": "text",
-								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3RAdGVzdC5jb20iLCJ1c2VySWQiOiI1ZmUzOWEzNmRhYTEzZjFmYTM4ZTFlMDYiLCJpYXQiOjE2MDg3NjMxODAsImV4cCI6MTYwOTQ1NDM4MH0.HBCT9m8fBSX8WfCTAZpkMN9Km8EhHvQqviqT3G3v04c"
-							}
-						],
+						"header": [],
 						"body": {
 							"mode": "formdata",
 							"formdata": []
