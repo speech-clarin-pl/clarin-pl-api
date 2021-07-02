@@ -1,0 +1,1012 @@
+{
+	"info": {
+		"_postman_id": "6679ba75-d24e-4c4b-b5b2-936c80789fa4",
+		"name": "clarin-api",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "users",
+			"item": [
+				{
+					"name": "register",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\":\"Mariusz\",\n    \"email\":\"mklec@pjwstk.edu.pl\",\n    \"password\":\"Haslo123!\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/auth/registration",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"auth",
+								"registration"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if(pm.response.code === 200){",
+									"    pm.environment.set('token',pm.response.json().token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"mklec@pjwstk.edu.pl\",\n    \"password\": \"Haslo123!\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/auth/login",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "forgotPass",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"mklec@pjwstk.edu.pl\",\n    \"password\": \"Haslo123!\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/auth/forgotPass",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"auth",
+								"forgotPass"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "punkty dotyczace uzytkownikow"
+		},
+		{
+			"name": "projects",
+			"item": [
+				{
+					"name": "createNewProject",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if(pm.response.code === 201){",
+									"    pm.environment.set('projectId',pm.response.json().project._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"type": "text",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3RAdGVzdC5jb20iLCJ1c2VySWQiOiI1ZmUzOWEzNmRhYTEzZjFmYTM4ZTFlMDYiLCJpYXQiOjE2MDkwOTkwNjYsImV4cCI6MTYwOTc5MDI2Nn0.3s-gOX6LuFFEPFrumZuy3vcq7xvVkcqRBB7ITg5CoFQ"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"projectName\": \"Nowy projekt ABC\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/projectsList/addProject",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"projectsList",
+								"addProject"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "removeProject",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "{{url}}/projectsList/removeProject/{{projectId}}",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"projectsList",
+								"removeProject",
+								"{{projectId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "updateProjectName",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"type": "text",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3RAdGVzdC5jb20iLCJ1c2VySWQiOiI1ZmUzOWEzNmRhYTEzZjFmYTM4ZTFlMDYiLCJpYXQiOjE2MDkwOTkwNjYsImV4cCI6MTYwOTc5MDI2Nn0.3s-gOX6LuFFEPFrumZuy3vcq7xvVkcqRBB7ITg5CoFQ"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"newProjectName\": \"Zmieniona nazwa nowego projektu XYZ\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/projectsList/updateProjectName/{{projectId}}",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"projectsList",
+								"updateProjectName",
+								"{{projectId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getAllProjects",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/projectsList",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"projectsList"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "project",
+			"item": [
+				{
+					"name": "createNewSession",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if(pm.response.code === 201){",
+									"    pm.environment.set('sessionId',pm.response.json().id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"sessionName\": \"nowaSesja123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/repoFiles/createNewSession/{{projectId}}",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"repoFiles",
+								"createNewSession",
+								"{{projectId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "changeSessionName",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if(pm.response.code === 201){",
+									"    pm.environment.set('sessionId',pm.response.json().id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"newName\": \"zmienionaNazwa123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/repoFiles/changeSessionName/{{sessionId}}",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"repoFiles",
+								"changeSessionName",
+								"{{sessionId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "changeContainerName",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if(pm.response.code === 201){",
+									"    pm.environment.set('sessionId',pm.response.json().id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"newName\": \"zmienionyContainer\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/repoFiles/changeContainerName/{{containerId}}",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"repoFiles",
+								"changeContainerName",
+								"{{containerId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "moveContainerToSession",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if(pm.response.code === 201){",
+									"    pm.environment.set('sessionId',pm.response.json().id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"sessionId\": \"60dde3c32c7c40e8baedcaf2\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/repoFiles/moveContainerToSession/{{containerId}}",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"repoFiles",
+								"moveContainerToSession",
+								"{{containerId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "removeSession",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/repoFiles/deleteSession/{{sessionId}}",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"repoFiles",
+								"deleteSession",
+								"{{sessionId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getFile",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/repoFiles/download/{{containerId}}/audio",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"repoFiles",
+								"download",
+								"{{containerId}}",
+								"audio"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "runVADtool",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/repoFiles/runSpeechVAD/{{containerId}}",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"repoFiles",
+								"runSpeechVAD",
+								"{{containerId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "runDIAtool",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"type": "text",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3RAdGVzdC5jb20iLCJ1c2VySWQiOiI1ZmUzOWEzNmRhYTEzZjFmYTM4ZTFlMDYiLCJpYXQiOjE2MDg3NjMxODAsImV4cCI6MTYwOTQ1NDM4MH0.HBCT9m8fBSX8WfCTAZpkMN9Km8EhHvQqviqT3G3v04c"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "{{url}}/repoFiles/runSpeechDiarization/{{containerId}}",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"repoFiles",
+								"runSpeechDiarization",
+								"{{containerId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "runRECtool",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/repoFiles/runSpeechRecognition/{{containerId}}",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"repoFiles",
+								"runSpeechRecognition",
+								"{{containerId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "runKWStool",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"keywords\":\"celnik\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/repoFiles/runKWS/{{containerId}}",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"repoFiles",
+								"runKWS",
+								"{{containerId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "createCorpus",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/repoFiles/createCorpus/{{projectId}}",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"repoFiles",
+								"createCorpus",
+								"{{projectId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "downloadCorpus",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/repoFiles/downloadCorpus/{{projectId}}",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"repoFiles",
+								"downloadCorpus",
+								"{{projectId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "runG2Ptool",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"words\": \"ala\\\\nma\\\\kota\",\n    \"alphabet\": \"sampa\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/repoFiles/runG2P",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"repoFiles",
+								"runG2P"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "runSEGtool",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/repoFiles/runSpeechSegmentation/{{containerId}}",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"repoFiles",
+								"runSpeechSegmentation",
+								"{{containerId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "upload File",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if(pm.response.code === 201){",
+									"    pm.environment.set('containerId',pm.response.json().containerId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "projectId",
+									"value": "{{projectId}}",
+									"type": "text"
+								},
+								{
+									"key": "sessionId",
+									"value": "{{sessionId}}",
+									"type": "text"
+								},
+								{
+									"key": "containerId",
+									"value": "{{containerId}}",
+									"type": "text"
+								},
+								{
+									"key": "myFile",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/repoFiles/uploadFile",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"repoFiles",
+								"uploadFile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getRepoFiles",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/repoFiles/getProjectAssets/{{projectId}}",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"repoFiles",
+								"getProjectAssets",
+								"{{projectId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getContainerInfo",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/repoFiles/getContainerInfo/{{containerId}}",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"repoFiles",
+								"getContainerInfo",
+								"{{containerId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getRepoStats",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/repoFiles/getRepoStats/{{projectId}}",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"repoFiles",
+								"getRepoStats",
+								"{{projectId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "remove container",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/repoFiles/delete/{{containerId}}",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"repoFiles",
+								"delete",
+								"{{containerId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

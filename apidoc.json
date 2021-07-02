@@ -3,5 +3,5 @@
     "version": "0.1.0",
     "description": "CLARIN-PL dokumentacja API",
     "title": "CLARIN-PL",
-    "url" : "https://mowa.clarin-pl.eu:8433/api"
+    "url" : "https://mowa.clarin-pl.eu/api"
   }

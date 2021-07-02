@@ -273,7 +273,7 @@ exports.registration = (req, res, next) => {
 /**
  * @api {get} /confirmUser/:confirmationCode Weryfikacja użytkownika
  * @apiDescription Użytkownik po zarejestrowaniu powinien otrzymać wiadomość email z linkiem aktywującym. Kliknięcie w ten link weryfikuje użytkownika że to właśnie on się zarejestrował. 
- * @apiName RegisterUser
+ * @apiName VerifyUser
  * @apiGroup Użytkownik
  *
  * @apiParam {String} confirmationCode Kod weryfikacyjny zawarty w linku wysłanym na email 

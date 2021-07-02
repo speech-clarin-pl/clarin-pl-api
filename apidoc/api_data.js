@@ -2306,7 +2306,7 @@ define({ "api": [
     "url": "/confirmUser/:confirmationCode",
     "title": "Weryfikacja użytkownika",
     "description": "<p>Użytkownik po zarejestrowaniu powinien otrzymać wiadomość email z linkiem aktywującym. Kliknięcie w ten link weryfikuje użytkownika że to właśnie on się zarejestrował.</p>",
-    "name": "RegisterUser",
+    "name": "VerifyUser",
     "group": "Użytkownik",
     "parameter": {
       "fields": {
