@@ -1,6 +1,6 @@
 # CLARIN-PL-API
 This is back-end for webservice for building audio corpora and analyzing speech signals, available at [https://mowa.clarin-pl.eu](https://mowa.clarin-pl.eu).
-The project is a part of CLARIN-PL project. It order to run it in dev or production mode, the system requires to have the installed the following:
+The project is a part of CLARIN-PL project. It order to run speech services in development mode, the system requires to have this docker image working [speechclarinpl/website-worker](https://hub.docker.com/r/speechclarinpl/website-worker) and the following installed:
 
  * **nodejs** - The environment for running the server written in javascript
  * **mongoDB** - database 

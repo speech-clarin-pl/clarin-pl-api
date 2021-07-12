@@ -237,7 +237,7 @@ exports.deleteProject = async (req,res,next) => {
  * 
  * @apiHeader {String} Authorization Ciąg znaków 'Bearer token' gdzie w miejsce 'token' należy wstawić token uzyskany podczas logowania.
  * @apiSuccess {String} message wiadomość że projekt został usunięty.
- * @apiSuccess {String} projectId Id usuniętego projektu
+ * @apiSuccess {String} projectId Id projektu którego nazwę zmieniamy
  * @apiSuccess {String} newName nowa nazwa projektu
  *
  * @apiSuccessExample Success-Response:

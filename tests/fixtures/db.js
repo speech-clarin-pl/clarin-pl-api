@@ -11,7 +11,8 @@ const userOne = {
     _id: userOneId,
     name: 'Mario',
     email: 'mklec@pjwstk.edu.pl',
-    password: '$2a$12$ERIipjT2XZZmV28z.ahdMO9Dw2WwNH/JeuWsa44fwVQTZ3b6ttdbK',
+    password: '$2a$12$/64RBxapSdxAttdygONyxur7tWOan5UWS46Wz/N9BFCwRgx6s7Lba',
+    status: 'Active',
 }
 
 const token = jwt.sign({
