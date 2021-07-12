@@ -3,6 +3,12 @@ const fsnormal = require('fs');
 const appRoot = require('app-root-path'); //zwraca roota aplikacji 
 const path = require('path');
 var emptyDir = require('empty-dir');
+var sanitize = require("sanitize-filename");
+
+exports.sanitizeFileName = (fileName) => {
+    const sanitizedFileName = sanitize(fileName.replace(/\s/g, "_"));
+    return sanitizedFileName;
+}
 
 exports.convertJSONFileIntoTXT = (JSONFilePath) => {
     let jsonFile = fs.readJsonSync(JSONFilePath);

@@ -27,6 +27,8 @@ The project includes the following folders:
 * **middleware/** - the main middleware responsible for user authentication
 * **controllers/** - all the tasks are implemented in this dir
 * **clarin-api.postman_collection.json** - the API endpoints for testing in Postman application
+* **run_worker.sh** - runs the docker image speechclarinpl/website-worker with appropriate development configuration.
+* **run_worker_test.sh** - runs the docker image speechclarinpl/website-worker with appropriate test configuration (IMPORTANT! run this worker if you plan to run tests)
 
 ## Testing
 We use [jestjs](https://jestjs.io/) testing framework for performing application tests. 

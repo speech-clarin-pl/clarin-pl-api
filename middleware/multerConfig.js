@@ -7,6 +7,7 @@ const projectEntry = require('../models/projectEntry');
 const Container = require('../models/Container');
 const appRoot = require('app-root-path'); //zwraca roota aplikacji
 
+
 //multer configuration for storing files. It accepts array of files...
 const fileStorageAudio = multer.diskStorage({
 
@@ -55,8 +56,8 @@ const fileStorageAudio = multer.diskStorage({
 
       
       const userId = fp.owner;
-      const oryginalFileName = file.originalname;
-
+      const oryginalFileName = utils.sanitizeFileName(file.originalname);
+     
 
       //w zalęzności czy wgrywam transkrypcje czy plik audio to albo tworze nowy folder albo wgrywam do już istniejącego
       let type = file.mimetype;
@@ -70,6 +71,8 @@ const fileStorageAudio = multer.diskStorage({
 
           const conainerFolderName = utils.getFileNameWithNoExt(oryginalFileName)+"-"+uniqueHash;
           const containerFolderPath = appRoot + '/repo/' + userId + '/' + projectId + '/' + sessionId + '/' + conainerFolderName;
+
+         
 
           //tworze folder dla tego contenera
           try{
@@ -116,8 +119,9 @@ const fileStorageAudio = multer.diskStorage({
       //const uniqueHash = req.body.uniqueHash;
       const uniqueHash = req.uniqueHash;
 
-     // const audioFileName = utils.getFileNameWithNoExt(file.originalname)+"-"+utils.getFileExtention(file.originalname)+"-"+nowyHash;
-     const audioFileName = utils.getFileNameWithNoExt(file.originalname)+"-"+uniqueHash+"_temp."+utils.getFileExtention(file.originalname);
+     const sanitizedFileName = utils.sanitizeFileName(file.originalname);  
+     const audioFileName = utils.getFileNameWithNoExt(sanitizedFileName)+"-"+uniqueHash+"_temp."+utils.getFileExtention(sanitizedFileName);
+
       
      cb(null, audioFileName);
   }

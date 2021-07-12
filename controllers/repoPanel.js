@@ -1231,7 +1231,7 @@ exports.uploadFile = async (req, res, next) => {
     }
 
     const savedFile = req.file.filename;                // już z unikatowym id
-    const oryginalFileName = req.file.originalname;     //nazwa oryginalnego pliku
+    const oryginalFileName = utils.sanitizeFileName(req.file.originalname);     //nazwa oryginalnego pliku
     let type = req.file.mimetype + "";
     let typeArray = type.split("/");                    //rozpoznaje czy audio czy txt po mimetype
 
@@ -1273,6 +1273,9 @@ exports.uploadFile = async (req, res, next) => {
         const finalAudioFileName = conainerFolderName + ".wav";
         const fillCorrectAudioPath = containerFolderPath + "/" + finalAudioFileName;
 
+        //console.log(fullFilePath)
+        //console.log(fillCorrectAudioPath)
+
         audio.setAudioFrequency(16000)
           .setAudioChannels(1)
           .setAudioBitRate(256);
@@ -1281,8 +1284,11 @@ exports.uploadFile = async (req, res, next) => {
         audio.addCommand('-y', '');
         audio.addCommand('-sample_fmt', 's16');
 
+
         //tworze odpowiednia nazwe kontenera - bez unikatowego ID oraz bez rozszerzenia
         await audio.save(fillCorrectAudioPath);
+
+
 
         //teraz zmieniam nazwe pliku na taki jaki był przesłany oryginalnie - usuwając unikatowe id i _temp.
         //Czyli przywracam plikowi oryginalna nazwe
